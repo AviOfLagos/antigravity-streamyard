@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  transpilePackages: ["livekit-server-sdk"],
+  experimental: {
+    serverComponentsExternalPackages: ["@prisma/client", "prisma"],
+  },
 };
 
 export default nextConfig;
