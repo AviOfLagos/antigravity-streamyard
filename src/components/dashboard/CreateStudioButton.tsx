@@ -14,8 +14,6 @@ export default function CreateStudioButton() {
       const res = await fetch("/api/rooms", { method: "POST" })
       const data = await res.json()
       if (data.code) {
-        // Store host token in sessionStorage for the studio page
-        sessionStorage.setItem(`hostToken:${data.code}`, data.hostToken)
         router.push(`/studio/${data.code}`)
       }
     } catch (err) {

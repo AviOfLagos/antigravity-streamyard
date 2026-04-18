@@ -1,18 +1,25 @@
-import { auth } from "@/auth"
-import { prisma } from "@/lib/prisma"
-import { redirect } from "next/navigation"
-import Navbar from "@/components/ui/Navbar"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Video, Clock } from "lucide-react"
+import { Clock, Video } from "lucide-react"
 import Link from "next/link"
+import { redirect } from "next/navigation"
+
+import { auth } from "@/auth"
 import CreateStudioButton from "@/components/dashboard/CreateStudioButton"
 import PlatformSummary from "@/components/dashboard/PlatformSummary"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import Navbar from "@/components/ui/Navbar"
+import { prisma } from "@/lib/prisma"
 
-export default async function DashboardPage() {
+interface Props {
+  searchParams: Promise<{ error?: string }>
+}
+
+export default async function DashboardPage({ searchParams }: Props) {
   const session = await auth()
   if (!session?.user?.id) redirect("/login")
+
+  const { error } = await searchParams
 
   const [rooms, platforms] = await Promise.all([
     prisma.room.findMany({
@@ -29,6 +36,18 @@ export default async function DashboardPage() {
     <div className="min-h-screen bg-gray-950">
       <Navbar />
       <div className="max-w-5xl mx-auto px-6 py-10">
+        {/* G14/G15 — Error banner */}
+        {error === "room_not_found" && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-300 rounded-xl px-4 py-3 text-sm mb-6">
+            Studio not found or it belongs to a different account.
+          </div>
+        )}
+        {error === "room_ended" && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-300 rounded-xl px-4 py-3 text-sm mb-6">
+            That studio session has already ended.
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -73,6 +92,15 @@ export default async function DashboardPage() {
                     <Badge variant={room.status === "active" ? "default" : "secondary"}>
                       {room.status}
                     </Badge>
+                    {/* G29 — Summary link for ended rooms */}
+                    {room.status === "ended" && (
+                      <Link
+                        href={`/session-summary/${room.code}`}
+                        className="text-xs text-violet-400 hover:text-violet-300 transition-colors"
+                      >
+                        Summary
+                      </Link>
+                    )}
                     {room.status === "active" && (
                       <Link href={`/studio/${room.code}`}>
                         <Button size="sm" className="bg-red-500 hover:bg-red-600">Enter Studio</Button>

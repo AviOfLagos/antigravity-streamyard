@@ -16,7 +16,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md bg-gray-900 border-gray-800">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl text-white">
-            Sign in to StreamYard Clone
+            Sign in to Zerocast Clone
           </CardTitle>
           <CardDescription className="text-gray-400">
             Create studios and go live in seconds

@@ -12,7 +12,7 @@ export default async function Navbar() {
         <div className="w-7 h-7 bg-red-500 rounded-lg flex items-center justify-center">
           <Video className="w-3.5 h-3.5 text-white" />
         </div>
-        <span className="font-bold text-white">StreamYard Clone</span>
+        <span className="font-bold text-white">Zerocast Clone</span>
       </Link>
       <div className="flex items-center gap-4">
         <Link href="/dashboard" className="text-gray-400 hover:text-white text-sm transition-colors">Dashboard</Link>

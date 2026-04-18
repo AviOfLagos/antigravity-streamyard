@@ -6,7 +6,7 @@ import "@livekit/components-styles"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "StreamYard Clone",
+  title: "Zerocast Clone",
   description: "Go live in seconds",
 }
 

@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import Link from "next/link"
 import { LiveKitRoom } from "@livekit/components-react"
 import { Loader2, UserX, Video } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -10,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import type { SSEEventData } from "@/lib/chat/types"
 import GuestStudio from "./GuestStudio"
 
-type JoinStatus = "form" | "waiting" | "denied" | "joining" | "joined"
+type JoinStatus = "form" | "waiting" | "denied" | "joining" | "joined" | "timeout"
 
 interface JoinClientProps {
   roomCode: string
@@ -23,6 +24,8 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
   const [guestId, setGuestId] = useState<string | null>(null)
   const [livekitToken, setLivekitToken] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [sseError, setSseError] = useState(false)
+  const [studioEnded, setStudioEnded] = useState(false)
   const sseRef = useRef<EventSource | null>(null)
 
   const handleSSEEvent = useCallback((event: SSEEventData) => {
@@ -49,11 +52,18 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
     es.onmessage = (e) => {
       try {
         const data = JSON.parse(e.data) as SSEEventData
+        setSseError(false)
         handleSSEEvent(data)
       } catch {}
     }
 
-    return () => { es.close() }
+    es.onerror = () => {
+      setSseError(true)
+    }
+
+    const timer = setTimeout(() => setStatus("timeout"), 3 * 60 * 1000)
+
+    return () => { es.close(); clearTimeout(timer) }
   }, [status, guestId, roomCode, handleSSEEvent])
 
   const handleRequestJoin = async () => {
@@ -69,7 +79,12 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
 
       if (!res.ok) {
         const data = await res.json()
-        setError(data.error ?? "Failed to send request")
+        const msg: string = data.error ?? "Failed to send request"
+        if (msg.toLowerCase().includes("ended") || msg.toLowerCase().includes("not found")) {
+          setStudioEnded(true)
+        } else {
+          setError(msg)
+        }
         return
       }
 
@@ -83,6 +98,22 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
 
   // Form state
   if (status === "form") {
+    // G20: studio has ended — show a dedicated message instead of the form
+    if (studioEnded) {
+      return (
+        <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
+          <Card className="w-full max-w-md bg-gray-900 border-gray-800 text-center">
+            <CardContent className="py-10 space-y-3">
+              <p className="text-white font-semibold">This studio has ended.</p>
+              <Link href="/" className="text-sm text-gray-400 hover:text-white underline underline-offset-2 transition-colors">
+                Go home
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      )
+    }
+
     return (
       <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
         <Card className="w-full max-w-md bg-gray-900 border-gray-800">
@@ -136,8 +167,40 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
             <p className="text-gray-400 text-sm">
               The host has been notified. Please wait.
             </p>
+            {/* G18: SSE connection interrupted notice */}
+            {sseError && (
+              <p className="text-yellow-400/70 text-xs mt-3">Connection interrupted. Reconnecting…</p>
+            )}
           </CardContent>
         </Card>
+      </div>
+    )
+  }
+
+  // Timeout state (G19)
+  if (status === "timeout") {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center px-6">
+        <div className="flex flex-col items-center gap-4 py-20 px-6 text-center">
+          <p className="text-white font-semibold">Host hasn&apos;t responded</p>
+          <p className="text-gray-400 text-sm">The request timed out after 3 minutes.</p>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setStatus("waiting")}
+              className="px-4 py-2 rounded-xl text-sm font-medium bg-white/6 text-gray-300 hover:bg-white/10 hover:text-white transition-all"
+            >
+              Keep Waiting
+            </button>
+            <button
+              type="button"
+              onClick={() => { setStatus("form"); setGuestId(null); }}
+              className="px-4 py-2 rounded-xl text-sm font-medium bg-white/6 text-gray-300 hover:bg-white/10 hover:text-white transition-all"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
       </div>
     )
   }

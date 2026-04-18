@@ -14,7 +14,7 @@ export default async function LandingPage() {
           <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
             <Video className="w-4 h-4 text-white" />
           </div>
-          <span className="font-bold text-white text-lg">StreamYard Clone</span>
+          <span className="font-bold text-white text-lg">Zerocast Clone</span>
         </div>
         <div className="flex gap-3">
           {session?.user ? (
@@ -91,7 +91,7 @@ export default async function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-gray-800 px-6 py-8 text-center text-gray-500 text-sm">
-        StreamYard Clone — Built with Next.js, LiveKit, and ❤️
+        Zerocast Clone — Built with Next.js, LiveKit, and ❤️
       </footer>
     </div>
   )

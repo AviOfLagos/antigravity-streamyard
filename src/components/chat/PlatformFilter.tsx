@@ -1,39 +1,42 @@
 "use client"
 
-import { useChatStore } from "@/store/chat"
 import type { Platform } from "@/lib/chat/types"
+import { useChatStore } from "@/store/chat"
 
-const PLATFORMS: { key: Platform; label: string; activeClass: string }[] = [
-  { key: "youtube", label: "YT", activeClass: "bg-red-600 text-white" },
-  { key: "twitch", label: "TW", activeClass: "bg-purple-600 text-white" },
-  { key: "kick", label: "KI", activeClass: "bg-green-600 text-white" },
-  { key: "tiktok", label: "TT", activeClass: "bg-gray-600 text-white" },
-]
+import { PLATFORM_COLORS, PLATFORM_LABELS } from "./PlatformBadge"
+
+const PLATFORMS: Platform[] = ["youtube", "twitch", "kick", "tiktok"]
 
 export default function PlatformFilter() {
   const { filters, toggleFilter } = useChatStore()
+  const activeCount = PLATFORMS.filter((p) => filters[p]).length
 
   return (
-    <div className="flex gap-1 p-2 border-b border-gray-800">
-      {PLATFORMS.map((p) => (
-        <button
-          key={p.key}
-          onClick={() => toggleFilter(p.key)}
-          className={`px-2 py-1 rounded text-[10px] font-bold transition-colors ${
-            filters[p.key]
-              ? p.activeClass
-              : "bg-gray-800 text-gray-500 hover:text-gray-300"
-          }`}
-          title={filters[p.key] ? `Hide ${p.key} chat` : `Show ${p.key} chat`}
-        >
-          {p.label}
-        </button>
-      ))}
-      <div className="ml-auto flex items-center">
-        <span className="text-[10px] text-gray-500">
-          {PLATFORMS.filter((p) => filters[p.key]).length}/{PLATFORMS.length}
-        </span>
-      </div>
+    <div className="flex items-center gap-1 px-3 py-2 border-b border-white/6">
+      <span className="text-[10px] text-gray-600 mr-1 shrink-0">Filter</span>
+      {PLATFORMS.map((platform) => {
+        const active = filters[platform]
+        const color = PLATFORM_COLORS[platform]
+        return (
+          <button
+            key={platform}
+            type="button"
+            onClick={() => toggleFilter(platform)}
+            title={active ? `Hide ${platform}` : `Show ${platform}`}
+            className="px-1.5 py-0.5 rounded text-[9px] font-bold transition-all"
+            style={
+              active
+                ? { backgroundColor: `${color}22`, color, outline: `1px solid ${color}44` }
+                : { backgroundColor: "transparent", color: "#4b5563" }
+            }
+          >
+            {PLATFORM_LABELS[platform]}
+          </button>
+        )
+      })}
+      <span className="ml-auto text-[9px] text-gray-700">
+        {activeCount}/{PLATFORMS.length}
+      </span>
     </div>
   )
 }

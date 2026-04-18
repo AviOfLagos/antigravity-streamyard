@@ -1,7 +1,8 @@
-import { auth } from "@/auth"
-import { prisma } from "@/lib/prisma"
-import { startConnectors } from "@/lib/chat/manager"
 import { NextResponse } from "next/server"
+
+import { auth } from "@/auth"
+import { startConnectors } from "@/lib/chat/manager"
+import { prisma } from "@/lib/prisma"
 
 export async function POST(
   req: Request,
@@ -16,6 +17,11 @@ export async function POST(
   const room = await prisma.room.findUnique({ where: { code } })
   if (!room || room.hostId !== session.user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  }
+
+  // G33: reject if the room has already ended
+  if (room.status === "ended") {
+    return NextResponse.json({ error: "Room has ended" }, { status: 410 })
   }
 
   const platforms = await prisma.platformConnection.findMany({

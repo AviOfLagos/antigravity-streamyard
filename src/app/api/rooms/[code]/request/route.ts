@@ -1,7 +1,11 @@
-import { publishEvent, setPendingGuest } from "@/lib/redis"
-import { prisma } from "@/lib/prisma"
-import { NextResponse } from "next/server"
 import { randomUUID } from "crypto"
+import { NextResponse } from "next/server"
+
+import { getParticipantCount } from "@/lib/livekit"
+import { prisma } from "@/lib/prisma"
+import { publishEvent, redis, setPendingGuest } from "@/lib/redis"
+
+const PENDING_NAMES_TTL = 60 * 60 * 6 // 6 hours
 
 export async function POST(
   req: Request,
@@ -17,9 +21,26 @@ export async function POST(
     return NextResponse.json({ error: "Room not found or ended" }, { status: 404 })
   }
 
+  // G03: reject if room is already full
+  const count = await getParticipantCount(code)
+  if (count >= 6) {
+    return NextResponse.json({ error: "Room is full" }, { status: 400 })
+  }
+
+  // G04: reject duplicate pending request for the same name
+  const pendingNamesKey = `room:${code}:pending-names`
+  const alreadyPending = await redis.sismember(pendingNamesKey, name.trim())
+  if (alreadyPending) {
+    return NextResponse.json({ error: "You already have a pending request" }, { status: 409 })
+  }
+
   const guestId = randomUUID()
   await setPendingGuest(code, guestId, { name, requestedAt: Date.now() })
   await publishEvent(code, { type: "GUEST_REQUEST", data: { guestId, name } })
+
+  // Track pending name to prevent duplicates; expires with the room
+  await redis.sadd(pendingNamesKey, name.trim())
+  await redis.expire(pendingNamesKey, PENDING_NAMES_TTL)
 
   return NextResponse.json({ guestId })
 }

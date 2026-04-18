@@ -1,7 +1,8 @@
+import { NextResponse } from "next/server"
+
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
-import { publishEvent, deletePendingGuest } from "@/lib/redis"
-import { NextResponse } from "next/server"
+import { deletePendingGuest, publishEvent } from "@/lib/redis"
 
 export async function POST(
   req: Request,
@@ -12,6 +13,11 @@ export async function POST(
 
   const { code } = await params
   const { guestId } = await req.json()
+
+  // G07: guestId is required
+  if (!guestId || typeof guestId !== "string") {
+    return NextResponse.json({ error: "guestId is required" }, { status: 400 })
+  }
 
   const room = await prisma.room.findUnique({ where: { code } })
   if (!room || room.hostId !== session.user.id) {

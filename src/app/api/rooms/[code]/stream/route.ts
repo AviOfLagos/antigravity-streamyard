@@ -1,7 +1,7 @@
 export const runtime = "edge"
 
-import { NextRequest } from "next/server"
 import { Redis } from "@upstash/redis"
+import { type NextRequest, NextResponse } from "next/server"
 
 function getRedis() {
   return new Redis({
@@ -10,11 +10,27 @@ function getRedis() {
   })
 }
 
+const MAX_CONSECUTIVE_ERRORS = 10
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ code: string }> }
 ) {
   const { code } = await params
+
+  // G01 — Reject immediately if the room does not exist in Redis.
+  // `room:{code}:info` is set at room creation and deleted ~5 s after the room
+  // ends (via deleteRoomKeys). If the key is absent the room never existed or
+  // has already been fully cleaned up.
+  //
+  // Note: setRoomInfo stores { hostId, createdAt } — no "status" field — so we
+  // only check key existence, not contents.
+  const redisForCheck = getRedis()
+  const roomExists = await redisForCheck.exists(`room:${code}:info`)
+  if (!roomExists) {
+    return NextResponse.json({ error: "Room not found" }, { status: 404 })
+  }
+
   const sinceParam = req.nextUrl.searchParams.get("since")
   let since = sinceParam ? parseInt(sinceParam) : Date.now() - 1000
 
@@ -23,6 +39,8 @@ export async function GET(
   const stream = new ReadableStream({
     async start(controller) {
       let closed = false
+      // G02 — consecutive Redis error counter
+      let consecutiveErrors = 0
 
       const send = (data: unknown) => {
         if (closed) return
@@ -67,8 +85,20 @@ export async function GET(
             since = Math.max(since, _ts)
             send({ type: "CHAT_MESSAGE", data: payload })
           }
+
+          // Successful round — reset error streak
+          consecutiveErrors = 0
         } catch (err) {
           console.error("[SSE] Poll error:", err)
+          consecutiveErrors += 1
+
+          // G02 — too many consecutive Redis failures; close gracefully
+          if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+            send({ type: "CONNECTION_ERROR" })
+            closed = true
+            try { controller.close() } catch {}
+            return
+          }
         }
 
         // Schedule next poll after 1 second

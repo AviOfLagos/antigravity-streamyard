@@ -1,20 +1,47 @@
 import type { Platform } from "@/lib/chat/types"
 
-const PLATFORM_STYLES: Record<Platform, { bg: string; text: string; label: string }> = {
-  youtube: { bg: "bg-red-600", text: "text-white", label: "YT" },
-  twitch: { bg: "bg-purple-600", text: "text-white", label: "TW" },
-  kick: { bg: "bg-green-600", text: "text-white", label: "KI" },
-  tiktok: { bg: "bg-gray-700", text: "text-white", label: "TT" },
+const PLATFORM_COLORS: Record<Platform, string> = {
+  youtube: "#ef4444",
+  twitch: "#a855f7",
+  kick: "#22c55e",
+  tiktok: "#94a3b8",
 }
 
-export default function PlatformBadge({ platform }: { platform: Platform }) {
-  const style = PLATFORM_STYLES[platform]
+const PLATFORM_LABELS: Record<Platform, string> = {
+  youtube: "YT",
+  twitch: "TW",
+  kick: "KI",
+  tiktok: "TT",
+}
+
+interface PlatformBadgeProps {
+  platform: Platform
+  /** If true, renders a small 2-char label pill; otherwise renders a color dot */
+  variant?: "pill" | "dot"
+}
+
+export default function PlatformBadge({ platform, variant = "dot" }: PlatformBadgeProps) {
+  const color = PLATFORM_COLORS[platform]
+
+  if (variant === "pill") {
+    return (
+      <span
+        className="inline-flex items-center justify-center rounded text-[9px] font-bold px-1 py-0.5 shrink-0"
+        style={{ backgroundColor: `${color}22`, color }}
+        title={platform}
+      >
+        {PLATFORM_LABELS[platform]}
+      </span>
+    )
+  }
+
   return (
     <span
-      className={`inline-flex items-center justify-center w-5 h-5 rounded text-[9px] font-bold shrink-0 ${style.bg} ${style.text}`}
+      className="inline-block w-1.5 h-1.5 rounded-full shrink-0 mt-1.25"
+      style={{ backgroundColor: color }}
       title={platform}
-    >
-      {style.label}
-    </span>
+    />
   )
 }
+
+export { PLATFORM_COLORS, PLATFORM_LABELS }

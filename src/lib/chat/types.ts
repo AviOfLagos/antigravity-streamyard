@@ -21,3 +21,4 @@ export type SSEEventData =
   | { type: "GUEST_LEFT"; data: { participantId: string } }
   | { type: "STUDIO_ENDED" }
   | { type: "PING" }
+  | { type: "CONNECTION_ERROR" }
