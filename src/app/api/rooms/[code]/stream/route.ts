@@ -3,10 +3,12 @@ export const runtime = "edge"
 import { NextRequest } from "next/server"
 import { Redis } from "@upstash/redis"
 
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-})
+function getRedis() {
+  return new Redis({
+    url: (process.env.UPSTASH_REDIS_REST_URL ?? "").trim(),
+    token: (process.env.UPSTASH_REDIS_REST_TOKEN ?? "").trim(),
+  })
+}
 
 export async function GET(
   req: NextRequest,
@@ -36,6 +38,8 @@ export async function GET(
 
       const poll = async () => {
         if (closed) return
+
+        const redis = getRedis()
 
         try {
           // Poll events
