@@ -9,13 +9,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
   adapter: PrismaAdapter(prisma),
-  // Override providers with full scopes for the API route handler
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      // Only request basic profile — no restricted scopes at sign-in.
-      // YouTube access is requested separately when the user connects YouTube in Settings.
       authorization: {
         params: {
           scope: "openid email profile",
@@ -23,9 +20,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         },
       },
     }),
-    Resend({
-      from: "noreply@Zerocast-clone.app",
-    }),
+    // Only include Resend if RESEND_API_KEY is configured — missing key crashes NextAuth init
+    ...(process.env.RESEND_API_KEY
+      ? [Resend({ from: "noreply@zerocast.live" })]
+      : []),
   ],
   callbacks: {
     ...authConfig.callbacks,
