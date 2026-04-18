@@ -6,8 +6,9 @@ import "@livekit/components-styles"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Zerocast Clone",
-  description: "Go live in seconds",
+  title: "Zerocast — Browser-based Live Studio",
+  description:
+    "Invite guests, unify chat, go live across YouTube, Twitch, Kick and TikTok — all from your browser.",
 }
 
 export default function RootLayout({
@@ -17,7 +18,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.className} bg-gray-950 text-white antialiased`}>
+      <body className={`${inter.className} bg-[#080808] text-white antialiased`}>
         {children}
       </body>
     </html>
