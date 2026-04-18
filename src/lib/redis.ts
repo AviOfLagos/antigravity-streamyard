@@ -1,9 +1,23 @@
 import { Redis } from "@upstash/redis"
 import type { ChatMessage } from "./chat/types"
 
-export const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+// Lazy singleton so the Redis client is only instantiated when first used,
+// not at module-load time (which would fail during build if env vars are placeholders).
+let _redis: Redis | null = null
+
+function getRedis(): Redis {
+  if (!_redis) {
+    const url = process.env.UPSTASH_REDIS_REST_URL ?? ""
+    const token = process.env.UPSTASH_REDIS_REST_TOKEN ?? ""
+    _redis = new Redis({ url, token })
+  }
+  return _redis
+}
+
+export const redis = new Proxy({} as Redis, {
+  get(_target, prop) {
+    return (getRedis() as unknown as Record<string | symbol, unknown>)[prop]
+  },
 })
 
 const TTL = 60 * 60 * 24 // 24 hours
