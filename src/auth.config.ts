@@ -6,6 +6,7 @@ import Google from "next-auth/providers/google"
  * Must NOT import Prisma or any Node.js-only modules.
  */
 export const authConfig = {
+  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
