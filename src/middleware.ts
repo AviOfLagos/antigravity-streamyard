@@ -1,16 +1,9 @@
-import { auth } from "@/auth"
-import { NextResponse } from "next/server"
+import NextAuth from "next-auth"
+import { authConfig } from "@/auth.config"
 
-export default auth((req) => {
-  const { pathname } = req.nextUrl
-  const protectedPaths = ["/dashboard", "/settings", "/studio"]
-  const isProtected = protectedPaths.some((p) => pathname.startsWith(p))
-
-  if (isProtected && !req.auth) {
-    return NextResponse.redirect(new URL("/login", req.url))
-  }
-  return NextResponse.next()
-})
+// Use the lightweight edge-compatible auth config in middleware.
+// The full auth.ts (with PrismaAdapter) is only used in API routes / server components.
+export default NextAuth(authConfig).auth
 
 export const config = {
   matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],

@@ -3,13 +3,16 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import Google from "next-auth/providers/google"
 import Resend from "next-auth/providers/resend"
 import { prisma } from "@/lib/prisma"
+import { authConfig } from "@/auth.config"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(prisma),
+  // Override providers with full scopes for the API route handler
   providers: [
     Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       authorization: {
         params: {
           scope:
@@ -23,10 +26,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       from: "noreply@streamyard-clone.app",
     }),
   ],
-  pages: {
-    signIn: "/login",
-  },
   callbacks: {
+    ...authConfig.callbacks,
     session({ session, user }) {
       session.user.id = user.id
       return session
