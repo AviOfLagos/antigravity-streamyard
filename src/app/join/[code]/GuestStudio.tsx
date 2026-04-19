@@ -100,7 +100,7 @@ export default function GuestStudio({ roomCode, displayName }: GuestStudioProps)
   function gridCols(n: number) {
     if (n <= 1) return "grid-cols-1"
     if (n <= 2) return "grid-cols-2"
-    return "grid-cols-2"
+    return "grid-cols-3"
   }
 
   return (

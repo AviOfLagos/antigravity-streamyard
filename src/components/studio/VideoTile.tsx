@@ -34,7 +34,7 @@ export default function VideoTile({ trackRef, isVisible, isLocal, isHost }: Vide
     <TrackRefContext.Provider value={ensuredRef}>
       <div
         className={[
-          "relative bg-[#1a1a1a] rounded-xl overflow-hidden aspect-video flex items-center justify-center",
+          "group relative bg-[#1a1a1a] rounded-xl overflow-hidden aspect-video flex items-center justify-center",
           isSpeaking ? "ring-2 ring-violet-500/70" : "ring-1 ring-white/4",
         ].join(" ")}
       >

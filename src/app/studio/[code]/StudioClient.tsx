@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 
-import { LiveKitRoom } from "@livekit/components-react"
+import { LiveKitRoom, useConnectionState } from "@livekit/components-react"
 import { MessageSquare, X, Zap } from "lucide-react"
+import { ConnectionState } from "livekit-client"
 
 import ChatPanel from "@/components/chat/ChatPanel"
+import { PLATFORM_COLORS } from "@/components/chat/PlatformBadge"
 import ControlBar from "@/components/studio/ControlBar"
 import GuestRequestToast from "@/components/studio/GuestRequestToast"
 import VideoGrid from "@/components/studio/VideoGrid"
@@ -20,6 +22,31 @@ interface StudioClientProps {
   userName: string
 }
 
+function ConnectionMonitor() {
+  const state = useConnectionState()
+  if (state === ConnectionState.Connecting) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-20 pointer-events-none">
+        <div className="text-center">
+          <div className="w-6 h-6 border-2 border-violet-400 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+          <p className="text-white text-sm">Connecting to studio…</p>
+        </div>
+      </div>
+    )
+  }
+  if (state === ConnectionState.Reconnecting || state === ConnectionState.Disconnected) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-20 pointer-events-none">
+        <div className="text-center">
+          <p className="text-white font-semibold mb-1">Connection lost</p>
+          <p className="text-gray-300 text-sm">Attempting to reconnect…</p>
+        </div>
+      </div>
+    )
+  }
+  return null
+}
+
 export default function StudioClient({ roomCode, hostToken, livekitUrl }: StudioClientProps) {
   const { addPendingGuest, removePendingGuest } = useStudioStore()
   const { addMessage } = useChatStore()
@@ -27,7 +54,16 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl }: Studio
   const startedConnectors = useRef(false)
   const [chatOpen, setChatOpen] = useState(false)
   const [sseOk, setSseOk] = useState(true)
-  const [lkConnected, setLkConnected] = useState(true)
+  const [connectedPlatforms, setConnectedPlatforms] = useState<{ platform: string; channelName: string }[]>([])
+
+  useEffect(() => {
+    fetch(`/api/rooms/${roomCode}/platforms`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data.platforms)) setConnectedPlatforms(data.platforms)
+      })
+      .catch(() => {/* silently ignore — indicator is non-critical */})
+  }, [roomCode])
 
   const handleSSEEvent = useCallback((event: SSEEventData) => {
     switch (event.type) {
@@ -94,6 +130,18 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl }: Studio
           <span className="font-mono text-[11px] text-gray-500 tracking-widest uppercase">
             {roomCode}
           </span>
+          {connectedPlatforms.length > 0 && (
+            <div className="flex items-center gap-1">
+              {connectedPlatforms.map((p) => (
+                <span
+                  key={p.platform}
+                  title={`${p.platform}: ${p.channelName}`}
+                  className="w-1.5 h-1.5 rounded-full"
+                  style={{ backgroundColor: (PLATFORM_COLORS as Record<string, string>)[p.platform] ?? "#6b7280" }}
+                />
+              ))}
+            </div>
+          )}
         </div>
         {/* Mobile chat toggle */}
         <button
@@ -114,8 +162,6 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl }: Studio
         video={true}
         audio={true}
         className="flex flex-1 overflow-hidden"
-        onDisconnected={() => setLkConnected(false)}
-        onConnected={() => setLkConnected(true)}
       >
         {/* Stage: video + controls */}
         <div className="relative flex flex-col flex-1 min-w-0 overflow-hidden">
@@ -125,15 +171,8 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl }: Studio
           {/* ControlBar is now inside LiveKitRoom — TrackToggle hooks work here */}
           <ControlBar roomCode={roomCode} />
 
-          {/* G35 — LiveKit disconnection overlay */}
-          {!lkConnected && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-20">
-              <div className="text-center">
-                <p className="text-white font-semibold mb-1">Connection lost</p>
-                <p className="text-gray-300 text-sm">Attempting to reconnect…</p>
-              </div>
-            </div>
-          )}
+          {/* G35 — LiveKit connection state overlay */}
+          <ConnectionMonitor />
         </div>
 
         {/* Chat panel — slide in from right on mobile */}
@@ -153,7 +192,7 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl }: Studio
 
       {/* G13 — SSE connection error banner */}
       {!sseOk && (
-        <div className="fixed bottom-16 left-1/2 -translate-x-1/2 bg-red-500/15 border border-red-500/20 text-red-300 text-xs px-4 py-2 rounded-full z-50">
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-red-500/15 border border-red-500/20 text-red-300 text-xs px-4 py-2 rounded-full z-50">
           Connection interrupted — events may be delayed
         </div>
       )}

@@ -28,7 +28,7 @@ export default async function StudioPage({ params }: Props) {
     )
   }
 
-  const hostToken = generateHostToken(code, session.user.id, session.user.name ?? "Host")
+  const hostToken = await generateHostToken(code, session.user.id, session.user.name ?? "Host")
 
   return (
     <StudioClient

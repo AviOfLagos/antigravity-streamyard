@@ -61,7 +61,7 @@ export async function POST(
     return NextResponse.json({ error: "Room is full (max 6 participants)" }, { status: 400 })
   }
 
-  const guestToken = generateParticipantToken(code, guestId, name ?? "Guest")
+  const guestToken = await generateParticipantToken(code, guestId, name ?? "Guest")
   await setApprovedGuest(code, guestId, guestToken)
   await deletePendingGuest(code, guestId)
   await publishEvent(code, { type: "GUEST_ADMITTED", data: { guestId, token: guestToken } })

@@ -34,10 +34,19 @@ export async function getParticipantCount(roomName: string): Promise<number> {
   }
 }
 
-export function generateHostToken(roomCode: string, userId: string, userName: string): string {
+// livekit-server-sdk v2.x: toJwt() is async — must be awaited.
+// Previously cast as `string` with `as unknown as string` which silently
+// passed an unresolved Promise to the LiveKit client, causing immediate disconnect.
+
+export async function generateHostToken(
+  roomCode: string,
+  userId: string,
+  userName: string,
+): Promise<string> {
   const at = new AccessToken(apiKey, apiSecret, {
     identity: `host-${userId}`,
     name: userName,
+    ttl: "10h",
   })
   at.addGrant({
     roomCreate: true,
@@ -45,20 +54,28 @@ export function generateHostToken(roomCode: string, userId: string, userName: st
     room: roomCode,
     canPublish: true,
     canSubscribe: true,
+    canPublishData: true,
+    roomAdmin: true,
   })
-  return at.toJwt() as unknown as string
+  return at.toJwt()
 }
 
-export function generateParticipantToken(roomCode: string, guestId: string, displayName: string): string {
+export async function generateParticipantToken(
+  roomCode: string,
+  guestId: string,
+  displayName: string,
+): Promise<string> {
   const at = new AccessToken(apiKey, apiSecret, {
     identity: `guest-${guestId}`,
     name: displayName,
+    ttl: "4h",
   })
   at.addGrant({
     roomJoin: true,
     room: roomCode,
     canPublish: true,
     canSubscribe: true,
+    canPublishData: true,
   })
-  return at.toJwt() as unknown as string
+  return at.toJwt()
 }

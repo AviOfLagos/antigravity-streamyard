@@ -50,7 +50,7 @@ export async function POST() {
     await redis.set(`session:start:${code}`, now, { ex: 60 * 60 * 24 * 2 })
 
     // Generate host token
-    const hostToken = generateHostToken(code, session.user.id, session.user.name ?? "Host")
+    const hostToken = await generateHostToken(code, session.user.id, session.user.name ?? "Host")
 
     return NextResponse.json({ code, hostToken })
   } catch (err) {
