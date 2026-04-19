@@ -1,4 +1,4 @@
-import { Clock, Video } from "lucide-react"
+import { Clock, RefreshCw, Video } from "lucide-react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
@@ -21,22 +21,31 @@ export default async function DashboardPage({ searchParams }: Props) {
 
   const { error } = await searchParams
 
-  const [rooms, platforms] = await Promise.all([
-    prisma.room.findMany({
+  // Run sequentially to avoid exhausting Neon's serverless connection pool.
+  // Promise.all with multiple concurrent queries causes P1001 on the free tier.
+  let rooms: Awaited<ReturnType<typeof prisma.room.findMany>> = []
+  let platforms: Awaited<ReturnType<typeof prisma.platformConnection.findMany>> = []
+  let dbError = false
+
+  try {
+    rooms = await prisma.room.findMany({
       where: { hostId: session.user.id },
       orderBy: { createdAt: "desc" },
       take: 10,
-    }),
-    prisma.platformConnection.findMany({
+    })
+    platforms = await prisma.platformConnection.findMany({
       where: { userId: session.user.id },
-    }),
-  ])
+    })
+  } catch {
+    dbError = true
+  }
 
   return (
     <div className="min-h-screen bg-gray-950">
       <Navbar />
       <div className="max-w-5xl mx-auto px-6 py-10">
-        {/* G14/G15 — Error banner */}
+
+        {/* Auth redirect error banners */}
         {error === "room_not_found" && (
           <div className="bg-red-500/10 border border-red-500/20 text-red-300 rounded-xl px-4 py-3 text-sm mb-6">
             Studio not found or it belongs to a different account.
@@ -45,6 +54,17 @@ export default async function DashboardPage({ searchParams }: Props) {
         {error === "room_ended" && (
           <div className="bg-red-500/10 border border-red-500/20 text-red-300 rounded-xl px-4 py-3 text-sm mb-6">
             That studio session has already ended.
+          </div>
+        )}
+
+        {/* Database error — transient Neon connection issue */}
+        {dbError && (
+          <div className="bg-amber-500/10 border border-amber-500/20 text-amber-300 rounded-xl px-4 py-3 text-sm mb-6 flex items-center justify-between gap-4">
+            <span>Couldn't reach the database. This is usually a brief cold-start on Neon's free tier.</span>
+            <a href="/dashboard" className="flex items-center gap-1.5 text-amber-300 hover:text-amber-200 font-medium shrink-0">
+              <RefreshCw className="w-3.5 h-3.5" />
+              Retry
+            </a>
           </div>
         )}
 
@@ -63,7 +83,7 @@ export default async function DashboardPage({ searchParams }: Props) {
 
         {/* Rooms */}
         <h2 className="text-lg font-semibold text-white mb-4">Recent Studios</h2>
-        {rooms.length === 0 ? (
+        {rooms.length === 0 && !dbError ? (
           <Card className="bg-gray-900 border-gray-800">
             <CardContent className="py-16 text-center">
               <Video className="w-12 h-12 text-gray-600 mx-auto mb-4" />
@@ -73,7 +93,7 @@ export default async function DashboardPage({ searchParams }: Props) {
           </Card>
         ) : (
           <div className="space-y-3">
-            {rooms.map((room: typeof rooms[number]) => (
+            {rooms.map((room) => (
               <Card key={room.id} className="bg-gray-900 border-gray-800">
                 <CardContent className="flex items-center justify-between py-4 px-5">
                   <div className="flex items-center gap-3">
@@ -92,7 +112,6 @@ export default async function DashboardPage({ searchParams }: Props) {
                     <Badge variant={room.status === "active" ? "default" : "secondary"}>
                       {room.status}
                     </Badge>
-                    {/* G29 — Summary link for ended rooms */}
                     {room.status === "ended" && (
                       <Link
                         href={`/session-summary/${room.code}`}
