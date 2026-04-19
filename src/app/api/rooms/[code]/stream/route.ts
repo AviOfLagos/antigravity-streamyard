@@ -19,27 +19,27 @@ export async function GET(
   const { code } = await params
 
   // G01 — Reject immediately if the room does not exist in Redis.
-  // `room:{code}:info` is set at room creation and deleted ~5 s after the room
-  // ends (via deleteRoomKeys). If the key is absent the room never existed or
-  // has already been fully cleaned up.
-  //
-  // Note: setRoomInfo stores { hostId, createdAt } — no "status" field — so we
-  // only check key existence, not contents.
   const redisForCheck = getRedis()
   const roomExists = await redisForCheck.exists(`room:${code}:info`)
   if (!roomExists) {
     return NextResponse.json({ error: "Room not found" }, { status: 404 })
   }
 
+  // Events and chat use SEPARATE since-pointers to prevent a critical bug:
+  // if only `since` is shared, a chat message with a higher _ts would cause
+  // all older GUEST_REQUEST events to be permanently filtered out on every
+  // subsequent poll. Events use sinceEvents=0 (replay all up to the list cap
+  // of 200) so a guest request submitted before the host opened SSE is never
+  // missed. Chat uses a short lookback (5 s) to avoid replaying full history.
   const sinceParam = req.nextUrl.searchParams.get("since")
-  let since = sinceParam ? parseInt(sinceParam) : Date.now() - 1000
+  let sinceEvents = sinceParam ? parseInt(sinceParam, 10) : 0
+  let sinceChat = Date.now() - 5000
 
   const encoder = new TextEncoder()
 
   const stream = new ReadableStream({
     async start(controller) {
       let closed = false
-      // G02 — consecutive Redis error counter
       let consecutiveErrors = 0
 
       const send = (data: unknown) => {
@@ -51,7 +51,6 @@ export async function GET(
         }
       }
 
-      // Send initial ping
       send({ type: "PING" })
 
       const poll = async () => {
@@ -60,39 +59,37 @@ export async function GET(
         const redis = getRedis()
 
         try {
-          // Poll events
+          // ── Events (all undelivered since sinceEvents) ─────────────────────
           const rawEvents = await redis.lrange(`room:${code}:events`, 0, -1)
           const events = rawEvents
             .map((e) => (typeof e === "string" ? JSON.parse(e) : e))
-            .filter((e: { _ts: number }) => e._ts > since)
+            .filter((e: { _ts: number }) => e._ts > sinceEvents)
             .reverse()
 
           for (const event of events) {
             const { _ts, ...payload } = event as { _ts: number; [key: string]: unknown }
-            since = Math.max(since, _ts)
+            sinceEvents = Math.max(sinceEvents, _ts)
             send(payload)
           }
 
-          // Poll chat
+          // ── Chat (short window — avoid replaying full chat history) ─────────
           const rawChats = await redis.lrange(`room:${code}:chat`, 0, -1)
           const chats = rawChats
             .map((e) => (typeof e === "string" ? JSON.parse(e) : e))
-            .filter((e: { _ts: number }) => e._ts > since)
+            .filter((e: { _ts: number }) => e._ts > sinceChat)
             .reverse()
 
           for (const chat of chats) {
             const { _ts, ...payload } = chat as { _ts: number; [key: string]: unknown }
-            since = Math.max(since, _ts)
+            sinceChat = Math.max(sinceChat, _ts)
             send({ type: "CHAT_MESSAGE", data: payload })
           }
 
-          // Successful round — reset error streak
           consecutiveErrors = 0
         } catch (err) {
           console.error("[SSE] Poll error:", err)
           consecutiveErrors += 1
 
-          // G02 — too many consecutive Redis failures; close gracefully
           if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
             send({ type: "CONNECTION_ERROR" })
             closed = true
@@ -101,7 +98,6 @@ export async function GET(
           }
         }
 
-        // Schedule next poll after 1 second
         if (!closed) {
           setTimeout(async () => {
             send({ type: "PING" })
@@ -112,7 +108,6 @@ export async function GET(
 
       await poll()
 
-      // Clean up when connection closes
       req.signal.addEventListener("abort", () => {
         closed = true
         try { controller.close() } catch {}

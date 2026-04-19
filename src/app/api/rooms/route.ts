@@ -8,9 +8,13 @@ import { generateRoomCode } from "@/lib/utils/roomCode"
 
 const MAX_CODE_RETRIES = 5
 
-export async function POST() {
+export async function POST(req: Request) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  const body = await req.json().catch(() => ({}))
+  const title = typeof body.title === "string" && body.title.trim() ? body.title.trim() : null
+  const selectedPlatforms = Array.isArray(body.selectedPlatforms) ? body.selectedPlatforms : []
 
   try {
     // Create LiveKit room first (code is only used for room name, collision is DB-side)
@@ -22,7 +26,7 @@ export async function POST() {
     while (true) {
       try {
         await prisma.room.create({
-          data: { code, hostId: session.user.id, status: "active" },
+          data: { code, hostId: session.user.id, status: "active", title, selectedPlatforms },
         })
         break
       } catch (err: unknown) {
@@ -44,7 +48,7 @@ export async function POST() {
     const now = Date.now()
 
     // Store in Redis
-    await setRoomInfo(code, { hostId: session.user.id, createdAt: now })
+    await setRoomInfo(code, { hostId: session.user.id, createdAt: now, title })
 
     // Store session start timestamp for duration calculation
     await redis.set(`session:start:${code}`, now, { ex: 60 * 60 * 24 * 2 })

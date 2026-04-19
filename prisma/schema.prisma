@@ -73,11 +73,13 @@ model PlatformConnection {
 }
 
 model Room {
-  id        String    @id @default(cuid())
-  code      String    @unique
-  hostId    String
-  host      User      @relation(fields: [hostId], references: [id])
-  status    String    @default("active")
-  createdAt DateTime  @default(now())
-  endedAt   DateTime?
+  id               String    @id @default(cuid())
+  code             String    @unique
+  title            String?
+  hostId           String
+  host             User      @relation(fields: [hostId], references: [id])
+  status           String    @default("active")
+  selectedPlatforms String[]
+  createdAt        DateTime  @default(now())
+  endedAt          DateTime?
 }

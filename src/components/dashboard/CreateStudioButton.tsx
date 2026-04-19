@@ -3,37 +3,90 @@
 import { Check, Copy, Loader2, Plus } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 
-type Step = "idle" | "creating" | "setup"
+type Step = "idle" | "creating-modal" | "submitting" | "ready"
+
+interface PlatformConnection {
+  platform: string
+  channelName: string
+}
+
+const PLATFORM_COLORS: Record<string, string> = {
+  youtube: "#ef4444",
+  twitch: "#a855f7",
+  kick: "#22c55e",
+  tiktok: "#94a3b8",
+}
 
 export default function CreateStudioButton() {
   const router = useRouter()
   const [step, setStep] = useState<Step>("idle")
+  const [title, setTitle] = useState("")
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([])
+  const [availablePlatforms, setAvailablePlatforms] = useState<PlatformConnection[]>([])
   const [roomCode, setRoomCode] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  useEffect(() => {
+    if (step !== "creating-modal") return
+    fetch("/api/platforms")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data.platforms)) setAvailablePlatforms(data.platforms)
+      })
+      .catch(() => {})
+  }, [step])
+
+  const handleOpen = () => {
+    setError(null)
+    setStep("creating-modal")
+  }
+
+  const handleCancel = () => {
+    setStep("idle")
+    setTitle("")
+    setSelectedPlatforms([])
+    setAvailablePlatforms([])
+    setError(null)
+  }
+
+  const handleTogglePlatform = (platform: string) => {
+    setSelectedPlatforms((prev) =>
+      prev.includes(platform) ? prev.filter((p) => p !== platform) : [...prev, platform],
+    )
+  }
+
   const handleCreate = async () => {
-    setStep("creating")
+    if (!title.trim()) return
+    setStep("submitting")
     setError(null)
     try {
-      const res = await fetch("/api/rooms", { method: "POST" })
+      const res = await fetch("/api/rooms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: title.trim(), selectedPlatforms }),
+      })
       const data = await res.json()
       if (!res.ok || !data.code) {
         throw new Error(data.error ?? "Failed to create studio")
       }
       setRoomCode(data.code)
-      setStep("setup")
+      setStep("ready")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong")
-      setStep("idle")
+      setStep("creating-modal")
     }
   }
 
-  const inviteUrl = roomCode ? `${window.location.origin}/join/${roomCode}` : ""
+  const inviteUrl = roomCode
+    ? typeof window !== "undefined"
+      ? `${window.location.origin}/join/${roomCode}`
+      : `/join/${roomCode}`
+    : ""
 
   const handleCopy = async () => {
     if (!inviteUrl) return
@@ -50,103 +103,200 @@ export default function CreateStudioButton() {
   const handleBack = () => {
     setStep("idle")
     setRoomCode(null)
+    setTitle("")
+    setSelectedPlatforms([])
+    setAvailablePlatforms([])
     setCopied(false)
+    setError(null)
   }
+
+  const isModalOpen = step === "creating-modal" || step === "submitting" || step === "ready"
 
   return (
     <>
       <Button
-        onClick={handleCreate}
-        disabled={step === "creating"}
+        onClick={handleOpen}
+        disabled={step === "submitting"}
         className="bg-violet-600 hover:bg-violet-700 text-white"
       >
-        {step === "creating" ? (
-          <>
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            Creating...
-          </>
-        ) : (
-          <>
-            <Plus className="w-4 h-4 mr-2" />
-            Create Studio
-          </>
-        )}
+        <Plus className="w-4 h-4 mr-2" />
+        Create Studio
       </Button>
 
-      {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
-
-      {step === "setup" && roomCode && (
+      {isModalOpen && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-          <div className="bg-[#111111] border border-white/8 rounded-2xl p-6 w-full max-w-md mx-4">
-            {/* Header */}
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-9 h-9 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
-                <Check className="w-5 h-5 text-emerald-400" />
+          {/* ── Step 1: Details ── */}
+          {(step === "creating-modal" || step === "submitting") && (
+            <div className="bg-[#111111] border border-white/8 rounded-2xl p-6 w-full max-w-lg mx-4">
+              <h2 className="text-white font-semibold text-lg mb-5">Create Studio</h2>
+
+              {/* Title input */}
+              <div className="mb-5">
+                <label
+                  htmlFor="studio-title"
+                  className="block text-xs text-gray-500 uppercase tracking-wide mb-1.5"
+                >
+                  Studio name
+                </label>
+                <input
+                  id="studio-title"
+                  placeholder="e.g. Morning Show, Product Demo..."
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="w-full bg-[#1a1a1a] border border-white/8 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-gray-600 outline-none focus:ring-1 focus:ring-violet-500/50 focus:border-violet-500/40 transition-colors"
+                />
               </div>
-              <h2 className="text-white font-semibold text-lg">Studio Ready</h2>
-            </div>
 
-            {/* Room code */}
-            <p className="font-mono text-xl text-white text-center py-2 mb-4 tracking-widest uppercase">
-              {roomCode}
-            </p>
+              {/* Platform selection */}
+              <div className="mb-5">
+                <p
+                  id="stream-to-label"
+                  className="block text-xs text-gray-500 uppercase tracking-wide mb-2"
+                >
+                  Stream to
+                </p>
+                {availablePlatforms.length === 0 ? (
+                  <p className="text-sm text-gray-500">
+                    No platforms connected yet.{" "}
+                    <Link
+                      href="/settings/platforms"
+                      className="text-violet-400 hover:text-violet-300"
+                    >
+                      Connect platforms →
+                    </Link>
+                  </p>
+                ) : (
+                  <ul className="space-y-2">
+                    {availablePlatforms.map(({ platform, channelName }) => {
+                      const isChecked = selectedPlatforms.includes(platform)
+                      const color = PLATFORM_COLORS[platform.toLowerCase()] ?? "#94a3b8"
+                      return (
+                        <li key={platform}>
+                          <label className="flex items-center gap-3 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              className="w-4 h-4 rounded accent-violet-500"
+                              checked={isChecked}
+                              onChange={() => handleTogglePlatform(platform)}
+                            />
+                            <span
+                              className="w-2.5 h-2.5 rounded-full shrink-0"
+                              style={{ backgroundColor: color }}
+                            />
+                            <span className="text-sm text-white capitalize">{platform}</span>
+                            <span className="text-sm text-gray-500">{channelName}</span>
+                          </label>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
 
-            {/* Invite link section */}
-            <div className="mb-5">
-              <p className="text-xs text-gray-500 mb-1.5">Guest invite link</p>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 bg-[#1a1a1a] rounded-xl px-3 py-2.5 text-xs font-mono text-gray-400 truncate">
-                  {inviteUrl}
-                </div>
+                {title.trim() && availablePlatforms.length > 0 && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    Stream title will be: {title.trim()}
+                  </p>
+                )}
+              </div>
+
+              {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
+
+              {/* Footer buttons */}
+              <div className="flex items-center justify-end gap-3">
                 <button
                   type="button"
-                  onClick={handleCopy}
-                  className="shrink-0 flex items-center gap-1.5 bg-[#1a1a1a] hover:bg-white/8 border border-white/8 text-gray-400 hover:text-white rounded-xl px-3 py-2.5 text-xs transition-colors"
+                  onClick={handleCancel}
+                  disabled={step === "submitting"}
+                  className="text-gray-400 hover:text-white hover:bg-white/6 font-medium rounded-xl px-4 py-2.5 text-sm transition-colors"
                 >
-                  {copied ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
-                      <span className="text-emerald-400">Copied!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5" />
-                      Copy
-                    </>
-                  )}
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCreate}
+                  disabled={title.trim() === "" || step === "submitting"}
+                  className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-xl px-4 py-2.5 text-sm transition-colors"
+                >
+                  {step === "submitting" && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Create Studio →
                 </button>
               </div>
             </div>
+          )}
 
-            {/* Platform note */}
-            <p className="text-xs text-gray-500 mb-6">
-              Connected platforms will stream chat automatically.{" "}
-              <Link
-                href="/settings/platforms"
-                className="text-violet-400 hover:text-violet-300 transition-colors"
-              >
-                Manage platforms
-              </Link>
-            </p>
+          {/* ── Step 2: Ready ── */}
+          {step === "ready" && roomCode && (
+            <div className="bg-[#111111] border border-white/8 rounded-2xl p-6 w-full max-w-lg mx-4">
+              {/* Header */}
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-9 h-9 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
+                  <Check className="w-5 h-5 text-emerald-400" />
+                </div>
+                <h2 className="text-white font-semibold text-lg">Studio Ready</h2>
+              </div>
 
-            {/* Action buttons */}
-            <div className="flex flex-col gap-2">
-              <button
-                type="button"
-                onClick={handleEnterStudio}
-                className="w-full bg-violet-600 hover:bg-violet-700 text-white font-medium rounded-xl py-2.5 text-sm transition-colors"
-              >
-                Enter Studio
-              </button>
-              <button
-                type="button"
-                onClick={handleBack}
-                className="w-full text-gray-400 hover:text-white hover:bg-white/6 font-medium rounded-xl py-2.5 text-sm transition-colors"
-              >
-                ← Back
-              </button>
+              {/* Room title */}
+              <p className="text-lg font-semibold text-white mb-1">{title || roomCode}</p>
+
+              {/* Room code */}
+              <p className="font-mono text-sm text-gray-500 tracking-widest uppercase mb-4">
+                {roomCode}
+              </p>
+
+              {/* Selected platforms summary */}
+              {selectedPlatforms.length > 0 && (
+                <p className="text-xs text-gray-500 mb-4">
+                  Streaming chat from:{" "}
+                  {selectedPlatforms.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(", ")}
+                </p>
+              )}
+
+              {/* Invite link */}
+              <div className="mb-5">
+                <p className="text-xs text-gray-500 mb-1.5">Guest invite link</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-[#1a1a1a] rounded-xl px-3 py-2.5 text-xs font-mono text-gray-400 truncate">
+                    {inviteUrl}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCopy}
+                    className="shrink-0 flex items-center gap-1.5 bg-[#1a1a1a] hover:bg-white/8 border border-white/8 text-gray-400 hover:text-white rounded-xl px-3 py-2.5 text-xs transition-colors"
+                  >
+                    {copied ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        <span className="text-emerald-400">Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        Copy
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={handleEnterStudio}
+                  className="w-full bg-violet-600 hover:bg-violet-700 text-white font-medium rounded-xl py-2.5 text-sm transition-colors"
+                >
+                  Enter Studio
+                </button>
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  className="w-full text-gray-400 hover:text-white hover:bg-white/6 font-medium rounded-xl py-2.5 text-sm transition-colors"
+                >
+                  ← Back
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
     </>

@@ -19,7 +19,7 @@ interface StudioClientProps {
   roomCode: string
   hostToken: string
   livekitUrl: string
-  userName: string
+  title?: string
 }
 
 function ConnectionMonitor() {
@@ -47,7 +47,7 @@ function ConnectionMonitor() {
   return null
 }
 
-export default function StudioClient({ roomCode, hostToken, livekitUrl }: StudioClientProps) {
+export default function StudioClient({ roomCode, hostToken, livekitUrl, title }: StudioClientProps) {
   const { addPendingGuest, removePendingGuest } = useStudioStore()
   const { addMessage } = useChatStore()
   const sseRef = useRef<EventSource | null>(null)
@@ -127,9 +127,14 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl }: Studio
             Zerocast
           </div>
           <div className="h-4 w-px bg-white/10" />
-          <span className="font-mono text-[11px] text-gray-500 tracking-widest uppercase">
-            {roomCode}
-          </span>
+          {title ? (
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold text-white leading-tight">{title}</span>
+              <span className="font-mono text-[9px] text-gray-600 tracking-widest uppercase">{roomCode}</span>
+            </div>
+          ) : (
+            <span className="font-mono text-[11px] text-gray-500 tracking-widest uppercase">{roomCode}</span>
+          )}
           {connectedPlatforms.length > 0 && (
             <div className="flex items-center gap-1">
               {connectedPlatforms.map((p) => (

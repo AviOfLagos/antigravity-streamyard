@@ -35,7 +35,7 @@ export default async function StudioPage({ params }: Props) {
       roomCode={code}
       hostToken={hostToken}
       livekitUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
-      userName={session.user.name ?? "Host"}
+      title={room.title ?? undefined}
     />
   )
 }

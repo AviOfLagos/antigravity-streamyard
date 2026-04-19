@@ -101,7 +101,8 @@ export default async function DashboardPage({ searchParams }: Props) {
                       <Video className="w-4 h-4 text-gray-400" />
                     </div>
                     <div>
-                      <p className="text-white font-medium font-mono">Room {room.code}</p>
+                      <p className="text-white font-medium">{room.title ?? `Room ${room.code}`}</p>
+                      <p className="font-mono text-xs text-gray-600 tracking-widest">{room.code}</p>
                       <p className="text-gray-500 text-xs flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         {new Date(room.createdAt).toLocaleDateString()}

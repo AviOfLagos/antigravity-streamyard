@@ -96,7 +96,7 @@ export default async function DemoStudioPage({ params, searchParams }: Props) {
       roomCode={code}
       hostToken={token}
       livekitUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL!}
-      userName="Host"
+      title={room.title ?? undefined}
     />
   )
 }

@@ -14,7 +14,10 @@ export async function POST(
   const { code } = await params
 
   // Get host's platform connections
-  const room = await prisma.room.findUnique({ where: { code } })
+  const room = await prisma.room.findUnique({
+    where: { code },
+    select: { hostId: true, status: true, selectedPlatforms: true },
+  })
   if (!room || room.hostId !== session.user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
@@ -23,6 +26,8 @@ export async function POST(
   if (room.status === "ended") {
     return NextResponse.json({ error: "Room has ended" }, { status: 410 })
   }
+
+  const selectedPlatforms: string[] = room.selectedPlatforms ?? []
 
   const platforms = await prisma.platformConnection.findMany({
     where: { userId: session.user.id },
@@ -39,7 +44,13 @@ export async function POST(
     youtubeAccessToken = account?.access_token ?? null
   }
 
-  const platformData = platforms.map((p) => ({
+  // Only include platforms the host selected for this broadcast.
+  // If selectedPlatforms is empty (legacy rooms), connect all as before.
+  const filteredConnections = platforms.filter((c) =>
+    selectedPlatforms.length === 0 || selectedPlatforms.includes(c.platform)
+  )
+
+  const platformData = filteredConnections.map((p) => ({
     platform: p.platform,
     channelName: p.channelName,
     accessToken: p.platform === "youtube" ? youtubeAccessToken : null,
@@ -48,5 +59,5 @@ export async function POST(
   // Start connectors asynchronously — don't await
   startConnectors(code, platformData).catch(console.error)
 
-  return NextResponse.json({ ok: true, platforms: platforms.map((p) => p.platform) })
+  return NextResponse.json({ ok: true, platforms: filteredConnections.map((p) => p.platform) })
 }
