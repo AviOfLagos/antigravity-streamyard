@@ -60,7 +60,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         {/* Database error — transient Neon connection issue */}
         {dbError && (
           <div className="bg-amber-500/10 border border-amber-500/20 text-amber-300 rounded-xl px-4 py-3 text-sm mb-6 flex items-center justify-between gap-4">
-            <span>Couldn't reach the database. This is usually a brief cold-start on Neon's free tier.</span>
+            <span>{"Couldn't reach the database. This is usually a brief cold-start on Neon's free tier."}</span>
             <a href="/dashboard" className="flex items-center gap-1.5 text-amber-300 hover:text-amber-200 font-medium shrink-0">
               <RefreshCw className="w-3.5 h-3.5" />
               Retry
