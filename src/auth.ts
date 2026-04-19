@@ -10,6 +10,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   secret: process.env.NEXTAUTH_SECRET,
   adapter: PrismaAdapter(prisma),
+
+  // JWT strategy is required when using both a database adapter AND Edge middleware.
+  // Database sessions (the adapter default) can't be verified by the Edge middleware
+  // because it has no Prisma access — causing every request to appear unauthenticated
+  // and redirect back to /login in an infinite loop.
+  // JWT sessions are verified entirely from the signed cookie — no DB round-trip needed.
+  session: { strategy: "jwt" },
+
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
@@ -22,18 +30,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
     // Resend email magic links — only registered when RESEND_API_KEY is set.
-    // Omitting it entirely prevents NextAuth from crashing on init when the key is absent.
-    // From address: use RESEND_FROM env var (must be a Resend-verified domain).
-    // Until a custom domain is verified, onboarding@resend.dev works for testing
-    // (Resend's own verified sender — free plan only delivers to your own account email).
+    // Free plan: onboarding@resend.dev only delivers to emails verified in your Resend account.
+    // Production: set RESEND_FROM to a sender on a verified domain (resend.com/domains).
     ...(process.env.RESEND_API_KEY
       ? [Resend({ from: process.env.RESEND_FROM ?? "onboarding@resend.dev" })]
       : []),
   ],
+
   callbacks: {
     ...authConfig.callbacks,
-    session({ session, user }) {
-      session.user.id = user.id
+
+    // Persist the user's database id into the JWT on first sign-in.
+    jwt({ token, user }) {
+      if (user?.id) token.id = user.id
+      return token
+    },
+
+    // Expose the id from the JWT to the session object.
+    session({ session, token }) {
+      if (token.id) session.user.id = token.id as string
       return session
     },
   },
