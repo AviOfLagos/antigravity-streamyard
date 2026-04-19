@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
-import { LiveKitRoom } from "@livekit/components-react"
-import { Loader2, UserX, Video } from "lucide-react"
+import { LiveKitRoom, RoomAudioRenderer, usePreviewTracks } from "@livekit/components-react"
+import { LocalVideoTrack } from "livekit-client"
+import { AlertCircle, Camera, CameraOff, Loader2, Mic, MicOff, UserX, Video } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -13,11 +14,111 @@ import { SSEEventDataSchema } from "@/lib/schemas/sse"
 import { GuestRequestResponseSchema } from "@/lib/schemas/guest"
 import GuestStudio from "./GuestStudio"
 
-type JoinStatus = "form" | "waiting" | "denied" | "joining" | "joined" | "timeout"
+type JoinStatus = "form" | "preview" | "waiting" | "denied" | "joining" | "joined" | "timeout" | "room-full"
 
 interface JoinClientProps {
   roomCode: string
   livekitUrl: string
+}
+
+/** F-13: Device preview component — camera/mic preview before requesting to join */
+function DevicePreview({
+  videoEnabled,
+  audioEnabled,
+  onToggleVideo,
+  onToggleAudio,
+  onDeviceError,
+}: {
+  videoEnabled: boolean
+  audioEnabled: boolean
+  onToggleVideo: () => void
+  onToggleAudio: () => void
+  onDeviceError: (err: Error) => void
+}) {
+  const tracks = usePreviewTracks(
+    {
+      audio: audioEnabled,
+      video: videoEnabled,
+    },
+    onDeviceError
+  )
+
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  // Attach/detach video track to the preview element
+  useEffect(() => {
+    if (!videoRef.current || !tracks) return
+    const videoTrack = tracks.find(
+      (t) => t.kind === "video"
+    ) as LocalVideoTrack | undefined
+    if (videoTrack) {
+      videoTrack.attach(videoRef.current)
+      return () => {
+        videoTrack.detach(videoRef.current!)
+      }
+    }
+  }, [tracks])
+
+  // Clean up tracks on unmount
+  useEffect(() => {
+    return () => {
+      tracks?.forEach((t) => t.stop())
+    }
+  }, [tracks])
+
+  return (
+    <div className="space-y-3">
+      {/* Video preview */}
+      <div className="relative aspect-video bg-gray-800 rounded-xl overflow-hidden">
+        {videoEnabled ? (
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="w-full h-full object-cover mirror"
+            style={{ transform: "scaleX(-1)" }}
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <div className="w-16 h-16 rounded-full bg-gray-700 flex items-center justify-center">
+              <CameraOff className="w-8 h-8 text-gray-500" />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Device toggle buttons */}
+      <div className="flex items-center justify-center gap-3">
+        <button
+          type="button"
+          onClick={onToggleVideo}
+          className={[
+            "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all",
+            videoEnabled
+              ? "bg-white/6 text-gray-300 hover:bg-white/10"
+              : "bg-red-500/10 text-red-400 hover:bg-red-500/20",
+          ].join(" ")}
+        >
+          {videoEnabled ? <Camera className="w-4 h-4" /> : <CameraOff className="w-4 h-4" />}
+          {videoEnabled ? "Camera On" : "Camera Off"}
+        </button>
+        <button
+          type="button"
+          onClick={onToggleAudio}
+          className={[
+            "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all",
+            audioEnabled
+              ? "bg-white/6 text-gray-300 hover:bg-white/10"
+              : "bg-red-500/10 text-red-400 hover:bg-red-500/20",
+          ].join(" ")}
+        >
+          {audioEnabled ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
+          {audioEnabled ? "Mic On" : "Mic Off"}
+        </button>
+      </div>
+    </div>
+  )
 }
 
 export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
@@ -30,6 +131,16 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
   const [studioEnded, setStudioEnded] = useState(false)
   const sseRef = useRef<EventSource | null>(null)
 
+  // F-13: Device preview state
+  const [videoEnabled, setVideoEnabled] = useState(true)
+  const [audioEnabled, setAudioEnabled] = useState(true)
+  const [deviceError, setDeviceError] = useState<string | null>(null)
+  const [permissionDenied, setPermissionDenied] = useState(false)
+
+  // F-13: Denial cooldown (30 seconds)
+  const [denialCooldown, setDenialCooldown] = useState(0)
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
   const handleSSEEvent = useCallback((event: SSEEventData) => {
     if (event.type === "GUEST_ADMITTED" && event.data.guestId === guestId) {
       setLivekitToken(event.data.token)
@@ -38,11 +149,30 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
     }
     if (event.type === "GUEST_DENIED" && event.data.guestId === guestId) {
       setStatus("denied")
+      // Start 30-second cooldown
+      setDenialCooldown(30)
+      if (cooldownRef.current) clearInterval(cooldownRef.current)
+      cooldownRef.current = setInterval(() => {
+        setDenialCooldown((prev) => {
+          if (prev <= 1) {
+            if (cooldownRef.current) clearInterval(cooldownRef.current)
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
     }
     if (event.type === "STUDIO_ENDED") {
       window.location.href = "/studio-ended"
     }
   }, [guestId])
+
+  // Clean up cooldown timer
+  useEffect(() => {
+    return () => {
+      if (cooldownRef.current) clearInterval(cooldownRef.current)
+    }
+  }, [])
 
   useEffect(() => {
     if (status !== "waiting" || !guestId) return
@@ -71,6 +201,28 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
     return () => { es.close(); clearTimeout(timer) }
   }, [status, guestId, roomCode, handleSSEEvent])
 
+  // F-13: Handle device permission errors
+  const handleDeviceError = (err: Error) => {
+    if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+      setPermissionDenied(true)
+      setVideoEnabled(false)
+      setAudioEnabled(false)
+      setDeviceError(null)
+    } else if (err.name === "NotFoundError") {
+      // Device not found — can still join
+      setDeviceError("No camera or microphone detected. You can still join.")
+    } else {
+      setDeviceError(err.message)
+    }
+  }
+
+  // F-13: Proceed to preview step after entering name
+  const handleContinueToPreview = () => {
+    if (!displayName.trim()) return
+    setError(null)
+    setStatus("preview")
+  }
+
   const handleRequestJoin = async () => {
     if (!displayName.trim()) return
     setError(null)
@@ -87,6 +239,9 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
         const msg: string = data.error ?? "Failed to send request"
         if (msg.toLowerCase().includes("ended") || msg.toLowerCase().includes("not found")) {
           setStudioEnded(true)
+          setStatus("form")
+        } else if (msg.toLowerCase().includes("full")) {
+          setStatus("room-full")
         } else {
           setError(msg)
         }
@@ -106,7 +261,7 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
     }
   }
 
-  // Form state
+  // Form state — enter display name
   if (status === "form") {
     // G20: studio has ended — show a dedicated message instead of the form
     if (studioEnded) {
@@ -142,7 +297,7 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
               <Input
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleRequestJoin()}
+                onKeyDown={(e) => e.key === "Enter" && handleContinueToPreview()}
                 placeholder="Enter your name..."
                 className="mt-1.5 bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
                 autoFocus
@@ -151,12 +306,96 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
             </div>
             {error && <p className="text-red-400 text-sm">{error}</p>}
             <Button
-              onClick={handleRequestJoin}
+              onClick={handleContinueToPreview}
               disabled={!displayName.trim()}
               className="w-full bg-red-500 hover:bg-red-600"
             >
-              Request to Join
+              Continue
             </Button>
+            <p className="text-center text-gray-500 text-xs">
+              Next: preview your camera and microphone
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // F-13: Device preview step — camera/mic preview before requesting to join
+  if (status === "preview") {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
+        <Card className="w-full max-w-lg bg-gray-900 border-gray-800">
+          <CardHeader className="text-center pb-2">
+            <CardTitle className="text-white text-xl">Preview your devices</CardTitle>
+            <CardDescription className="text-gray-400">
+              Check your camera and microphone before joining as <span className="text-gray-300 font-medium">{displayName}</span>
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Permission denied instructions */}
+            {permissionDenied && (
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
+                <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                <div className="text-sm">
+                  <p className="text-yellow-300 font-medium mb-1">Camera/microphone access denied</p>
+                  <p className="text-yellow-200/70 text-xs">
+                    To enable, click the camera icon in your browser address bar, allow access, then reload this page.
+                    You can still join without camera or microphone.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Device error notice */}
+            {deviceError && !permissionDenied && (
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
+                <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                <p className="text-yellow-300 text-sm">{deviceError}</p>
+              </div>
+            )}
+
+            {/* Device preview */}
+            {!permissionDenied && (
+              <DevicePreview
+                videoEnabled={videoEnabled}
+                audioEnabled={audioEnabled}
+                onToggleVideo={() => setVideoEnabled((v) => !v)}
+                onToggleAudio={() => setAudioEnabled((a) => !a)}
+                onDeviceError={handleDeviceError}
+              />
+            )}
+
+            {/* Permission denied — show avatar placeholder */}
+            {permissionDenied && (
+              <div className="aspect-video bg-gray-800 rounded-xl flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-16 h-16 rounded-full bg-gray-700 flex items-center justify-center mx-auto mb-2">
+                    <CameraOff className="w-8 h-8 text-gray-500" />
+                  </div>
+                  <p className="text-gray-500 text-sm">Joining without camera/mic</p>
+                </div>
+              </div>
+            )}
+
+            {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setStatus("form")}
+                className="flex-1 border-gray-700 text-gray-300"
+              >
+                Back
+              </Button>
+              <Button
+                onClick={handleRequestJoin}
+                className="flex-1 bg-red-500 hover:bg-red-600"
+              >
+                Request to Join
+              </Button>
+            </div>
+
             <p className="text-center text-gray-500 text-xs">
               The host will need to approve your request
             </p>
@@ -166,20 +405,31 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
     )
   }
 
-  // Waiting state
+  // Waiting state — F-13: improved animated waiting room
   if (status === "waiting") {
     return (
       <div className="min-h-screen bg-gray-950 flex items-center justify-center">
         <Card className="w-full max-w-sm bg-gray-900 border-gray-800 text-center">
           <CardContent className="py-10">
-            <Loader2 className="w-10 h-10 text-red-400 animate-spin mx-auto mb-4" />
-            <h2 className="text-white font-semibold mb-1">Waiting for host...</h2>
+            {/* Animated waiting indicator */}
+            <div className="flex items-center justify-center gap-1.5 mb-5">
+              <span className="w-2.5 h-2.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+              <span className="w-2.5 h-2.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+              <span className="w-2.5 h-2.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+            </div>
+            <h2 className="text-white font-semibold mb-1">Waiting for host to let you in...</h2>
             <p className="text-gray-400 text-sm">
-              The host has been notified. Please wait.
+              The host has been notified of your request.
+            </p>
+            <p className="text-gray-600 text-xs mt-3">
+              Joining as <span className="text-gray-400">{displayName}</span>
+              {videoEnabled && " with camera"}
+              {audioEnabled && (videoEnabled ? " and mic" : " with mic")}
+              {!videoEnabled && !audioEnabled && " (no camera/mic)"}
             </p>
             {/* G18: SSE connection interrupted notice */}
             {sseError && (
-              <p className="text-yellow-400/70 text-xs mt-3">Connection interrupted. Reconnecting…</p>
+              <p className="text-yellow-400/70 text-xs mt-3">Connection interrupted. Reconnecting...</p>
             )}
           </CardContent>
         </Card>
@@ -215,23 +465,48 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
     )
   }
 
-  // Denied state
-  if (status === "denied") {
+  // F-13: Room full state
+  if (status === "room-full") {
     return (
       <div className="min-h-screen bg-gray-950 flex items-center justify-center">
         <Card className="w-full max-w-sm bg-gray-900 border-gray-800 text-center">
           <CardContent className="py-10">
-            <UserX className="w-10 h-10 text-red-400 mx-auto mb-4" />
-            <h2 className="text-white font-semibold mb-1">Request Declined</h2>
+            <AlertCircle className="w-10 h-10 text-yellow-400 mx-auto mb-4" />
+            <h2 className="text-white font-semibold mb-1">Room is full</h2>
             <p className="text-gray-400 text-sm mb-4">
-              The host declined your request to join.
+              This studio has reached its maximum number of participants. Please try again later.
             </p>
             <Button
               variant="outline"
               onClick={() => { setStatus("form"); setGuestId(null); setError(null) }}
               className="border-gray-700 text-gray-300"
             >
-              Try Again
+              Go Back
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // F-13: Denied state with 30-second cooldown before re-requesting
+  if (status === "denied") {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <Card className="w-full max-w-sm bg-gray-900 border-gray-800 text-center">
+          <CardContent className="py-10">
+            <UserX className="w-10 h-10 text-red-400 mx-auto mb-4" />
+            <h2 className="text-white font-semibold mb-1">Not admitted</h2>
+            <p className="text-gray-400 text-sm mb-4">
+              The host isn&apos;t able to admit you right now.
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => { setStatus("form"); setGuestId(null); setError(null); setDenialCooldown(0) }}
+              disabled={denialCooldown > 0}
+              className="border-gray-700 text-gray-300"
+            >
+              {denialCooldown > 0 ? `Try again in ${denialCooldown}s` : "Try Again"}
             </Button>
           </CardContent>
         </Card>
@@ -248,10 +523,11 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
         token={livekitToken}
         serverUrl={livekitUrl}
         connect={true}
-        video={true}
-        audio={true}
+        video={videoEnabled}
+        audio={audioEnabled}
         className="h-screen"
       >
+        <RoomAudioRenderer />
         <GuestStudio roomCode={roomCode} displayName={displayName} />
       </LiveKitRoom>
     )

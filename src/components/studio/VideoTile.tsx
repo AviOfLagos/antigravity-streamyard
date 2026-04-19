@@ -1,5 +1,7 @@
 "use client"
 
+import React, { useCallback } from "react"
+
 import { TrackRefContext, VideoTrack, useEnsureTrackRef, useIsSpeaking, type TrackReference, type TrackReferenceOrPlaceholder } from "@livekit/components-react"
 import { Eye, EyeOff } from "lucide-react"
 
@@ -16,10 +18,11 @@ function isTrackReference(ref: TrackReferenceOrPlaceholder): ref is TrackReferen
   return ref.publication !== undefined
 }
 
-export default function VideoTile({ trackRef, isVisible, isLocal, isHost }: VideoTileProps) {
+function VideoTileInner({ trackRef, isVisible, isLocal, isHost }: VideoTileProps) {
   const ensuredRef = useEnsureTrackRef(trackRef)
   const isSpeaking = useIsSpeaking(trackRef.participant)
-  const { toggleOnScreen } = useStudioStore()
+  const bringOnStage = useStudioStore((s) => s.bringOnStage)
+  const sendToBackstage = useStudioStore((s) => s.sendToBackstage)
 
   const displayName = trackRef.participant?.name ?? trackRef.participant?.identity ?? "Guest"
   const participantId = trackRef.participant?.identity ?? ""
@@ -27,6 +30,16 @@ export default function VideoTile({ trackRef, isVisible, isLocal, isHost }: Vide
   const hasVideo =
     isTrackReference(ensuredRef) &&
     (ensuredRef.publication?.isSubscribed || trackRef.participant?.isLocal)
+
+  const handleToggle = useCallback(() => {
+    // Toggle between on-stage and backstage
+    const ids = useStudioStore.getState().onScreenParticipantIds
+    if (ids.includes(participantId)) {
+      sendToBackstage(participantId)
+    } else {
+      bringOnStage(participantId)
+    }
+  }, [participantId, bringOnStage, sendToBackstage])
 
   if (!isVisible) return null
 
@@ -66,7 +79,7 @@ export default function VideoTile({ trackRef, isVisible, isLocal, isHost }: Vide
         {isHost && !isLocal && (
           <button
             type="button"
-            onClick={() => toggleOnScreen(participantId)}
+            onClick={handleToggle}
             className="absolute top-2 right-2 p-1 rounded-lg bg-black/50 backdrop-blur-sm text-gray-400 hover:text-white hover:bg-black/70 transition-colors opacity-0 group-hover:opacity-100"
             title="Toggle on screen"
           >
@@ -78,11 +91,18 @@ export default function VideoTile({ trackRef, isVisible, isLocal, isHost }: Vide
   )
 }
 
+const VideoTile = React.memo(VideoTileInner)
+export default VideoTile
+
 /** Tile shown when a participant is toggled off-screen by the host */
-export function OffScreenTile({ trackRef, isHost }: { trackRef: TrackReferenceOrPlaceholder; isHost?: boolean }) {
-  const { toggleOnScreen } = useStudioStore()
+function OffScreenTileInner({ trackRef, isHost }: { trackRef: TrackReferenceOrPlaceholder; isHost?: boolean }) {
+  const bringOnStage = useStudioStore((s) => s.bringOnStage)
   const displayName = trackRef.participant?.name ?? trackRef.participant?.identity ?? "Guest"
   const participantId = trackRef.participant?.identity ?? ""
+
+  const handleBringOnStage = useCallback(() => {
+    bringOnStage(participantId)
+  }, [bringOnStage, participantId])
 
   if (!isHost) return null
 
@@ -94,7 +114,7 @@ export function OffScreenTile({ trackRef, isHost }: { trackRef: TrackReferenceOr
       </div>
       <button
         type="button"
-        onClick={() => toggleOnScreen(participantId)}
+        onClick={handleBringOnStage}
         className="absolute top-2 right-2 p-1 rounded-lg bg-black/50 text-gray-500 hover:text-white transition-colors"
         title="Bring on screen"
       >
@@ -103,3 +123,5 @@ export function OffScreenTile({ trackRef, isHost }: { trackRef: TrackReferenceOr
     </div>
   )
 }
+
+export const OffScreenTile = React.memo(OffScreenTileInner)

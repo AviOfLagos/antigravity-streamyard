@@ -1,5 +1,7 @@
 "use client"
 
+import { useCallback } from "react"
+
 import type { Platform } from "@/lib/chat/types"
 import { useChatStore } from "@/store/chat"
 
@@ -8,8 +10,13 @@ import { PLATFORM_COLORS, PLATFORM_LABELS } from "./PlatformBadge"
 const PLATFORMS: Platform[] = ["youtube", "twitch", "kick", "tiktok"]
 
 export default function PlatformFilter() {
-  const { filters, toggleFilter } = useChatStore()
+  const filters = useChatStore((s) => s.filters)
+  const toggleFilter = useChatStore((s) => s.toggleFilter)
   const activeCount = PLATFORMS.filter((p) => filters[p]).length
+
+  const handleToggle = useCallback((platform: Platform) => {
+    toggleFilter(platform)
+  }, [toggleFilter])
 
   return (
     <div className="flex items-center gap-1 px-3 py-2 border-b border-white/6">
@@ -21,7 +28,7 @@ export default function PlatformFilter() {
           <button
             key={platform}
             type="button"
-            onClick={() => toggleFilter(platform)}
+            onClick={() => handleToggle(platform)}
             title={active ? `Hide ${platform}` : `Show ${platform}`}
             className="px-1.5 py-0.5 rounded text-[9px] font-bold transition-all"
             style={

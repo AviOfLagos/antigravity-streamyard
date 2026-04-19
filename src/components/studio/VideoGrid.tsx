@@ -1,5 +1,7 @@
 "use client"
 
+import { useMemo } from "react"
+
 import { useParticipants, useTracks } from "@livekit/components-react"
 import { Track } from "livekit-client"
 
@@ -28,21 +30,28 @@ export default function VideoGrid({ roomCode: _roomCode, isHost }: VideoGridProp
     ],
     { onlySubscribed: false }
   )
-  const { onScreenParticipantIds, activeLayout, pinnedParticipantId } = useStudioStore()
+  const onScreenParticipantIds = useStudioStore((s) => s.onScreenParticipantIds)
+  const activeLayout = useStudioStore((s) => s.activeLayout)
+  const pinnedParticipantId = useStudioStore((s) => s.pinnedParticipantId)
 
-  // Filter to camera and screenshare tracks only
-  const allTracks = tracks.filter(
-    (t) => t.source === Track.Source.Camera || t.source === Track.Source.ScreenShare
-  )
+  // Memoize track filtering chains
+  const { stageTracks, screenshareTracks, cameraTracks } = useMemo(() => {
+    // Filter to camera and screenshare tracks only
+    const allTracks = tracks.filter(
+      (t) => t.source === Track.Source.Camera || t.source === Track.Source.ScreenShare
+    )
 
-  // When onScreenParticipantIds is empty, show everyone (backwards compat)
-  const stageTracks =
-    onScreenParticipantIds.length === 0
-      ? allTracks
-      : allTracks.filter((t) => onScreenParticipantIds.includes(t.participant.identity))
+    // When onScreenParticipantIds is empty, show everyone (backwards compat)
+    const stage =
+      onScreenParticipantIds.length === 0
+        ? allTracks
+        : allTracks.filter((t) => onScreenParticipantIds.includes(t.participant.identity))
 
-  const screenshareTracks = stageTracks.filter((t) => t.source === Track.Source.ScreenShare)
-  const cameraTracks = stageTracks.filter((t) => t.source === Track.Source.Camera)
+    const screenshare = stage.filter((t) => t.source === Track.Source.ScreenShare)
+    const camera = stage.filter((t) => t.source === Track.Source.Camera)
+
+    return { stageTracks: stage, screenshareTracks: screenshare, cameraTracks: camera }
+  }, [tracks, onScreenParticipantIds])
 
   // Determine pinned track for spotlight / single
   const pinnedTrack =

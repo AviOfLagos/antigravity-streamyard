@@ -1,5 +1,7 @@
 "use client"
 
+import { useCallback } from "react"
+
 import { Focus, LayoutGrid, Monitor, PictureInPicture2, Square } from "lucide-react"
 
 import { type StudioLayout, useStudioStore } from "@/store/studio"
@@ -19,7 +21,12 @@ const PRESETS: Preset[] = [
 ]
 
 export default function LayoutSelector() {
-  const { activeLayout, setLayout } = useStudioStore()
+  const activeLayout = useStudioStore((s) => s.activeLayout)
+  const setLayout = useStudioStore((s) => s.setLayout)
+
+  const handleSetLayout = useCallback((layout: StudioLayout) => {
+    setLayout(layout)
+  }, [setLayout])
 
   return (
     <div className="hidden sm:flex items-center gap-1">
@@ -29,7 +36,7 @@ export default function LayoutSelector() {
           <button
             key={preset.id}
             type="button"
-            onClick={() => setLayout(preset.id)}
+            onClick={() => handleSetLayout(preset.id)}
             className={[
               "flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg transition-colors text-[10px] font-medium select-none",
               isActive

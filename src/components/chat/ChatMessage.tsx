@@ -1,5 +1,9 @@
+import React, { useState } from "react"
+
 import type { ChatMessage as ChatMessageType } from "@/lib/chat/types"
 import { PLATFORM_COLORS } from "./PlatformBadge"
+
+const MAX_MESSAGE_LENGTH = 500
 
 function formatTime(iso: string) {
   try {
@@ -9,8 +13,14 @@ function formatTime(iso: string) {
   }
 }
 
-export default function ChatMessage({ message }: { message: ChatMessageType }) {
+function ChatMessageInner({ message }: { message: ChatMessageType }) {
   const platformColor = PLATFORM_COLORS[message.platform]
+  const [expanded, setExpanded] = useState(false)
+
+  const isLong = message.message.length > MAX_MESSAGE_LENGTH
+  const displayText = isLong && !expanded
+    ? message.message.slice(0, MAX_MESSAGE_LENGTH) + "..."
+    : message.message
 
   return (
     <div
@@ -32,7 +42,16 @@ export default function ChatMessage({ message }: { message: ChatMessageType }) {
             {message.author.name}
           </span>
           <span className="text-[11px] text-gray-300 wrap-break-word leading-snug">
-            {message.message}
+            {displayText}
+            {isLong && (
+              <button
+                type="button"
+                className="ml-1 text-violet-400 hover:text-violet-300 text-[10px] font-medium transition-colors"
+                onClick={() => setExpanded(!expanded)}
+              >
+                {expanded ? "Show less" : "Show more"}
+              </button>
+            )}
           </span>
         </div>
       </div>
@@ -44,3 +63,6 @@ export default function ChatMessage({ message }: { message: ChatMessageType }) {
     </div>
   )
 }
+
+const ChatMessage = React.memo(ChatMessageInner, (prev, next) => prev.message.id === next.message.id)
+export default ChatMessage

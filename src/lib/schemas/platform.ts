@@ -38,6 +38,15 @@ export const PlatformDisconnectRequestSchema = z.object({
 })
 export type PlatformDisconnectRequest = z.infer<typeof PlatformDisconnectRequestSchema>
 
+// ── Stream key request (PUT /api/platforms/stream-key) ──────────────────────
+
+export const StreamKeyRequestSchema = z.object({
+  platform: PlatformSchema,
+  streamKey: z.string().min(1),
+  ingestUrl: z.string().optional(),
+})
+export type StreamKeyRequest = z.infer<typeof StreamKeyRequestSchema>
+
 // ── Platform list response ───────────────────────────────────────────────────
 
 export const PlatformListResponseSchema = z.object({

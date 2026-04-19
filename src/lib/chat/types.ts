@@ -9,3 +9,6 @@ export type { SSEEventData } from "@/lib/schemas/sse"
 export { PlatformSchema } from "@/lib/schemas/platform"
 export { ChatMessageSchema } from "@/lib/schemas/chat"
 export { SSEEventDataSchema } from "@/lib/schemas/sse"
+
+// ── Connector health state ──────────────────────────────────────────────────
+export type ConnectorStatus = "connecting" | "connected" | "reconnecting" | "failed"

@@ -1,9 +1,15 @@
 import { z } from "zod"
 
+import { stripHtml } from "@/lib/sanitize"
+
 // ── Guest join request (POST /api/rooms/[code]/request) ──────────────────────
 
 export const GuestRequestSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z
+    .string()
+    .min(1, "Name is required")
+    .transform((val) => stripHtml(val).trim().slice(0, 50))
+    .pipe(z.string().min(1, "Name is required after sanitization")),
 })
 export type GuestRequest = z.infer<typeof GuestRequestSchema>
 

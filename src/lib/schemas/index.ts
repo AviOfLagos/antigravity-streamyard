@@ -11,9 +11,12 @@ export {
   type PlatformDisconnectRequest,
   PlatformListResponseSchema,
   type PlatformListResponse,
+  StreamKeyRequestSchema,
+  type StreamKeyRequest,
 } from "./platform"
 
 export {
+  RoomCodeSchema,
   CreateRoomRequestSchema,
   type CreateRoomRequest,
   CreateRoomResponseSchema,
@@ -57,6 +60,12 @@ export {
   SSEStudioEndedEventSchema,
   SSEPingEventSchema,
   SSEConnectionErrorEventSchema,
+  SSEPlatformTokenExpiredEventSchema,
+  SSEChatConnectorStatusEventSchema,
+  SSEStreamStartedEventSchema,
+  SSEStreamStoppedEventSchema,
+  SSEStreamDestinationChangedEventSchema,
+  SSEStreamErrorEventSchema,
   SSEEventDataSchema,
   type SSEEventData,
 } from "./sse"

@@ -1,7 +1,8 @@
-import { RoomStatus } from "@prisma/client"
+import { RoomStatus, StreamStatus } from "@prisma/client"
 import { NextResponse } from "next/server"
 
 import { auth } from "@/auth"
+import { stopStream } from "@/lib/egress"
 import { closeLivekitRoom, getParticipantCount } from "@/lib/livekit"
 import { prisma } from "@/lib/prisma"
 import { deleteRoomKeys, publishEvent, redis } from "@/lib/redis"
@@ -81,6 +82,20 @@ export async function POST(
     platforms,
   }
   await redis.set(`session:summary:${code}`, JSON.stringify(summary), { ex: SUMMARY_TTL })
+
+  // Stop any active egress before tearing down the room
+  const activeEgress = await prisma.streamSession.findFirst({
+    where: { roomId: room.id, status: { in: [StreamStatus.STARTING, StreamStatus.LIVE] } },
+  })
+  if (activeEgress?.egressId) {
+    await Promise.allSettled([
+      stopStream(activeEgress.egressId),
+      prisma.streamSession.update({
+        where: { id: activeEgress.id },
+        data: { status: StreamStatus.ENDED, endedAt: endedAt },
+      }),
+    ])
+  }
 
   // Notify all participants before cleanup
   await publishEvent(code, { type: "STUDIO_ENDED" })

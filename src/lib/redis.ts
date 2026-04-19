@@ -1,5 +1,6 @@
 import { Redis } from "@upstash/redis"
 import type { ChatMessage } from "./chat/types"
+import { stripHtml } from "./sanitize"
 
 // Lazy singleton so the Redis client is only instantiated when first used,
 // not at module-load time (which would fail during build if env vars are placeholders).
@@ -54,7 +55,7 @@ export async function deleteRoomKeys(code: string) {
 
 // Publish events
 export interface RoomEvent {
-  type: "GUEST_REQUEST" | "GUEST_ADMITTED" | "GUEST_DENIED" | "STUDIO_ENDED" | "GUEST_LEFT"
+  type: "GUEST_REQUEST" | "GUEST_ADMITTED" | "GUEST_DENIED" | "STUDIO_ENDED" | "GUEST_LEFT" | "PLATFORM_TOKEN_EXPIRED" | "STREAM_STARTED" | "STREAM_STOPPED" | "STREAM_DESTINATION_CHANGED" | "STREAM_ERROR"
   data?: Record<string, unknown>
 }
 
@@ -70,11 +71,42 @@ export async function publishEvent(roomCode: string, event: RoomEvent | Record<s
   await redis.expire(`room:${roomCode}:events`, TTL)
 }
 
+const DEDUP_TTL = 60 * 60 // 1 hour TTL for dedup keys
+
 /**
  * Publish a chat message to the Redis list for a room.
+ * Deduplicates by msg.id + msg.platform using a Redis SET with TTL.
  * The SSE endpoint polls this list every second.
  */
 export async function publishChat(roomCode: string, msg: ChatMessage | object): Promise<void> {
+  // Sanitize incoming chat message text — strip HTML, preserve emoji/unicode, limit to 2000 chars
+  const msgRecord = msg as Record<string, unknown>
+  if (typeof msgRecord.message === "string") {
+    msgRecord.message = stripHtml(msgRecord.message).trim().slice(0, 2000)
+  }
+  // Sanitize author name if present
+  if (
+    msgRecord.author &&
+    typeof msgRecord.author === "object" &&
+    typeof (msgRecord.author as Record<string, unknown>).name === "string"
+  ) {
+    ;(msgRecord.author as Record<string, unknown>).name = stripHtml(
+      (msgRecord.author as Record<string, unknown>).name as string,
+    ).trim().slice(0, 50)
+  }
+
+  // Build dedup key from message id + platform
+  const dedupId = `${msgRecord.id ?? ""}:${msgRecord.platform ?? ""}`
+  const dedupKey = `room:${roomCode}:chat:seen`
+
+  // Check if already seen — SISMEMBER returns 1 if exists
+  const alreadySeen = await redis.sismember(dedupKey, dedupId)
+  if (alreadySeen) return
+
+  // Mark as seen
+  await redis.sadd(dedupKey, dedupId)
+  await redis.expire(dedupKey, DEDUP_TTL)
+
   const payload = { ...msg, _ts: Date.now() }
   // LPUSH so newest items are at head; keep last 500 messages
   await redis.lpush(`room:${roomCode}:chat`, JSON.stringify(payload))
@@ -91,10 +123,54 @@ export async function pollEvents(code: string, since: number): Promise<RoomEvent
     .reverse()
 }
 
-export async function pollChat(code: string, since: number): Promise<object[]> {
+// Studio host state persistence (F-11)
+export async function saveStudioState(code: string, state: object): Promise<void> {
+  try {
+    await redis.set(`room:${code}:hostState`, JSON.stringify(state), { ex: TTL })
+  } catch (err) {
+    console.warn("[saveStudioState] Redis write failed, state not persisted:", err)
+  }
+}
+
+export async function loadStudioState(code: string): Promise<object | null> {
+  try {
+    const val = await redis.get(`room:${code}:hostState`)
+    if (!val) return null
+    return typeof val === "string" ? JSON.parse(val) : (val as object)
+  } catch (err) {
+    console.warn("[loadStudioState] Redis read failed, using defaults:", err)
+    return null
+  }
+}
+
+/**
+ * Poll chat messages from Redis.
+ * Supports both cursor-based (lastMessageId) and timestamp-based (since) filtering.
+ * Cursor-based is preferred: returns only messages newer than the cursor.
+ */
+export async function pollChat(
+  code: string,
+  since: number,
+  lastMessageId?: string
+): Promise<object[]> {
   const raw = await redis.lrange(`room:${code}:chat`, 0, -1)
-  return raw
+  const all = raw
     .map((item) => (typeof item === "string" ? JSON.parse(item) : item))
-    .filter((e: { _ts: number }) => e._ts > since)
-    .reverse()
+    .reverse() // oldest first
+
+  if (lastMessageId) {
+    // Cursor-based: find the index of the last seen message and return everything after
+    const idx = all.findIndex(
+      (m: { id?: string; platform?: string }) =>
+        `${m.id ?? ""}:${m.platform ?? ""}` === lastMessageId ||
+        m.id === lastMessageId
+    )
+    if (idx >= 0) {
+      return all.slice(idx + 1)
+    }
+    // If cursor not found, fall back to timestamp-based
+  }
+
+  // Timestamp-based fallback
+  return all.filter((e: { _ts: number }) => e._ts > since)
 }

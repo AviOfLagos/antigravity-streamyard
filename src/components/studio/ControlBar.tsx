@@ -8,6 +8,7 @@ import { LogOut, Mic, MicOff, Monitor, MonitorOff, Video, VideoOff } from "lucid
 import { Track } from "livekit-client"
 import { useRouter } from "next/navigation"
 
+import GoLivePanel from "./GoLivePanel"
 import InviteLink from "./InviteLink"
 import LayoutSelector from "./LayoutSelector"
 
@@ -42,9 +43,10 @@ function TrackButton({ source, onIcon, offIcon, onLabel, offLabel }: TrackButton
 
 interface ControlBarProps {
   roomCode: string
+  connectedPlatforms?: { platform: string; channelName: string }[]
 }
 
-export default function ControlBar({ roomCode }: ControlBarProps) {
+export default function ControlBar({ roomCode, connectedPlatforms = [] }: ControlBarProps) {
   const router = useRouter()
   const [ending, setEnding] = useState(false)
 
@@ -94,6 +96,9 @@ export default function ControlBar({ roomCode }: ControlBarProps) {
       {/* Layout presets (hidden on mobile) */}
       <LayoutSelector />
 
+      {/* Go Live / LIVE button */}
+      <GoLivePanel roomCode={roomCode} connectedPlatforms={connectedPlatforms} />
+
       {/* Right: end studio */}
       <button
         type="button"
@@ -102,7 +107,7 @@ export default function ControlBar({ roomCode }: ControlBarProps) {
         className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-[11px] font-medium min-w-15 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all disabled:opacity-40 select-none"
       >
         <LogOut className="w-5 h-5" />
-        <span>{ending ? "Ending…" : "End"}</span>
+        <span>{ending ? "Ending\u2026" : "End"}</span>
       </button>
     </div>
   )

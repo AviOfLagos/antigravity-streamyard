@@ -4,8 +4,9 @@ import { NextResponse } from "next/server"
 
 import { getParticipantCount } from "@/lib/livekit"
 import { prisma } from "@/lib/prisma"
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit"
 import { publishEvent, redis, setPendingGuest } from "@/lib/redis"
-import { GuestRequestSchema } from "@/lib/schemas"
+import { GuestRequestSchema, RoomCodeSchema } from "@/lib/schemas"
 import { validateRequestBody } from "@/lib/schemas/api"
 
 const PENDING_NAMES_TTL = 60 * 60 * 6 // 6 hours
@@ -15,6 +16,30 @@ export async function POST(
   { params }: { params: Promise<{ code: string }> }
 ) {
   const { code } = await params
+
+  // Validate room code format
+  const codeResult = RoomCodeSchema.safeParse(code)
+  if (!codeResult.success) {
+    return NextResponse.json({ error: "Invalid room code" }, { status: 400 })
+  }
+
+  // Rate limit: 3 requests per minute per IP
+  const ip = getClientIp(req)
+  const rl = await checkRateLimit(ip, "rooms:request")
+  if (!rl.success) {
+    const retryAfter = Math.ceil((rl.reset - Date.now()) / 1000)
+    return NextResponse.json(
+      { error: "Too many requests", retryAfter },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(retryAfter),
+          "X-RateLimit-Limit": String(rl.limit),
+          "X-RateLimit-Remaining": String(rl.remaining),
+        },
+      },
+    )
+  }
   const body = await req.json().catch(() => ({}))
   const validation = validateRequestBody(GuestRequestSchema, body)
   if (!validation.success) return validation.response

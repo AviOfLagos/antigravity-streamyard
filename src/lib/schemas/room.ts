@@ -1,12 +1,25 @@
 import { RoomStatus as PrismaRoomStatus } from "@prisma/client"
 import { z } from "zod"
 
+import { stripHtml } from "@/lib/sanitize"
 import { PlatformSchema } from "./platform"
+
+// ── Room code validation ────────────────────────────────────────────────────
+
+export const RoomCodeSchema = z
+  .string()
+  .regex(/^[a-zA-Z0-9]{6,8}$/, "Room code must be 6-8 alphanumeric characters")
 
 // ── Room creation request (POST /api/rooms) ──────────────────────────────────
 
 export const CreateRoomRequestSchema = z.object({
-  title: z.string().optional(),
+  title: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val) return val
+      return stripHtml(val).trim().slice(0, 100) || undefined
+    }),
   selectedPlatforms: z.array(PlatformSchema).optional().default([]),
 })
 export type CreateRoomRequest = z.infer<typeof CreateRoomRequestSchema>

@@ -71,7 +71,7 @@ export default function GuestStudio({ roomCode, displayName }: GuestStudioProps)
     ],
     { onlySubscribed: false }
   )
-  const { addMessage } = useChatStore()
+  const addMessage = useChatStore((s) => s.addMessage)
   const sseRef = useRef<EventSource | null>(null)
 
   const handleSSEEvent = useCallback(

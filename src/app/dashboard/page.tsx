@@ -18,14 +18,17 @@ interface Props {
 
 async function fetchDashboardData(userId: string) {
   const attempt = async () => {
-    const rooms = await prisma.room.findMany({
-      where: { hostId: userId },
-      orderBy: { createdAt: "desc" },
-      take: 10,
-    })
-    const platforms = await prisma.platformConnection.findMany({
-      where: { userId },
-    })
+    // F-04: Parallelize DB queries instead of sequential awaits
+    const [rooms, platforms] = await Promise.all([
+      prisma.room.findMany({
+        where: { hostId: userId },
+        orderBy: { createdAt: "desc" },
+        take: 10,
+      }),
+      prisma.platformConnection.findMany({
+        where: { userId },
+      }),
+    ])
     return { rooms, platforms }
   }
 

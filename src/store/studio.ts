@@ -8,9 +8,7 @@ interface PendingGuest {
 export type StudioLayout = "grid" | "spotlight" | "screen-grid" | "screen-only" | "single"
 
 interface StudioStore {
-  // Legacy on-screen toggle (kept for backwards compat)
-  onScreen: Record<string, boolean>
-  // New: explicit list of on-stage participant identities (empty = show all)
+  // Explicit list of on-stage participant identities (empty = show all)
   onScreenParticipantIds: string[]
   // Active layout preset
   activeLayout: StudioLayout
@@ -19,10 +17,13 @@ interface StudioStore {
   // Pending guest requests
   pendingGuests: PendingGuest[]
 
-  // Legacy actions
-  toggleOnScreen: (participantId: string) => void
-  setOnScreen: (participantId: string, value: boolean) => void
-  // New stage actions
+  // Streaming state
+  isLive: boolean
+  streamEgressId: string | null
+  streamPlatforms: string[]
+  streamStartedAt: Date | null
+
+  // Stage actions
   bringOnStage: (id: string) => void
   sendToBackstage: (id: string) => void
   setLayout: (layout: StudioLayout) => void
@@ -31,24 +32,29 @@ interface StudioStore {
   addPendingGuest: (guest: PendingGuest) => void
   removePendingGuest: (guestId: string) => void
   clearPendingGuests: () => void
+  // Streaming actions
+  setLiveState: (isLive: boolean, egressId?: string, platforms?: string[], startedAt?: Date) => void
+  addStreamPlatform: (platform: string) => void
+  removeStreamPlatform: (platform: string) => void
+  // F-11: Hydrate from persisted state
+  hydrateFromSaved: (state: {
+    activeLayout?: StudioLayout
+    pinnedParticipantId?: string | null
+    onScreenParticipantIds?: string[]
+  }) => void
 }
 
 export const useStudioStore = create<StudioStore>((set) => ({
-  onScreen: {},
   onScreenParticipantIds: [],
   activeLayout: "grid",
   pinnedParticipantId: null,
   pendingGuests: [],
 
-  toggleOnScreen: (id) =>
-    set((state) => ({
-      onScreen: { ...state.onScreen, [id]: !(state.onScreen[id] ?? true) },
-    })),
-
-  setOnScreen: (id, value) =>
-    set((state) => ({
-      onScreen: { ...state.onScreen, [id]: value },
-    })),
+  // Streaming state
+  isLive: false,
+  streamEgressId: null,
+  streamPlatforms: [],
+  streamStartedAt: null,
 
   bringOnStage: (id) =>
     set((state) => ({
@@ -82,4 +88,33 @@ export const useStudioStore = create<StudioStore>((set) => ({
     })),
 
   clearPendingGuests: () => set({ pendingGuests: [] }),
+
+  // Streaming actions
+  setLiveState: (isLive, egressId, platforms, startedAt) =>
+    set({
+      isLive,
+      streamEgressId: egressId ?? null,
+      streamPlatforms: platforms ?? [],
+      streamStartedAt: startedAt ?? null,
+    }),
+
+  addStreamPlatform: (platform) =>
+    set((state) => ({
+      streamPlatforms: state.streamPlatforms.includes(platform)
+        ? state.streamPlatforms
+        : [...state.streamPlatforms, platform],
+    })),
+
+  removeStreamPlatform: (platform) =>
+    set((state) => ({
+      streamPlatforms: state.streamPlatforms.filter((p) => p !== platform),
+    })),
+
+  // F-11: Hydrate studio state from Redis-persisted snapshot
+  hydrateFromSaved: (saved) =>
+    set((state) => ({
+      activeLayout: saved.activeLayout ?? state.activeLayout,
+      pinnedParticipantId: saved.pinnedParticipantId ?? state.pinnedParticipantId,
+      onScreenParticipantIds: saved.onScreenParticipantIds ?? state.onScreenParticipantIds,
+    })),
 }))

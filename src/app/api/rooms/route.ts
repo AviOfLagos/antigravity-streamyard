@@ -4,6 +4,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { createLivekitRoom, generateHostToken } from "@/lib/livekit"
 import { prisma } from "@/lib/prisma"
+import { checkRateLimit } from "@/lib/rate-limit"
 import { redis, setRoomInfo } from "@/lib/redis"
 import { CreateRoomRequestSchema } from "@/lib/schemas"
 import { validateRequestBody } from "@/lib/schemas/api"
@@ -16,6 +17,23 @@ const MAX_CODE_RETRIES = 5
 export async function POST(req: Request) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  // Rate limit: 5 requests per minute per user
+  const rl = await checkRateLimit(session.user.id, "rooms:create")
+  if (!rl.success) {
+    const retryAfter = Math.ceil((rl.reset - Date.now()) / 1000)
+    return NextResponse.json(
+      { error: "Too many requests", retryAfter },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(retryAfter),
+          "X-RateLimit-Limit": String(rl.limit),
+          "X-RateLimit-Remaining": String(rl.remaining),
+        },
+      },
+    )
+  }
 
   const body = await req.json().catch(() => ({}))
   const validation = validateRequestBody(CreateRoomRequestSchema, body)

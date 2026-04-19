@@ -1,5 +1,7 @@
 "use client"
 
+import React, { useCallback } from "react"
+
 import { useParticipants } from "@livekit/components-react"
 import type { Participant } from "livekit-client"
 
@@ -10,12 +12,21 @@ interface ParticipantRowProps {
   isOnStage: boolean
 }
 
-function ParticipantRow({ participant, isOnStage }: ParticipantRowProps) {
-  const { bringOnStage, sendToBackstage } = useStudioStore()
+const ParticipantRow = React.memo(function ParticipantRow({ participant, isOnStage }: ParticipantRowProps) {
+  const bringOnStage = useStudioStore((s) => s.bringOnStage)
+  const sendToBackstage = useStudioStore((s) => s.sendToBackstage)
   const displayName = participant.name ?? participant.identity ?? "Guest"
   const initial = displayName.charAt(0).toUpperCase()
   const micOn = participant.isMicrophoneEnabled
   const camOn = participant.isCameraEnabled
+
+  const handleStageToggle = useCallback(() => {
+    if (isOnStage) {
+      sendToBackstage(participant.identity)
+    } else {
+      bringOnStage(participant.identity)
+    }
+  }, [isOnStage, participant.identity, bringOnStage, sendToBackstage])
 
   return (
     <div className="flex flex-col items-center gap-1 shrink-0 w-20">
@@ -46,7 +57,7 @@ function ParticipantRow({ participant, isOnStage }: ParticipantRowProps) {
       {isOnStage ? (
         <button
           type="button"
-          onClick={() => sendToBackstage(participant.identity)}
+          onClick={handleStageToggle}
           className="bg-white/6 text-gray-400 hover:bg-white/10 hover:text-white px-2 py-0.5 rounded text-[9px] transition-colors"
         >
           Backstage
@@ -54,7 +65,7 @@ function ParticipantRow({ participant, isOnStage }: ParticipantRowProps) {
       ) : (
         <button
           type="button"
-          onClick={() => bringOnStage(participant.identity)}
+          onClick={handleStageToggle}
           className="bg-violet-500/15 text-violet-400 hover:bg-violet-500/25 px-2 py-0.5 rounded text-[9px] transition-colors"
         >
           Stage
@@ -62,7 +73,7 @@ function ParticipantRow({ participant, isOnStage }: ParticipantRowProps) {
       )}
     </div>
   )
-}
+})
 
 interface BackstagePanelProps {
   isHost?: boolean
@@ -70,7 +81,7 @@ interface BackstagePanelProps {
 
 export default function BackstagePanel({ isHost }: BackstagePanelProps) {
   const participants = useParticipants()
-  const { onScreenParticipantIds } = useStudioStore()
+  const onScreenParticipantIds = useStudioStore((s) => s.onScreenParticipantIds)
 
   if (!isHost) return null
 

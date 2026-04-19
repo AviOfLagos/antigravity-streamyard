@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useState } from "react"
 
 import { Check, UserPlus, X } from "lucide-react"
 
@@ -13,7 +13,8 @@ interface GuestRequestToastProps {
 }
 
 export default function GuestRequestToast({ roomCode, hostToken }: GuestRequestToastProps) {
-  const { pendingGuests, removePendingGuest } = useStudioStore()
+  const pendingGuests = useStudioStore((s) => s.pendingGuests)
+  const removePendingGuest = useStudioStore((s) => s.removePendingGuest)
   const [processing, setProcessing] = useState<string | null>(null)
 
   const authHeaders: Record<string, string> = {
@@ -21,7 +22,7 @@ export default function GuestRequestToast({ roomCode, hostToken }: GuestRequestT
     ...(hostToken ? { Authorization: `Bearer ${hostToken}` } : {}),
   }
 
-  const handleAdmit = async (guestId: string, name: string) => {
+  const handleAdmit = useCallback(async (guestId: string, name: string) => {
     setProcessing(guestId)
     try {
       const res = await fetch(`/api/rooms/${roomCode}/admit`, {
@@ -38,9 +39,9 @@ export default function GuestRequestToast({ roomCode, hostToken }: GuestRequestT
     } finally {
       setProcessing(null)
     }
-  }
+  }, [roomCode, hostToken, removePendingGuest])
 
-  const handleDeny = async (guestId: string) => {
+  const handleDeny = useCallback(async (guestId: string) => {
     setProcessing(guestId)
     try {
       const res = await fetch(`/api/rooms/${roomCode}/deny`, {
@@ -52,7 +53,7 @@ export default function GuestRequestToast({ roomCode, hostToken }: GuestRequestT
     } finally {
       setProcessing(null)
     }
-  }
+  }, [roomCode, hostToken, removePendingGuest])
 
   if (pendingGuests.length === 0) return null
 

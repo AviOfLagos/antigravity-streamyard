@@ -21,6 +21,14 @@ enum PlatformType {
   TIKTOK
 }
 
+enum StreamStatus {
+  STARTING
+  LIVE
+  STOPPING
+  ENDED
+  FAILED
+}
+
 enum ParticipantRole {
   HOST
   GUEST
@@ -84,6 +92,8 @@ model PlatformConnection {
   accessToken  String?
   refreshToken String?
   expiresAt    DateTime?
+  streamKey    String?      // RTMP stream key (encrypted at rest by Neon)
+  ingestUrl    String?      // Custom RTMP ingest URL (mainly for TikTok)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
@@ -101,6 +111,7 @@ model Room {
   createdAt         DateTime       @default(now())
   endedAt           DateTime?
   participants      Participant[]
+  streamSessions    StreamSession[]
 }
 
 model Participant {
@@ -112,6 +123,20 @@ model Participant {
   role     ParticipantRole
   joinedAt DateTime        @default(now())
   leftAt   DateTime?
+
+  @@index([roomId])
+}
+
+model StreamSession {
+  id             String         @id @default(cuid())
+  roomId         String
+  room           Room           @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  egressId       String?        @unique   // LiveKit egress ID
+  platforms      PlatformType[] // Which platforms are being streamed to
+  status         StreamStatus   @default(STARTING)
+  startedAt      DateTime       @default(now())
+  endedAt        DateTime?
+  error          String?        // Error message if FAILED
 
   @@index([roomId])
 }

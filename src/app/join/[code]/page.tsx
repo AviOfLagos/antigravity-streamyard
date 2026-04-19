@@ -1,5 +1,6 @@
 import { RoomStatus } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
+import { setRoomInfo } from "@/lib/redis"
 import { notFound } from "next/navigation"
 import JoinClient from "./JoinClient"
 
@@ -13,6 +14,9 @@ export default async function JoinPage({ params }: Props) {
   const room = await prisma.room.findUnique({ where: { code } })
 
   if (!room) notFound()
+
+  // Ensure room info exists in Redis (may have expired after 24h TTL)
+  await setRoomInfo(code, { hostId: room.hostId, createdAt: room.createdAt.toISOString(), title: room.title }).catch(() => {})
 
   if (room.status === RoomStatus.ENDED) {
     return (

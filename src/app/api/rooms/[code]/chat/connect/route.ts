@@ -4,6 +4,9 @@ import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { startConnectors } from "@/lib/chat/manager"
 import { prisma } from "@/lib/prisma"
+import { checkRateLimit } from "@/lib/rate-limit"
+import { RoomCodeSchema } from "@/lib/schemas"
+import type { PlatformConnectionRow } from "@/lib/auth/token-refresh"
 
 export async function POST(
   req: Request,
@@ -13,6 +16,29 @@ export async function POST(
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { code } = await params
+
+  // Validate room code format
+  const codeResult = RoomCodeSchema.safeParse(code)
+  if (!codeResult.success) {
+    return NextResponse.json({ error: "Invalid room code" }, { status: 400 })
+  }
+
+  // Rate limit: 2 requests per minute per user
+  const rl = await checkRateLimit(session.user.id, "rooms:chat-connect")
+  if (!rl.success) {
+    const retryAfter = Math.ceil((rl.reset - Date.now()) / 1000)
+    return NextResponse.json(
+      { error: "Too many requests", retryAfter },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(retryAfter),
+          "X-RateLimit-Limit": String(rl.limit),
+          "X-RateLimit-Remaining": String(rl.remaining),
+        },
+      },
+    )
+  }
 
   // Get host's platform connections
   const room = await prisma.room.findUnique({
@@ -34,17 +60,6 @@ export async function POST(
     where: { userId: session.user.id },
   })
 
-  // Get YouTube access token from account if connected
-  const youtubeConn = platforms.find((p) => p.platform === PlatformType.YOUTUBE)
-  let youtubeAccessToken: string | null = null
-  if (youtubeConn) {
-    const account = await prisma.account.findFirst({
-      where: { userId: session.user.id, provider: "google" },
-      select: { access_token: true },
-    })
-    youtubeAccessToken = account?.access_token ?? null
-  }
-
   // Only include platforms the host selected for this broadcast.
   // If selectedPlatforms is empty (legacy rooms), connect all as before.
   const filteredConnections = platforms.filter((c) =>
@@ -54,7 +69,9 @@ export async function POST(
   const platformData = filteredConnections.map((p) => ({
     platform: p.platform,
     channelName: p.channelName,
-    accessToken: p.platform === PlatformType.YOUTUBE ? youtubeAccessToken : null,
+    accessToken: p.accessToken,
+    // Pass the full connection row so the manager can handle token refresh
+    connectionRow: p as PlatformConnectionRow,
   }))
 
   // Start connectors asynchronously — don't await

@@ -2,6 +2,7 @@ import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import Navbar from "@/components/ui/Navbar"
+import { getTokenHealth, type PlatformConnectionRow } from "@/lib/auth/token-refresh"
 
 import PlatformConnectForm from "@/components/dashboard/PlatformConnectForm"
 
@@ -13,9 +14,19 @@ export default async function PlatformsPage() {
     where: { userId: session.user.id },
   })
 
-  // Map keyed by lowercase platform name for backward compat with PlatformConnectForm
+  // Build a map with token health info
   const connectedMap = Object.fromEntries(
-    connections.map((c: typeof connections[number]) => [c.platform.toLowerCase(), c])
+    connections.map((c: typeof connections[number]) => [
+      c.platform.toLowerCase(),
+      {
+        channelName: c.channelName,
+        channelId: c.channelId,
+        tokenHealth: getTokenHealth(c as PlatformConnectionRow),
+        expiresAt: c.expiresAt?.toISOString() ?? null,
+        hasStreamKey: !!c.streamKey,
+        hasIngestUrl: !!c.ingestUrl,
+      },
+    ])
   )
 
   return (
@@ -48,7 +59,7 @@ export default async function PlatformsPage() {
             label="TikTok"
             color="bg-gray-700"
             placeholder="@your-username"
-            helpText="Your TikTok username (used for live chat when you're streaming)"
+            helpText="Your TikTok username (used for live chat when you are streaming)"
             connection={connectedMap.tiktok ?? null}
           />
           <PlatformConnectForm

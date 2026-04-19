@@ -51,6 +51,51 @@ export const SSEConnectionErrorEventSchema = z.object({
   type: z.literal("CONNECTION_ERROR"),
 })
 
+export const SSEPlatformTokenExpiredEventSchema = z.object({
+  type: z.literal("PLATFORM_TOKEN_EXPIRED"),
+  data: z.object({
+    platform: z.string(),
+    error: z.string(),
+  }),
+})
+
+export const SSEChatConnectorStatusEventSchema = z.object({
+  type: z.literal("CHAT_CONNECTOR_STATUS"),
+  data: z.object({
+    platform: z.string(),
+    status: z.enum(["connecting", "connected", "reconnecting", "failed"]),
+    error: z.string().optional(),
+  }),
+})
+
+export const SSEStreamStartedEventSchema = z.object({
+  type: z.literal("STREAM_STARTED"),
+  data: z.object({
+    platforms: z.array(z.string()),
+    egressId: z.string(),
+  }),
+})
+
+export const SSEStreamStoppedEventSchema = z.object({
+  type: z.literal("STREAM_STOPPED"),
+})
+
+export const SSEStreamDestinationChangedEventSchema = z.object({
+  type: z.literal("STREAM_DESTINATION_CHANGED"),
+  data: z.object({
+    action: z.enum(["add", "remove"]),
+    platform: z.string(),
+  }),
+})
+
+export const SSEStreamErrorEventSchema = z.object({
+  type: z.literal("STREAM_ERROR"),
+  data: z.object({
+    platform: z.string().optional(),
+    error: z.string(),
+  }),
+})
+
 export const SSEEventDataSchema = z.discriminatedUnion("type", [
   SSEChatMessageEventSchema,
   SSEGuestRequestEventSchema,
@@ -60,5 +105,11 @@ export const SSEEventDataSchema = z.discriminatedUnion("type", [
   SSEStudioEndedEventSchema,
   SSEPingEventSchema,
   SSEConnectionErrorEventSchema,
+  SSEPlatformTokenExpiredEventSchema,
+  SSEChatConnectorStatusEventSchema,
+  SSEStreamStartedEventSchema,
+  SSEStreamStoppedEventSchema,
+  SSEStreamDestinationChangedEventSchema,
+  SSEStreamErrorEventSchema,
 ])
 export type SSEEventData = z.infer<typeof SSEEventDataSchema>
