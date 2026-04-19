@@ -11,6 +11,8 @@ import { PLATFORM_COLORS } from "@/components/chat/PlatformBadge"
 import ControlBar from "@/components/studio/ControlBar"
 import GuestRequestToast from "@/components/studio/GuestRequestToast"
 import VideoGrid from "@/components/studio/VideoGrid"
+import { SSEEventDataSchema } from "@/lib/schemas/sse"
+import { PlatformListResponseSchema } from "@/lib/schemas/platform"
 import type { SSEEventData } from "@/lib/chat/types"
 import { useChatStore } from "@/store/chat"
 import { useStudioStore } from "@/store/studio"
@@ -60,7 +62,9 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title }:
     fetch(`/api/rooms/${roomCode}/platforms`)
       .then((r) => r.json())
       .then((data) => {
-        if (Array.isArray(data.platforms)) setConnectedPlatforms(data.platforms)
+        const parsed = PlatformListResponseSchema.safeParse(data)
+        if (parsed.success) setConnectedPlatforms(parsed.data.platforms)
+        else if (Array.isArray(data.platforms)) setConnectedPlatforms(data.platforms)
       })
       .catch(() => {/* silently ignore — indicator is non-critical */})
   }, [roomCode])
@@ -92,7 +96,11 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title }:
     sseRef.current = es
     es.onmessage = (e) => {
       setSseOk(true)
-      try { handleSSEEvent(JSON.parse(e.data) as SSEEventData) } catch {}
+      try {
+        const raw = JSON.parse(e.data)
+        const parsed = SSEEventDataSchema.safeParse(raw)
+        if (parsed.success) handleSSEEvent(parsed.data)
+      } catch {}
     }
     es.onerror = () => setSseOk(false)
     if (!startedConnectors.current) {

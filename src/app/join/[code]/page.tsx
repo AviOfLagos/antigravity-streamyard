@@ -1,3 +1,4 @@
+import { RoomStatus } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
 import JoinClient from "./JoinClient"
@@ -13,7 +14,7 @@ export default async function JoinPage({ params }: Props) {
 
   if (!room) notFound()
 
-  if (room.status === "ended") {
+  if (room.status === RoomStatus.ENDED) {
     return (
       <div className="min-h-screen bg-gray-950 flex items-center justify-center">
         <div className="text-center">

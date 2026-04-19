@@ -11,7 +11,7 @@ const PLATFORM_CONFIG = {
 }
 
 export default function PlatformSummary({ platforms }: { platforms: { platform: string; channelName: string }[] }) {
-  const connected = new Set(platforms.map((p) => p.platform))
+  const connected = new Set(platforms.map((p) => p.platform.toLowerCase()))
 
   return (
     <>

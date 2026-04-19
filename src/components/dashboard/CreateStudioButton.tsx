@@ -6,13 +6,11 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { PlatformListResponseSchema } from "@/lib/schemas/platform"
+import { CreateRoomResponseSchema } from "@/lib/schemas/room"
+import type { PlatformConnection } from "@/lib/schemas/platform"
 
 type Step = "idle" | "creating-modal" | "submitting" | "ready"
-
-interface PlatformConnection {
-  platform: string
-  channelName: string
-}
 
 const PLATFORM_COLORS: Record<string, string> = {
   youtube: "#ef4444",
@@ -36,7 +34,9 @@ export default function CreateStudioButton() {
     fetch("/api/platforms")
       .then((r) => r.json())
       .then((data) => {
-        if (Array.isArray(data.platforms)) setAvailablePlatforms(data.platforms)
+        const parsed = PlatformListResponseSchema.safeParse(data)
+        if (parsed.success) setAvailablePlatforms(parsed.data.platforms)
+        else if (Array.isArray(data.platforms)) setAvailablePlatforms(data.platforms)
       })
       .catch(() => {})
   }, [step])
@@ -74,7 +74,12 @@ export default function CreateStudioButton() {
       if (!res.ok || !data.code) {
         throw new Error(data.error ?? "Failed to create studio")
       }
-      setRoomCode(data.code)
+      const parsed = CreateRoomResponseSchema.safeParse(data)
+      if (parsed.success) {
+        setRoomCode(parsed.data.code)
+      } else {
+        setRoomCode(data.code)
+      }
       setStep("ready")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong")

@@ -11,5 +11,7 @@ export async function GET() {
     select: { platform: true, channelName: true },
     orderBy: { createdAt: "asc" },
   })
-  return NextResponse.json({ platforms: connections })
+  return NextResponse.json({
+    platforms: connections.map((c) => ({ ...c, platform: c.platform.toLowerCase() })),
+  })
 }

@@ -1,3 +1,4 @@
+import { RoomStatus } from "@prisma/client"
 import { redirect } from "next/navigation"
 
 import { auth } from "@/auth"
@@ -17,7 +18,7 @@ export default async function StudioPage({ params }: Props) {
 
   const room = await prisma.room.findUnique({ where: { code } })
   if (!room || room.hostId !== session.user.id) redirect("/dashboard?error=room_not_found")
-  if (room.status === "ended") redirect("/dashboard?error=room_ended")
+  if (room.status === RoomStatus.ENDED) redirect("/dashboard?error=room_ended")
 
   // G16 — guard LiveKit env vars before generating token
   if (!process.env.LIVEKIT_API_KEY || !process.env.LIVEKIT_API_SECRET || !process.env.NEXT_PUBLIC_LIVEKIT_URL) {

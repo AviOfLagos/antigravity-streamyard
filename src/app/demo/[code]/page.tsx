@@ -1,3 +1,4 @@
+import { RoomStatus } from "@prisma/client"
 import { redirect } from "next/navigation"
 import StudioClient from "@/app/studio/[code]/StudioClient"
 import { prisma } from "@/lib/prisma"
@@ -38,7 +39,7 @@ export default async function DemoStudioPage({ params, searchParams }: Props) {
       </div>
     )
   }
-  if (room.status === "ended") {
+  if (room.status === RoomStatus.ENDED) {
     return (
       <div className="flex items-center justify-center h-dvh bg-[#0d0d0d]">
         <div className="text-center px-6 max-w-sm">

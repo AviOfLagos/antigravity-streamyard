@@ -3,6 +3,8 @@ import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { deletePendingGuest, publishEvent } from "@/lib/redis"
+import { DenyGuestRequestSchema } from "@/lib/schemas"
+import { validateRequestBody } from "@/lib/schemas/api"
 
 export async function POST(
   req: Request,
@@ -12,12 +14,11 @@ export async function POST(
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { code } = await params
-  const { guestId } = await req.json()
+  const body = await req.json().catch(() => ({}))
+  const validation = validateRequestBody(DenyGuestRequestSchema, body)
+  if (!validation.success) return validation.response
 
-  // G07: guestId is required
-  if (!guestId || typeof guestId !== "string") {
-    return NextResponse.json({ error: "guestId is required" }, { status: 400 })
-  }
+  const { guestId } = validation.data
 
   const room = await prisma.room.findUnique({ where: { code } })
   if (!room || room.hostId !== session.user.id) {

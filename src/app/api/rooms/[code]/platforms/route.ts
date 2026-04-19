@@ -13,5 +13,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ code: st
     where: { userId: session.user.id },
     select: { platform: true, channelName: true },
   })
-  return NextResponse.json({ platforms: connections })
+  return NextResponse.json({
+    platforms: connections.map((c) => ({ ...c, platform: c.platform.toLowerCase() })),
+  })
 }

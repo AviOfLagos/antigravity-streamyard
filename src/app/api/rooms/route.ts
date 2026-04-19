@@ -1,10 +1,15 @@
+import { PlatformType, RoomStatus } from "@prisma/client"
 import { NextResponse } from "next/server"
 
 import { auth } from "@/auth"
 import { createLivekitRoom, generateHostToken } from "@/lib/livekit"
 import { prisma } from "@/lib/prisma"
 import { redis, setRoomInfo } from "@/lib/redis"
+import { CreateRoomRequestSchema } from "@/lib/schemas"
+import { validateRequestBody } from "@/lib/schemas/api"
 import { generateRoomCode } from "@/lib/utils/roomCode"
+
+const VALID_PLATFORMS = new Set<string>(Object.values(PlatformType))
 
 const MAX_CODE_RETRIES = 5
 
@@ -13,8 +18,15 @@ export async function POST(req: Request) {
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const body = await req.json().catch(() => ({}))
-  const title = typeof body.title === "string" && body.title.trim() ? body.title.trim() : null
-  const selectedPlatforms = Array.isArray(body.selectedPlatforms) ? body.selectedPlatforms : []
+  const validation = validateRequestBody(CreateRoomRequestSchema, body)
+  if (!validation.success) return validation.response
+
+  const title = validation.data.title?.trim() || null
+  const rawPlatforms = validation.data.selectedPlatforms ?? []
+  // Validate and cast platform strings to PlatformType enum values (uppercase)
+  const selectedPlatforms: PlatformType[] = rawPlatforms
+    .map((p: string) => (typeof p === "string" ? p.toUpperCase() : ""))
+    .filter((p: string) => VALID_PLATFORMS.has(p)) as PlatformType[]
 
   try {
     // Create LiveKit room first (code is only used for room name, collision is DB-side)
@@ -26,7 +38,7 @@ export async function POST(req: Request) {
     while (true) {
       try {
         await prisma.room.create({
-          data: { code, hostId: session.user.id, status: "active", title, selectedPlatforms },
+          data: { code, hostId: session.user.id, status: RoomStatus.LOBBY, title, selectedPlatforms },
         })
         break
       } catch (err: unknown) {

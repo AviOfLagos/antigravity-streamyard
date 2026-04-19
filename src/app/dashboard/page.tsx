@@ -1,3 +1,4 @@
+import { RoomStatus } from "@prisma/client"
 import { Clock, RefreshCw, Video } from "lucide-react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
@@ -15,30 +16,43 @@ interface Props {
   searchParams: Promise<{ error?: string }>
 }
 
+async function fetchDashboardData(userId: string) {
+  const attempt = async () => {
+    const rooms = await prisma.room.findMany({
+      where: { hostId: userId },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+    })
+    const platforms = await prisma.platformConnection.findMany({
+      where: { userId },
+    })
+    return { rooms, platforms }
+  }
+
+  try {
+    return { ...(await attempt()), dbError: false }
+  } catch (e: unknown) {
+    // On connection error, wait briefly for Neon to wake, then retry once
+    const code = (e as { code?: string })?.code
+    if (code === "P1001" || code === "P1008") {
+      await new Promise(r => setTimeout(r, 800))
+      try {
+        return { ...(await attempt()), dbError: false }
+      } catch {
+        return { rooms: [], platforms: [], dbError: true }
+      }
+    }
+    return { rooms: [], platforms: [], dbError: true }
+  }
+}
+
 export default async function DashboardPage({ searchParams }: Props) {
   const session = await auth()
   if (!session?.user?.id) redirect("/login")
 
   const { error } = await searchParams
 
-  // Run sequentially to avoid exhausting Neon's serverless connection pool.
-  // Promise.all with multiple concurrent queries causes P1001 on the free tier.
-  let rooms: Awaited<ReturnType<typeof prisma.room.findMany>> = []
-  let platforms: Awaited<ReturnType<typeof prisma.platformConnection.findMany>> = []
-  let dbError = false
-
-  try {
-    rooms = await prisma.room.findMany({
-      where: { hostId: session.user.id },
-      orderBy: { createdAt: "desc" },
-      take: 10,
-    })
-    platforms = await prisma.platformConnection.findMany({
-      where: { userId: session.user.id },
-    })
-  } catch {
-    dbError = true
-  }
+  const { rooms, platforms, dbError } = await fetchDashboardData(session.user.id)
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -60,7 +74,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         {/* Database error — transient Neon connection issue */}
         {dbError && (
           <div className="bg-amber-500/10 border border-amber-500/20 text-amber-300 rounded-xl px-4 py-3 text-sm mb-6 flex items-center justify-between gap-4">
-            <span>{"Couldn't reach the database. This is usually a brief cold-start on Neon's free tier."}</span>
+            <span>{"Database is waking up — please wait a moment and refresh."}</span>
             <a href="/dashboard" className="flex items-center gap-1.5 text-amber-300 hover:text-amber-200 font-medium shrink-0">
               <RefreshCw className="w-3.5 h-3.5" />
               Retry
@@ -110,20 +124,38 @@ export default async function DashboardPage({ searchParams }: Props) {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Badge variant={room.status === "active" ? "default" : "secondary"}>
-                      {room.status}
+                    <Badge
+                      variant={room.status === RoomStatus.ENDED ? "secondary" : "default"}
+                      className={
+                        room.status === RoomStatus.LIVE
+                          ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                          : room.status === RoomStatus.LOBBY
+                            ? "bg-violet-500/20 text-violet-400 border-violet-500/30"
+                            : "bg-gray-500/20 text-gray-500 border-gray-500/30"
+                      }
+                    >
+                      {room.status === RoomStatus.LOBBY ? "Ready" : room.status === RoomStatus.LIVE ? "Live" : "Ended"}
                     </Badge>
-                    {room.status === "ended" && (
+                    {room.status === RoomStatus.LOBBY && (
+                      <Link href={`/studio/${room.code}`}>
+                        <Button size="sm" className="bg-violet-600 hover:bg-violet-500 text-white text-xs">
+                          Enter Studio
+                        </Button>
+                      </Link>
+                    )}
+                    {room.status === RoomStatus.LIVE && (
+                      <Link href={`/studio/${room.code}`}>
+                        <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs">
+                          Rejoin Live
+                        </Button>
+                      </Link>
+                    )}
+                    {room.status === RoomStatus.ENDED && (
                       <Link
                         href={`/session-summary/${room.code}`}
                         className="text-xs text-violet-400 hover:text-violet-300 transition-colors"
                       >
                         Summary
-                      </Link>
-                    )}
-                    {room.status === "active" && (
-                      <Link href={`/studio/${room.code}`}>
-                        <Button size="sm" className="bg-red-500 hover:bg-red-600">Enter Studio</Button>
                       </Link>
                     )}
                   </div>

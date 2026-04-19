@@ -1,3 +1,4 @@
+import { RoomStatus } from "@prisma/client"
 import { NextResponse } from "next/server"
 
 import { auth } from "@/auth"
@@ -22,7 +23,7 @@ export async function POST(
   }
 
   // G09: idempotent — if already ended, return success immediately
-  if (room.status === "ended") {
+  if (room.status === RoomStatus.ENDED) {
     return NextResponse.json({ ok: true })
   }
 
@@ -30,14 +31,21 @@ export async function POST(
   const endedAtMs = endedAt.getTime()
 
   // G09: use updateMany with a status guard to win the race atomically
+  // Match both LOBBY and LIVE since either can transition to ENDED
   const updated = await prisma.room.updateMany({
-    where: { code, status: "active" },
-    data: { status: "ended", endedAt },
+    where: { code, status: { not: RoomStatus.ENDED } },
+    data: { status: RoomStatus.ENDED, endedAt },
   })
   if (updated.count === 0) {
     // Another request already ended the room
     return NextResponse.json({ ok: true })
   }
+
+  // Bulk-update all participants with leftAt = now() where leftAt IS NULL
+  await prisma.participant.updateMany({
+    where: { roomId: room.id, leftAt: null },
+    data: { leftAt: endedAt },
+  })
 
   // G10: use Promise.allSettled so a failure in one stat doesn't crash the whole response
   const [participantResult, messageResult, startTsResult] = await Promise.allSettled([

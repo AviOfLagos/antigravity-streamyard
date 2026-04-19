@@ -1,24 +1,28 @@
+import { PlatformType } from "@prisma/client"
+
 import { startTwitchConnector, stopTwitchConnector } from "./twitch"
 import { startYouTubeConnector, stopYouTubeConnector } from "./youtube"
 import { startKickConnector, stopKickConnector } from "./kick"
 import { startTikTokConnector, stopTikTokConnector } from "./tiktok"
 
 export interface PlatformConnectionData {
-  platform: string
+  platform: string | PlatformType
   channelName: string
   accessToken?: string | null
 }
 
 export async function startConnectors(roomCode: string, platforms: PlatformConnectionData[]) {
   const promises = platforms.map(async (p) => {
+    // Normalize platform to uppercase for enum comparison
+    const plat = (typeof p.platform === "string" ? p.platform.toUpperCase() : p.platform) as string
     try {
-      if (p.platform === "twitch") {
+      if (plat === PlatformType.TWITCH) {
         await startTwitchConnector(roomCode, p.channelName)
-      } else if (p.platform === "youtube" && p.accessToken) {
+      } else if (plat === PlatformType.YOUTUBE && p.accessToken) {
         await startYouTubeConnector(roomCode, p.accessToken)
-      } else if (p.platform === "kick") {
+      } else if (plat === PlatformType.KICK) {
         await startKickConnector(roomCode, p.channelName)
-      } else if (p.platform === "tiktok") {
+      } else if (plat === PlatformType.TIKTOK) {
         await startTikTokConnector(roomCode, p.channelName)
       }
     } catch (err) {

@@ -1,24 +1,11 @@
-export type Platform = "youtube" | "twitch" | "kick" | "tiktok"
+// Re-export types from zod schemas for backward compatibility.
+// All types are now derived from zod schemas in src/lib/schemas/.
 
-export interface ChatMessage {
-  id: string
-  platform: Platform
-  author: {
-    name: string
-    avatar?: string
-    color?: string
-    badges?: string[]
-  }
-  message: string
-  timestamp: string // ISO string
-}
+export type { Platform } from "@/lib/schemas/platform"
+export type { ChatMessage } from "@/lib/schemas/chat"
+export type { SSEEventData } from "@/lib/schemas/sse"
 
-export type SSEEventData =
-  | { type: "CHAT_MESSAGE"; data: ChatMessage }
-  | { type: "GUEST_REQUEST"; data: { guestId: string; name: string } }
-  | { type: "GUEST_ADMITTED"; data: { guestId: string; token: string } }
-  | { type: "GUEST_DENIED"; data: { guestId: string } }
-  | { type: "GUEST_LEFT"; data: { participantId: string } }
-  | { type: "STUDIO_ENDED" }
-  | { type: "PING" }
-  | { type: "CONNECTION_ERROR" }
+// Re-export schemas for consumers that need runtime validation
+export { PlatformSchema } from "@/lib/schemas/platform"
+export { ChatMessageSchema } from "@/lib/schemas/chat"
+export { SSEEventDataSchema } from "@/lib/schemas/sse"

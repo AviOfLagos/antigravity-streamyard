@@ -9,6 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import type { SSEEventData } from "@/lib/chat/types"
+import { SSEEventDataSchema } from "@/lib/schemas/sse"
+import { GuestRequestResponseSchema } from "@/lib/schemas/guest"
 import GuestStudio from "./GuestStudio"
 
 type JoinStatus = "form" | "waiting" | "denied" | "joining" | "joined" | "timeout"
@@ -51,9 +53,12 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
 
     es.onmessage = (e) => {
       try {
-        const data = JSON.parse(e.data) as SSEEventData
-        setSseError(false)
-        handleSSEEvent(data)
+        const raw = JSON.parse(e.data)
+        const parsed = SSEEventDataSchema.safeParse(raw)
+        if (parsed.success) {
+          setSseError(false)
+          handleSSEEvent(parsed.data)
+        }
       } catch {}
     }
 
@@ -89,7 +94,12 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
       }
 
       const data = await res.json()
-      setGuestId(data.guestId)
+      const parsed = GuestRequestResponseSchema.safeParse(data)
+      if (parsed.success) {
+        setGuestId(parsed.data.guestId)
+      } else {
+        setGuestId(data.guestId)
+      }
       setStatus("waiting")
     } catch {
       setError("Network error. Please try again.")

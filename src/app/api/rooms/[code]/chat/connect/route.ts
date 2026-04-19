@@ -1,3 +1,4 @@
+import { PlatformType, RoomStatus } from "@prisma/client"
 import { NextResponse } from "next/server"
 
 import { auth } from "@/auth"
@@ -23,18 +24,18 @@ export async function POST(
   }
 
   // G33: reject if the room has already ended
-  if (room.status === "ended") {
+  if (room.status === RoomStatus.ENDED) {
     return NextResponse.json({ error: "Room has ended" }, { status: 410 })
   }
 
-  const selectedPlatforms: string[] = room.selectedPlatforms ?? []
+  const selectedPlatforms: PlatformType[] = room.selectedPlatforms ?? []
 
   const platforms = await prisma.platformConnection.findMany({
     where: { userId: session.user.id },
   })
 
   // Get YouTube access token from account if connected
-  const youtubeConn = platforms.find((p) => p.platform === "youtube")
+  const youtubeConn = platforms.find((p) => p.platform === PlatformType.YOUTUBE)
   let youtubeAccessToken: string | null = null
   if (youtubeConn) {
     const account = await prisma.account.findFirst({
@@ -53,11 +54,14 @@ export async function POST(
   const platformData = filteredConnections.map((p) => ({
     platform: p.platform,
     channelName: p.channelName,
-    accessToken: p.platform === "youtube" ? youtubeAccessToken : null,
+    accessToken: p.platform === PlatformType.YOUTUBE ? youtubeAccessToken : null,
   }))
 
   // Start connectors asynchronously — don't await
   startConnectors(code, platformData).catch(console.error)
 
-  return NextResponse.json({ ok: true, platforms: filteredConnections.map((p) => p.platform) })
+  return NextResponse.json({
+    ok: true,
+    platforms: filteredConnections.map((p) => p.platform.toLowerCase()),
+  })
 }

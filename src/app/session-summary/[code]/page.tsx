@@ -1,3 +1,4 @@
+import { RoomStatus } from "@prisma/client"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
@@ -59,20 +60,24 @@ export default async function SessionSummaryPage({ params }: Props) {
     )
   }
 
-  // G27 — DB fallback when Redis key has expired
+  // G27 — DB fallback when Redis key has expired — query Participant records for stats
   let limitedStats = false
-  if (!summary && room.hostId === session.user.id && room.status === "ended" && room.endedAt) {
+  if (!summary && room.hostId === session.user.id && room.status === RoomStatus.ENDED && room.endedAt) {
+    const participants = await prisma.participant.findMany({
+      where: { roomId: room.id },
+    })
     const durationMs = room.endedAt.getTime() - room.createdAt.getTime()
     summary = {
       code,
       endedAt: room.endedAt.toISOString(),
       durationSeconds: Math.floor(durationMs / 1000),
-      participantCount: 0,
-      peakParticipants: 0,
+      participantCount: participants.length,
+      peakParticipants: participants.length,
       messageCount: 0,
       platforms: [],
     }
-    limitedStats = true
+    // Only mark as limited if we had no participants recorded (legacy rooms)
+    limitedStats = participants.length === 0
   }
 
   if (!summary) {

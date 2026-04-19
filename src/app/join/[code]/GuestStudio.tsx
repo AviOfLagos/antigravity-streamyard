@@ -10,6 +10,7 @@ import { Track } from "livekit-client"
 import ChatPanel from "@/components/chat/ChatPanel"
 import VideoTile from "@/components/studio/VideoTile"
 import type { SSEEventData } from "@/lib/chat/types"
+import { SSEEventDataSchema } from "@/lib/schemas/sse"
 import { useChatStore } from "@/store/chat"
 
 interface GuestStudioProps {
@@ -87,7 +88,9 @@ export default function GuestStudio({ roomCode, displayName }: GuestStudioProps)
     sseRef.current = es
     es.onmessage = (e) => {
       try {
-        handleSSEEvent(JSON.parse(e.data) as SSEEventData)
+        const raw = JSON.parse(e.data)
+        const parsed = SSEEventDataSchema.safeParse(raw)
+        if (parsed.success) handleSSEEvent(parsed.data)
       } catch {}
     }
     return () => es.close()

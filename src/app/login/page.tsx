@@ -1,10 +1,14 @@
 import Link from "next/link"
+import { redirect } from "next/navigation"
 
 import { Zap } from "lucide-react"
 
-import { signIn } from "@/auth"
+import { auth, signIn } from "@/auth"
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const session = await auth()
+  if (session?.user?.id) redirect("/dashboard")
+
   const hasResend = !!process.env.RESEND_API_KEY
 
   return (

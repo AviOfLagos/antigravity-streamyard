@@ -1,3 +1,4 @@
+import { ParticipantRole, RoomStatus } from "@prisma/client"
 import { jwtVerify } from "jose"
 import { NextResponse } from "next/server"
 
@@ -5,18 +6,19 @@ import { auth } from "@/auth"
 import { generateParticipantToken, getParticipantCount } from "@/lib/livekit"
 import { prisma } from "@/lib/prisma"
 import { deletePendingGuest, publishEvent, setApprovedGuest } from "@/lib/redis"
+import { AdmitGuestRequestSchema } from "@/lib/schemas"
+import { validateRequestBody } from "@/lib/schemas/api"
 
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ code: string }> }
 ) {
   const { code } = await params
-  const { guestId, name } = await req.json()
+  const body = await req.json().catch(() => ({}))
+  const validation = validateRequestBody(AdmitGuestRequestSchema, body)
+  if (!validation.success) return validation.response
 
-  // G06: guestId is required
-  if (!guestId || typeof guestId !== "string") {
-    return NextResponse.json({ error: "guestId is required" }, { status: 400 })
-  }
+  const { guestId, name } = validation.data
 
   // Fetch room once — reused in both auth paths and the ended-room check
   const room = await prisma.room.findUnique({ where: { code } })
@@ -51,7 +53,7 @@ export async function POST(
   if (!authorized) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   // G05: reject admit on an ended room (room is guaranteed non-null — authorization above confirmed hostId matches)
-  if (!room || room.status === "ended") {
+  if (!room || room.status === RoomStatus.ENDED) {
     return NextResponse.json({ error: "Room has ended" }, { status: 410 })
   }
 
@@ -61,10 +63,21 @@ export async function POST(
     return NextResponse.json({ error: "Room is full (max 6 participants)" }, { status: 400 })
   }
 
-  const guestToken = await generateParticipantToken(code, guestId, name ?? "Guest")
+  const displayName = name ?? "Guest"
+  const guestToken = await generateParticipantToken(code, guestId, displayName)
   await setApprovedGuest(code, guestId, guestToken)
   await deletePendingGuest(code, guestId)
   await publishEvent(code, { type: "GUEST_ADMITTED", data: { guestId, token: guestToken } })
+
+  // Create Participant record in DB
+  await prisma.participant.create({
+    data: {
+      roomId: room.id,
+      name: displayName,
+      identity: `guest-${guestId}`,
+      role: ParticipantRole.GUEST,
+    },
+  })
 
   return NextResponse.json({ ok: true })
 }

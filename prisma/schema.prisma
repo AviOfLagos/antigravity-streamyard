@@ -8,6 +8,24 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum RoomStatus {
+  LOBBY
+  LIVE
+  ENDED
+}
+
+enum PlatformType {
+  YOUTUBE
+  TWITCH
+  KICK
+  TIKTOK
+}
+
+enum ParticipantRole {
+  HOST
+  GUEST
+}
+
 model User {
   id                  String               @id @default(cuid())
   name                String?
@@ -57,29 +75,43 @@ model VerificationToken {
 }
 
 model PlatformConnection {
-  id           String    @id @default(cuid())
+  id           String       @id @default(cuid())
   userId       String
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  platform     String
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platform     PlatformType
   channelId    String
   channelName  String
   accessToken  String?
   refreshToken String?
   expiresAt    DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   @@unique([userId, platform])
 }
 
 model Room {
-  id               String    @id @default(cuid())
-  code             String    @unique
-  title            String?
-  hostId           String
-  host             User      @relation(fields: [hostId], references: [id])
-  status           String    @default("active")
-  selectedPlatforms String[]
-  createdAt        DateTime  @default(now())
-  endedAt          DateTime?
+  id                String         @id @default(cuid())
+  code              String         @unique
+  title             String?
+  hostId            String
+  host              User           @relation(fields: [hostId], references: [id])
+  status            RoomStatus     @default(LOBBY)
+  selectedPlatforms PlatformType[]
+  createdAt         DateTime       @default(now())
+  endedAt           DateTime?
+  participants      Participant[]
+}
+
+model Participant {
+  id       String          @id @default(cuid())
+  roomId   String
+  room     Room            @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  name     String
+  identity String          // LiveKit identity string (e.g., "host-xxx" or "guest-xxx")
+  role     ParticipantRole
+  joinedAt DateTime        @default(now())
+  leftAt   DateTime?
+
+  @@index([roomId])
 }

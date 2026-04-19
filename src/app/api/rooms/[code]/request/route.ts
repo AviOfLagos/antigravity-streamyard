@@ -1,9 +1,12 @@
+import { RoomStatus } from "@prisma/client"
 import { randomUUID } from "crypto"
 import { NextResponse } from "next/server"
 
 import { getParticipantCount } from "@/lib/livekit"
 import { prisma } from "@/lib/prisma"
 import { publishEvent, redis, setPendingGuest } from "@/lib/redis"
+import { GuestRequestSchema } from "@/lib/schemas"
+import { validateRequestBody } from "@/lib/schemas/api"
 
 const PENDING_NAMES_TTL = 60 * 60 * 6 // 6 hours
 
@@ -12,12 +15,15 @@ export async function POST(
   { params }: { params: Promise<{ code: string }> }
 ) {
   const { code } = await params
-  const { name } = await req.json()
-  if (!name?.trim()) return NextResponse.json({ error: "Name required" }, { status: 400 })
+  const body = await req.json().catch(() => ({}))
+  const validation = validateRequestBody(GuestRequestSchema, body)
+  if (!validation.success) return validation.response
 
-  // Verify room is active
+  const { name } = validation.data
+
+  // Verify room is not ended (LOBBY and LIVE both accept guest requests)
   const room = await prisma.room.findUnique({ where: { code } })
-  if (!room || room.status !== "active") {
+  if (!room || room.status === RoomStatus.ENDED) {
     return NextResponse.json({ error: "Room not found or ended" }, { status: 404 })
   }
 

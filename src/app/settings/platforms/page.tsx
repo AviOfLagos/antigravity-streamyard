@@ -13,7 +13,10 @@ export default async function PlatformsPage() {
     where: { userId: session.user.id },
   })
 
-  const connectedMap = Object.fromEntries(connections.map((c: typeof connections[number]) => [c.platform, c]))
+  // Map keyed by lowercase platform name for backward compat with PlatformConnectForm
+  const connectedMap = Object.fromEntries(
+    connections.map((c: typeof connections[number]) => [c.platform.toLowerCase(), c])
+  )
 
   return (
     <div className="min-h-screen bg-gray-950">
