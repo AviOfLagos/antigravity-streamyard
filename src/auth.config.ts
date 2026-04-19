@@ -7,7 +7,7 @@ import Google from "next-auth/providers/google"
  */
 export const authConfig = {
   trustHost: true,
-  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
@@ -21,9 +21,7 @@ export const authConfig = {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user
       const protectedPaths = ["/dashboard", "/settings", "/studio", "/session-summary"]
-      const isProtected = protectedPaths.some((p) =>
-        nextUrl.pathname.startsWith(p)
-      )
+      const isProtected = protectedPaths.some((p) => nextUrl.pathname.startsWith(p))
       if (isProtected && !isLoggedIn) return false
       return true
     },
