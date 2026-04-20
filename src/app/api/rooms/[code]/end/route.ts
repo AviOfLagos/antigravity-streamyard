@@ -5,6 +5,7 @@ import { auth } from "@/auth"
 import { stopStream } from "@/lib/egress"
 import { closeLivekitRoom, getParticipantCount } from "@/lib/livekit"
 import { prisma } from "@/lib/prisma"
+import { getCachedRoom, invalidateRoomCache } from "@/lib/room-cache"
 import { deleteRoomKeys, publishEvent, redis } from "@/lib/redis"
 
 const SUMMARY_TTL = 60 * 60 * 24 // 24 hours
@@ -18,7 +19,7 @@ export async function POST(
 
   const { code } = await params
 
-  const room = await prisma.room.findUnique({ where: { code } })
+  const room = await getCachedRoom(code)
   if (!room || room.hostId !== session.user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
@@ -41,6 +42,9 @@ export async function POST(
     // Another request already ended the room
     return NextResponse.json({ ok: true })
   }
+
+  // Invalidate room cache after status change
+  await invalidateRoomCache(code)
 
   // Bulk-update all participants with leftAt = now() where leftAt IS NULL
   await prisma.participant.updateMany({

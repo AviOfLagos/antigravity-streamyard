@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
-import { prisma } from "@/lib/prisma"
+import { getCachedRoom } from "@/lib/room-cache"
 import { saveStudioState, loadStudioState } from "@/lib/redis"
 
 /**
@@ -17,7 +17,7 @@ export async function GET(
   }
 
   // Only the host can load state
-  const room = await prisma.room.findUnique({ where: { code } })
+  const room = await getCachedRoom(code)
   if (!room || room.hostId !== session.user.id) {
     return NextResponse.json({ error: "Not found" }, { status: 404 })
   }
@@ -39,7 +39,7 @@ export async function PUT(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const room = await prisma.room.findUnique({ where: { code } })
+  const room = await getCachedRoom(code)
   if (!room || room.hostId !== session.user.id) {
     return NextResponse.json({ error: "Not found" }, { status: 404 })
   }

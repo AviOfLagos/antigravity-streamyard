@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 
 import { auth } from "@/auth"
-import { prisma } from "@/lib/prisma"
+import { getCachedRoom } from "@/lib/room-cache"
 import { deletePendingGuest, publishEvent } from "@/lib/redis"
 import { DenyGuestRequestSchema } from "@/lib/schemas"
 import { validateRequestBody } from "@/lib/schemas/api"
@@ -20,7 +20,7 @@ export async function POST(
 
   const { guestId } = validation.data
 
-  const room = await prisma.room.findUnique({ where: { code } })
+  const room = await getCachedRoom(code)
   if (!room || room.hostId !== session.user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }

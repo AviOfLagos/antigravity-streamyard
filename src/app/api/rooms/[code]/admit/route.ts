@@ -5,6 +5,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { generateParticipantToken, getParticipantCount } from "@/lib/livekit"
 import { prisma } from "@/lib/prisma"
+import { getCachedRoom } from "@/lib/room-cache"
 import { deletePendingGuest, publishEvent, setApprovedGuest } from "@/lib/redis"
 import { AdmitGuestRequestSchema } from "@/lib/schemas"
 import { validateRequestBody } from "@/lib/schemas/api"
@@ -21,7 +22,7 @@ export async function POST(
   const { guestId, name } = validation.data
 
   // Fetch room once — reused in both auth paths and the ended-room check
-  const room = await prisma.room.findUnique({ where: { code } })
+  const room = await getCachedRoom(code)
 
   // ── Auth: session OR LiveKit host JWT (for demo/direct access) ──────────
   let authorized = false

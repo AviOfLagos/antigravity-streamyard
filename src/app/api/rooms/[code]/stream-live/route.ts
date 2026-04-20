@@ -4,6 +4,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { addDestination, removeDestination, startStream, stopStream } from "@/lib/egress"
 import { prisma } from "@/lib/prisma"
+import { getCachedRoom, invalidateRoomCache } from "@/lib/room-cache"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { publishEvent } from "@/lib/redis"
 
@@ -36,7 +37,7 @@ export async function POST(
   }
 
   // Validate room exists and is owned by host
-  const room = await prisma.room.findUnique({ where: { code } })
+  const room = await getCachedRoom(code)
   if (!room || room.hostId !== session.user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
@@ -128,6 +129,7 @@ export async function POST(
       where: { code },
       data: { status: RoomStatus.LIVE },
     })
+    await invalidateRoomCache(code)
 
     // Publish SSE event
     await publishEvent(code, {
@@ -173,7 +175,7 @@ export async function DELETE(
 
   const { code } = await params
 
-  const room = await prisma.room.findUnique({ where: { code } })
+  const room = await getCachedRoom(code)
   if (!room || room.hostId !== session.user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
@@ -209,6 +211,7 @@ export async function DELETE(
       where: { code },
       data: { status: RoomStatus.LOBBY },
     })
+    await invalidateRoomCache(code)
 
     await publishEvent(code, { type: "STREAM_STOPPED" })
 
@@ -239,7 +242,7 @@ export async function PATCH(
 
   const { code } = await params
 
-  const room = await prisma.room.findUnique({ where: { code } })
+  const room = await getCachedRoom(code)
   if (!room || room.hostId !== session.user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }

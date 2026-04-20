@@ -7,6 +7,7 @@ import { auth } from "@/auth"
 import StudioErrorBoundary from "@/components/studio/StudioErrorBoundary"
 import { generateHostToken } from "@/lib/livekit"
 import { prisma } from "@/lib/prisma"
+import { getCachedRoom } from "@/lib/room-cache"
 import { setRoomInfo } from "@/lib/redis"
 import StudioClient from "./StudioClient"
 
@@ -65,7 +66,7 @@ export default async function StudioPage({ params }: Props) {
   const session = await auth()
   if (!session?.user?.id) redirect("/login")
 
-  const room = await prisma.room.findUnique({ where: { code } })
+  const room = await getCachedRoom(code)
   if (!room || room.hostId !== session.user.id) redirect("/dashboard?error=room_not_found")
   if (room.status === RoomStatus.ENDED) redirect("/dashboard?error=room_ended")
 

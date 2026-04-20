@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 
-import { LiveKitRoom, RoomAudioRenderer, useConnectionState } from "@livekit/components-react"
+import { LiveKitRoom, RoomAudioRenderer, StartAudio, useConnectionState } from "@livekit/components-react"
 import { MessageSquare, X, Zap } from "lucide-react"
 import { ConnectionState } from "livekit-client"
 import { toast } from "sonner"
@@ -360,6 +360,9 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, c
       >
         {/* Render remote participants' audio */}
         <RoomAudioRenderer />
+        {/* Fix: Browser autoplay policy blocks audio until user gesture on this page.
+            StartAudio shows a button only when audio is blocked, auto-hides otherwise. */}
+        <StartAudio label="Click to enable audio" className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-violet-500 hover:bg-violet-600 text-white text-sm font-medium shadow-lg transition-all animate-pulse" />
         {/* Stage: video + controls */}
         <div className="relative flex flex-col flex-1 min-w-0 overflow-hidden">
           {/* F-12: Connection status indicator inside LiveKitRoom context */}

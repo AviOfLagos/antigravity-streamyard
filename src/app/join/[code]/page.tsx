@@ -1,5 +1,5 @@
 import { RoomStatus } from "@prisma/client"
-import { prisma } from "@/lib/prisma"
+import { getCachedRoom } from "@/lib/room-cache"
 import { setRoomInfo } from "@/lib/redis"
 import { notFound } from "next/navigation"
 import JoinClient from "./JoinClient"
@@ -11,7 +11,7 @@ interface Props {
 export default async function JoinPage({ params }: Props) {
   const { code } = await params
 
-  const room = await prisma.room.findUnique({ where: { code } })
+  const room = await getCachedRoom(code)
 
   if (!room) notFound()
 

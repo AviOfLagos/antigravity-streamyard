@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
-import { LiveKitRoom, RoomAudioRenderer, usePreviewTracks } from "@livekit/components-react"
+import { LiveKitRoom, RoomAudioRenderer, StartAudio, usePreviewTracks } from "@livekit/components-react"
 import { LocalVideoTrack } from "livekit-client"
 import { AlertCircle, Camera, CameraOff, Loader2, Mic, MicOff, UserX, Video } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -528,6 +528,7 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
         className="h-screen"
       >
         <RoomAudioRenderer />
+        <StartAudio label="Click to enable audio" className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-violet-500 hover:bg-violet-600 text-white text-sm font-medium shadow-lg transition-all animate-pulse" />
         <GuestStudio roomCode={roomCode} displayName={displayName} />
       </LiveKitRoom>
     )

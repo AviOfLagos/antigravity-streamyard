@@ -6,6 +6,7 @@ import { createLivekitRoom, generateHostToken } from "@/lib/livekit"
 import { prisma } from "@/lib/prisma"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { redis, setRoomInfo } from "@/lib/redis"
+import { warmRoomCache } from "@/lib/room-cache"
 import { CreateRoomRequestSchema } from "@/lib/schemas"
 import { validateRequestBody } from "@/lib/schemas/api"
 import { generateRoomCode } from "@/lib/utils/roomCode"
@@ -77,8 +78,11 @@ export async function POST(req: Request) {
 
     const now = Date.now()
 
-    // Store in Redis
+    // Store in Redis + warm room cache
     await setRoomInfo(code, { hostId: session.user.id, createdAt: now, title })
+    // Fetch the created room to warm the cache with the full Prisma object
+    const createdRoom = await prisma.room.findUnique({ where: { code } })
+    if (createdRoom) await warmRoomCache(code, createdRoom)
 
     // Store session start timestamp for duration calculation
     await redis.set(`session:start:${code}`, now, { ex: 60 * 60 * 24 * 2 })

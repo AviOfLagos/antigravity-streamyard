@@ -4,6 +4,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { startConnectors } from "@/lib/chat/manager"
 import { prisma } from "@/lib/prisma"
+import { getCachedRoom } from "@/lib/room-cache"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { RoomCodeSchema } from "@/lib/schemas"
 import type { PlatformConnectionRow } from "@/lib/auth/token-refresh"
@@ -41,10 +42,7 @@ export async function POST(
   }
 
   // Get host's platform connections
-  const room = await prisma.room.findUnique({
-    where: { code },
-    select: { hostId: true, status: true, selectedPlatforms: true },
-  })
+  const room = await getCachedRoom(code)
   if (!room || room.hostId !== session.user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }

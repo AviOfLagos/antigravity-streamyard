@@ -1,7 +1,7 @@
 import { RoomStatus } from "@prisma/client"
 import { redirect } from "next/navigation"
 import StudioClient from "@/app/studio/[code]/StudioClient"
-import { prisma } from "@/lib/prisma"
+import { getCachedRoom } from "@/lib/room-cache"
 
 interface Props {
   params: Promise<{ code: string }>
@@ -19,7 +19,7 @@ export default async function DemoStudioPage({ params, searchParams }: Props) {
   if (!token) redirect("/login")
 
   // G23 — Room doesn't exist in DB
-  const room = await prisma.room.findUnique({ where: { code } })
+  const room = await getCachedRoom(code)
   if (!room) {
     return (
       <div className="flex items-center justify-center h-dvh bg-[#0d0d0d]">

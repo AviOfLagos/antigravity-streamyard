@@ -3,7 +3,7 @@ import { randomUUID } from "crypto"
 import { NextResponse } from "next/server"
 
 import { getParticipantCount } from "@/lib/livekit"
-import { prisma } from "@/lib/prisma"
+import { getCachedRoom } from "@/lib/room-cache"
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit"
 import { publishEvent, redis, setPendingGuest } from "@/lib/redis"
 import { GuestRequestSchema, RoomCodeSchema } from "@/lib/schemas"
@@ -47,7 +47,7 @@ export async function POST(
   const { name } = validation.data
 
   // Verify room is not ended (LOBBY and LIVE both accept guest requests)
-  const room = await prisma.room.findUnique({ where: { code } })
+  const room = await getCachedRoom(code)
   if (!room || room.status === RoomStatus.ENDED) {
     return NextResponse.json({ error: "Room not found or ended" }, { status: 404 })
   }

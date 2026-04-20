@@ -2,6 +2,7 @@ import { RoomStatus } from "@prisma/client"
 import { NextResponse } from "next/server"
 
 import { prisma } from "@/lib/prisma"
+import { getCachedRoom } from "@/lib/room-cache"
 import { publishEvent } from "@/lib/redis"
 import { LeaveRequestSchema } from "@/lib/schemas"
 import { validateRequestBody } from "@/lib/schemas/api"
@@ -17,7 +18,7 @@ export async function POST(
 
   const { displayName, identity } = validation.data
 
-  const room = await prisma.room.findUnique({ where: { code } })
+  const room = await getCachedRoom(code)
 
   // Idempotent — if room is gone or already ended, guest is already gone
   if (!room || room.status === RoomStatus.ENDED) {
