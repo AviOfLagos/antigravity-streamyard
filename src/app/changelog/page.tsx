@@ -31,6 +31,26 @@ const tagLabels: Record<Tag, string> = {
 
 const entries: ChangelogEntry[] = [
   {
+    date: "Apr 25, 2026",
+    version: "v1.2.0",
+    title: "Platform Connector Upgrades & Chat Reply",
+    changes: [
+      { tag: "feat", text: "Send messages to YouTube and Twitch live chat directly from the studio" },
+      { tag: "feat", text: "Chat input for hosts — type a message and it goes to all connected platforms" },
+      { tag: "feat", text: "Twitch reply threading — replies show parent message context in the chat panel" },
+      { tag: "feat", text: "YouTube Super Chats and Super Stickers displayed as donation events with amounts" },
+      { tag: "feat", text: "Twitch Bits/Cheers displayed as donations, subs/resubs/gift subs as subscription events" },
+      { tag: "feat", text: "Twitch raids shown with viewer count badge" },
+      { tag: "feat", text: "TikTok gifts shown as donations with diamond-to-USD conversion" },
+      { tag: "feat", text: "Follow events captured from Twitch, Kick, and TikTok" },
+      { tag: "feat", text: "Kick subscription and gifted sub events captured via Pusher" },
+      { tag: "improvement", text: "YouTube polling now uses dynamic interval from API response instead of fixed 20s" },
+      { tag: "improvement", text: "Chat UI: color-coded event types — donations (yellow), subs (violet), follows (green), raids (blue)" },
+      { tag: "improvement", text: "TikTok like events shown as compact one-line display, join events filtered to reduce noise" },
+      { tag: "improvement", text: "Author badges parsed from all platforms (moderator, subscriber, VIP, owner)" },
+    ],
+  },
+  {
     date: "Apr 24, 2026",
     version: "v1.1.0",
     title: "Access Control & Guest Leads",

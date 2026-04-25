@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { useVirtualizer } from "@tanstack/react-virtual"
-import { ArrowDown, MessageSquare } from "lucide-react"
+import { ArrowDown, MessageSquare, Send } from "lucide-react"
 
 import { useChatStore } from "@/store/chat"
 
@@ -15,7 +15,6 @@ interface ChatPanelProps {
   isHost: boolean
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default function ChatPanel({ roomCode, isHost }: ChatPanelProps) {
   const parentRef = useRef<HTMLDivElement>(null)
   const storeMessages = useChatStore((s) => s.messages)
@@ -150,6 +149,59 @@ export default function ChatPanel({ roomCode, isHost }: ChatPanelProps) {
           </button>
         )}
       </div>
+
+      {/* Host chat input */}
+      {isHost && <ChatInput roomCode={roomCode} />}
+    </div>
+  )
+}
+
+function ChatInput({ roomCode }: { roomCode: string }) {
+  const [text, setText] = useState("")
+  const [sending, setSending] = useState(false)
+
+  const handleSend = async () => {
+    const msg = text.trim()
+    if (!msg || sending) return
+    setSending(true)
+    try {
+      await fetch(`/api/rooms/${roomCode}/chat/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: msg }),
+      })
+      setText("")
+    } catch {
+      // Silent fail — non-critical
+    } finally {
+      setSending(false)
+    }
+  }
+
+  return (
+    <div className="flex-none border-t border-white/6 px-2 py-2">
+      <div className="flex items-center gap-1.5">
+        <input
+          type="text"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleSend()}
+          placeholder="Send to chat..."
+          maxLength={500}
+          className="flex-1 bg-white/4 text-white text-xs placeholder:text-gray-600 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-violet-500/30 transition-colors"
+        />
+        <button
+          type="button"
+          onClick={handleSend}
+          disabled={!text.trim() || sending}
+          className="p-2 rounded-lg text-gray-500 hover:text-violet-400 hover:bg-violet-500/10 disabled:opacity-30 transition-colors"
+        >
+          <Send className="w-3.5 h-3.5" />
+        </button>
+      </div>
+      <p className="text-[9px] text-gray-700 mt-1 px-1">
+        Sends to YouTube and Twitch
+      </p>
     </div>
   )
 }
