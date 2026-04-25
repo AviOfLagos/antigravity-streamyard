@@ -1,85 +1,18 @@
 "use client"
 
-import React, { useCallback } from "react"
-
 import { useParticipants } from "@livekit/components-react"
-import type { Participant } from "livekit-client"
+import { Users } from "lucide-react"
 
+import ParticipantRow from "@/components/studio/ParticipantRow"
 import { useStudioStore } from "@/store/studio"
-
-interface ParticipantRowProps {
-  participant: Participant
-  isOnStage: boolean
-}
-
-const ParticipantRow = React.memo(function ParticipantRow({ participant, isOnStage }: ParticipantRowProps) {
-  const bringOnStage = useStudioStore((s) => s.bringOnStage)
-  const sendToBackstage = useStudioStore((s) => s.sendToBackstage)
-  const displayName = participant.name ?? participant.identity ?? "Guest"
-  const initial = displayName.charAt(0).toUpperCase()
-  const micOn = participant.isMicrophoneEnabled
-  const camOn = participant.isCameraEnabled
-
-  const handleStageToggle = useCallback(() => {
-    if (isOnStage) {
-      sendToBackstage(participant.identity)
-    } else {
-      bringOnStage(participant.identity)
-    }
-  }, [isOnStage, participant.identity, bringOnStage, sendToBackstage])
-
-  return (
-    <div className="flex flex-col items-center gap-1 shrink-0 w-20">
-      {/* Avatar */}
-      <div className="relative w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-sm font-semibold text-white select-none shrink-0">
-        {initial}
-        {/* Mic dot */}
-        <span
-          className={[
-            "absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-[#080808]",
-            micOn ? "bg-emerald-400" : "bg-gray-600",
-          ].join(" ")}
-          title={micOn ? "Mic on" : "Mic off"}
-        />
-      </div>
-
-      {/* Name */}
-      <span className="text-[10px] text-gray-400 truncate w-full text-center leading-tight">
-        {displayName}
-      </span>
-
-      {/* Cam indicator */}
-      <span className={["text-[9px]", camOn ? "text-emerald-400" : "text-gray-600"].join(" ")}>
-        {camOn ? "Cam on" : "Cam off"}
-      </span>
-
-      {/* Stage / Backstage button */}
-      {isOnStage ? (
-        <button
-          type="button"
-          onClick={handleStageToggle}
-          className="bg-white/6 text-gray-400 hover:bg-white/10 hover:text-white px-2 py-0.5 rounded text-[9px] transition-colors"
-        >
-          Backstage
-        </button>
-      ) : (
-        <button
-          type="button"
-          onClick={handleStageToggle}
-          className="bg-violet-500/15 text-violet-400 hover:bg-violet-500/25 px-2 py-0.5 rounded text-[9px] transition-colors"
-        >
-          Stage
-        </button>
-      )}
-    </div>
-  )
-})
 
 interface BackstagePanelProps {
   isHost?: boolean
+  roomCode: string
+  hostToken?: string
 }
 
-export default function BackstagePanel({ isHost }: BackstagePanelProps) {
+export default function BackstagePanel({ isHost, roomCode, hostToken }: BackstagePanelProps) {
   const participants = useParticipants()
   const onScreenParticipantIds = useStudioStore((s) => s.onScreenParticipantIds)
 
@@ -96,18 +29,36 @@ export default function BackstagePanel({ isHost }: BackstagePanelProps) {
     ? []
     : participants.filter((p) => !onScreenParticipantIds.includes(p.identity))
 
-  const allParticipants = [...backstage, ...onStage]
-
-  if (allParticipants.length === 0) return null
-
+  // Only show host when alone — always show the panel for host visibility
   return (
-    <div className="h-20 flex items-center gap-2 px-3 bg-[#080808] border-t border-white/6 overflow-x-auto">
-      {backstage.map((p) => (
-        <ParticipantRow key={p.identity} participant={p} isOnStage={false} />
-      ))}
-      {onStage.map((p) => (
-        <ParticipantRow key={p.identity} participant={p} isOnStage={true} />
-      ))}
+    <div className="min-h-[5.5rem] flex items-center gap-2 px-3 py-2 bg-[#080808] border-t border-white/6 overflow-x-auto">
+      {participants.length <= 1 ? (
+        <div className="flex items-center gap-2 text-gray-600 text-xs mx-auto">
+          <Users className="w-3.5 h-3.5" />
+          <span>No guests yet — share the invite link</span>
+        </div>
+      ) : (
+        <>
+          {backstage.map((p) => (
+            <ParticipantRow
+              key={p.identity}
+              participant={p}
+              isOnStage={false}
+              roomCode={roomCode}
+              hostToken={hostToken}
+            />
+          ))}
+          {onStage.map((p) => (
+            <ParticipantRow
+              key={p.identity}
+              participant={p}
+              isOnStage={true}
+              roomCode={roomCode}
+              hostToken={hostToken}
+            />
+          ))}
+        </>
+      )}
     </div>
   )
 }

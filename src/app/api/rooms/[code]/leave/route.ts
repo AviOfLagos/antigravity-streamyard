@@ -35,7 +35,7 @@ export async function POST(
 
   await publishEvent(code, {
     type: "GUEST_LEFT",
-    data: { participantId: displayName ?? "Guest" },
+    data: { participantId: identity ?? displayName ?? "Guest" },
   })
 
   return NextResponse.json({ ok: true })

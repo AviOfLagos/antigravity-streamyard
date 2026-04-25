@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef } from "react"
 
 import { type ToggleSource } from "@livekit/components-core"
-import { useParticipants, useTracks, useTrackToggle } from "@livekit/components-react"
+import { useLocalParticipant, useParticipants, useTracks, useTrackToggle } from "@livekit/components-react"
 import { LogOut, Mic, MicOff, Video, VideoOff, Zap } from "lucide-react"
 import { Track } from "livekit-client"
 
@@ -52,12 +52,14 @@ function GuestTrackButton({
 }
 
 export default function GuestStudio({ roomCode, displayName }: GuestStudioProps) {
+  const { localParticipant } = useLocalParticipant()
+
   const handleLeave = async () => {
     try {
       await fetch(`/api/rooms/${roomCode}/leave`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ displayName }),
+        body: JSON.stringify({ displayName, identity: localParticipant.identity }),
       })
     } catch { /* best-effort */ }
     window.location.href = "/studio-ended"

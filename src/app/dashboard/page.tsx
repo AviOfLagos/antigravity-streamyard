@@ -1,3 +1,5 @@
+import { Suspense } from "react"
+
 import { RoomStatus } from "@prisma/client"
 import { Clock, RefreshCw, Video } from "lucide-react"
 import Link from "next/link"
@@ -94,10 +96,30 @@ export default async function DashboardPage({ searchParams }: Props) {
           <CreateStudioButton />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <PlatformSummary platforms={platforms} />
-        </div>
+        {/* F-04: Suspense boundary — platform summary */}
+        <Suspense fallback={
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-24 bg-gray-900 border border-gray-800 rounded-xl animate-pulse" />
+            ))}
+          </div>
+        }>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <PlatformSummary platforms={platforms} />
+          </div>
+        </Suspense>
 
+        {/* F-04: Suspense boundary — rooms list */}
+        <Suspense fallback={
+          <div>
+            <div className="h-5 w-32 bg-gray-800 rounded animate-pulse mb-4" />
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-20 bg-gray-900 border border-gray-800 rounded-xl animate-pulse" />
+              ))}
+            </div>
+          </div>
+        }>
         {/* Rooms */}
         <h2 className="text-lg font-semibold text-white mb-4">Recent Studios</h2>
         {rooms.length === 0 && !dbError ? (
@@ -167,6 +189,7 @@ export default async function DashboardPage({ searchParams }: Props) {
             ))}
           </div>
         )}
+        </Suspense>
       </div>
     </div>
   )

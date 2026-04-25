@@ -1,8 +1,9 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 
 import { Check, UserPlus, X } from "lucide-react"
+import { toast } from "sonner"
 
 import { useStudioStore } from "@/store/studio"
 
@@ -17,10 +18,10 @@ export default function GuestRequestToast({ roomCode, hostToken }: GuestRequestT
   const removePendingGuest = useStudioStore((s) => s.removePendingGuest)
   const [processing, setProcessing] = useState<string | null>(null)
 
-  const authHeaders: Record<string, string> = {
+  const authHeaders = useMemo<Record<string, string>>(() => ({
     "Content-Type": "application/json",
     ...(hostToken ? { Authorization: `Bearer ${hostToken}` } : {}),
-  }
+  }), [hostToken])
 
   const handleAdmit = useCallback(async (guestId: string, name: string) => {
     setProcessing(guestId)
@@ -31,15 +32,23 @@ export default function GuestRequestToast({ roomCode, hostToken }: GuestRequestT
         body: JSON.stringify({ guestId, name }),
       })
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        console.error("[admit] failed:", err)
+        const err = await res.json().catch(() => ({ error: "Unknown error" }))
+        const msg = err.error ?? "Failed to admit guest"
+        toast.error(`Could not admit ${name}`, { description: msg })
+        // If room is full or ended, remove from pending since it can't succeed
+        if (res.status === 400 || res.status === 410) {
+          removePendingGuest(guestId)
+        }
         return
       }
       removePendingGuest(guestId)
+      toast.success(`${name} admitted`)
+    } catch {
+      toast.error("Network error", { description: "Could not reach the server. Try again." })
     } finally {
       setProcessing(null)
     }
-  }, [roomCode, hostToken, removePendingGuest])
+  }, [roomCode, authHeaders, removePendingGuest])
 
   const handleDeny = useCallback(async (guestId: string) => {
     setProcessing(guestId)
@@ -49,11 +58,19 @@ export default function GuestRequestToast({ roomCode, hostToken }: GuestRequestT
         headers: authHeaders,
         body: JSON.stringify({ guestId }),
       })
-      if (res.ok) removePendingGuest(guestId)
+      if (res.ok) {
+        removePendingGuest(guestId)
+      } else {
+        // Remove from UI anyway — the guest request is stale
+        removePendingGuest(guestId)
+      }
+    } catch {
+      // Network error — remove from UI to avoid stale toasts
+      removePendingGuest(guestId)
     } finally {
       setProcessing(null)
     }
-  }, [roomCode, hostToken, removePendingGuest])
+  }, [roomCode, authHeaders, removePendingGuest])
 
   if (pendingGuests.length === 0) return null
 

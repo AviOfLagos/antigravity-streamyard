@@ -10,6 +10,11 @@ export const GuestRequestSchema = z.object({
     .min(1, "Name is required")
     .transform((val) => stripHtml(val).trim().slice(0, 50))
     .pipe(z.string().min(1, "Name is required after sanitization")),
+  email: z
+    .string()
+    .email("Invalid email address")
+    .transform((val) => val.trim().toLowerCase().slice(0, 200))
+    .optional(),
 })
 export type GuestRequest = z.infer<typeof GuestRequestSchema>
 
@@ -17,6 +22,7 @@ export type GuestRequest = z.infer<typeof GuestRequestSchema>
 
 export const GuestRequestResponseSchema = z.object({
   guestId: z.string(),
+  autoAdmitted: z.boolean().optional(),
 })
 export type GuestRequestResponse = z.infer<typeof GuestRequestResponseSchema>
 

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { LiveKitRoom, RoomAudioRenderer, StartAudio, usePreviewTracks } from "@livekit/components-react"
 import { LocalVideoTrack } from "livekit-client"
-import { AlertCircle, Camera, CameraOff, Loader2, Mic, MicOff, UserX, Video } from "lucide-react"
+import { AlertCircle, Camera, CameraOff, Mic, MicOff, UserX, Video } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -47,14 +47,15 @@ function DevicePreview({
 
   // Attach/detach video track to the preview element
   useEffect(() => {
-    if (!videoRef.current || !tracks) return
+    const el = videoRef.current
+    if (!el || !tracks) return
     const videoTrack = tracks.find(
       (t) => t.kind === "video"
     ) as LocalVideoTrack | undefined
     if (videoTrack) {
-      videoTrack.attach(videoRef.current)
+      videoTrack.attach(el)
       return () => {
-        videoTrack.detach(videoRef.current!)
+        videoTrack.detach(el)
       }
     }
   }, [tracks])
@@ -124,6 +125,7 @@ function DevicePreview({
 export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
   const [status, setStatus] = useState<JoinStatus>("form")
   const [displayName, setDisplayName] = useState("")
+  const [guestEmail, setGuestEmail] = useState("")
   const [guestId, setGuestId] = useState<string | null>(null)
   const [livekitToken, setLivekitToken] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -228,10 +230,13 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
     setError(null)
 
     try {
+      const payload: Record<string, string> = { name: displayName.trim() }
+      if (guestEmail.trim()) payload.email = guestEmail.trim()
+
       const res = await fetch(`/api/rooms/${roomCode}/request`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: displayName.trim() }),
+        body: JSON.stringify(payload),
       })
 
       if (!res.ok) {
@@ -250,11 +255,11 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
 
       const data = await res.json()
       const parsed = GuestRequestResponseSchema.safeParse(data)
-      if (parsed.success) {
-        setGuestId(parsed.data.guestId)
-      } else {
-        setGuestId(data.guestId)
-      }
+      const resolvedGuestId = parsed.success ? parsed.data.guestId : data.guestId
+      setGuestId(resolvedGuestId)
+
+      // Auto-admitted: go straight to waiting for SSE to deliver the token
+      // (the GUEST_ADMITTED event was already published server-side)
       setStatus("waiting")
     } catch {
       setError("Network error. Please try again.")
@@ -303,6 +308,23 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
                 autoFocus
                 maxLength={30}
               />
+            </div>
+            <div>
+              <Label className="text-gray-300 text-sm">
+                Email <span className="text-gray-600">(optional)</span>
+              </Label>
+              <Input
+                type="email"
+                value={guestEmail}
+                onChange={(e) => setGuestEmail(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleContinueToPreview()}
+                placeholder="you@example.com"
+                className="mt-1.5 bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
+                maxLength={200}
+              />
+              <p className="text-xs text-gray-600 mt-1">
+                No account needed — just so the host knows who you are.
+              </p>
             </div>
             {error && <p className="text-red-400 text-sm">{error}</p>}
             <Button

@@ -24,6 +24,7 @@ export default function CreateStudioButton() {
   const [step, setStep] = useState<Step>("idle")
   const [title, setTitle] = useState("")
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([])
+  const [autoAdmit, setAutoAdmit] = useState(false)
   const [availablePlatforms, setAvailablePlatforms] = useState<PlatformConnection[]>([])
   const [roomCode, setRoomCode] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
@@ -50,6 +51,7 @@ export default function CreateStudioButton() {
     setStep("idle")
     setTitle("")
     setSelectedPlatforms([])
+    setAutoAdmit(false)
     setAvailablePlatforms([])
     setError(null)
   }
@@ -68,7 +70,7 @@ export default function CreateStudioButton() {
       const res = await fetch("/api/rooms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: title.trim(), selectedPlatforms }),
+        body: JSON.stringify({ title: title.trim(), selectedPlatforms, autoAdmit }),
       })
       const data = await res.json()
       if (!res.ok || !data.code) {
@@ -110,6 +112,7 @@ export default function CreateStudioButton() {
     setRoomCode(null)
     setTitle("")
     setSelectedPlatforms([])
+    setAutoAdmit(false)
     setAvailablePlatforms([])
     setCopied(false)
     setError(null)
@@ -202,6 +205,41 @@ export default function CreateStudioButton() {
                     Stream title will be: {title.trim()}
                   </p>
                 )}
+              </div>
+
+              {/* Access control */}
+              <div className="mb-5">
+                <p className="block text-xs text-gray-500 uppercase tracking-wide mb-2">
+                  Guest access
+                </p>
+                <div className="flex flex-col gap-2">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="access-control"
+                      className="w-4 h-4 accent-violet-500"
+                      checked={!autoAdmit}
+                      onChange={() => setAutoAdmit(false)}
+                    />
+                    <div>
+                      <span className="text-sm text-white">Manual approval</span>
+                      <p className="text-xs text-gray-500">You approve each guest before they enter</p>
+                    </div>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="access-control"
+                      className="w-4 h-4 accent-violet-500"
+                      checked={autoAdmit}
+                      onChange={() => setAutoAdmit(true)}
+                    />
+                    <div>
+                      <span className="text-sm text-white">Auto-admit</span>
+                      <p className="text-xs text-gray-500">Anyone with the link joins automatically</p>
+                    </div>
+                  </label>
+                </div>
               </div>
 
               {error && <p className="text-red-400 text-sm mb-4">{error}</p>}

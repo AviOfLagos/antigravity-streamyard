@@ -1,11 +1,12 @@
-import { RoomStatus } from "@prisma/client"
+import { ParticipantRole, RoomStatus } from "@prisma/client"
 import { randomUUID } from "crypto"
 import { NextResponse } from "next/server"
 
-import { getParticipantCount } from "@/lib/livekit"
+import { generateParticipantToken, getParticipantCount } from "@/lib/livekit"
+import { prisma } from "@/lib/prisma"
 import { getCachedRoom } from "@/lib/room-cache"
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit"
-import { publishEvent, redis, setPendingGuest } from "@/lib/redis"
+import { publishEvent, redis, setApprovedGuest, setPendingGuest } from "@/lib/redis"
 import { GuestRequestSchema, RoomCodeSchema } from "@/lib/schemas"
 import { validateRequestBody } from "@/lib/schemas/api"
 
@@ -44,7 +45,7 @@ export async function POST(
   const validation = validateRequestBody(GuestRequestSchema, body)
   if (!validation.success) return validation.response
 
-  const { name } = validation.data
+  const { name, email } = validation.data
 
   // Verify room is not ended (LOBBY and LIVE both accept guest requests)
   const room = await getCachedRoom(code)
@@ -66,7 +67,45 @@ export async function POST(
   }
 
   const guestId = randomUUID()
-  await setPendingGuest(code, guestId, { name, requestedAt: Date.now() })
+
+  // Save guest lead (email + name) for marketing — fire and forget
+  if (email) {
+    prisma.guestLead.create({
+      data: { roomId: room.id, name, email },
+    }).catch((err) => {
+      console.warn("[guestLead] Failed to save:", err)
+    })
+  }
+
+  // Check if room has auto-admit enabled
+  if (room.autoAdmit) {
+    // Auto-admit: generate token immediately, skip pending queue
+    const identity = `guest-${guestId}`
+    const displayName = name ?? "Guest"
+    const guestToken = await generateParticipantToken(code, guestId, displayName)
+    await setApprovedGuest(code, guestId, guestToken)
+
+    // Create Participant record in DB
+    await prisma.participant.create({
+      data: {
+        roomId: room.id,
+        name: displayName,
+        identity,
+        role: ParticipantRole.GUEST,
+      },
+    })
+
+    // Publish admitted event so SSE listeners pick it up
+    await publishEvent(code, {
+      type: "GUEST_ADMITTED",
+      data: { guestId, token: guestToken, identity, name: displayName },
+    })
+
+    return NextResponse.json({ guestId, autoAdmitted: true })
+  }
+
+  // Manual admit: add to pending queue
+  await setPendingGuest(code, guestId, { name, email: email ?? null, requestedAt: Date.now() })
   await publishEvent(code, { type: "GUEST_REQUEST", data: { guestId, name } })
 
   // Track pending name to prevent duplicates; expires with the room

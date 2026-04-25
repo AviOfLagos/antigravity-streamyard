@@ -13,6 +13,7 @@ import VideoTile from "./VideoTile"
 interface VideoGridProps {
   roomCode: string
   isHost?: boolean
+  hostToken?: string
 }
 
 function gridCols(count: number) {
@@ -21,7 +22,7 @@ function gridCols(count: number) {
   return "grid-cols-3"
 }
 
-export default function VideoGrid({ roomCode: _roomCode, isHost }: VideoGridProps) {
+export default function VideoGrid({ roomCode, isHost, hostToken }: VideoGridProps) {
   const participants = useParticipants()
   const tracks = useTracks(
     [
@@ -158,7 +159,7 @@ export default function VideoGrid({ roomCode: _roomCode, isHost }: VideoGridProp
       <div className="flex-1 min-h-0 p-3">{stageContent}</div>
 
       {/* Backstage strip (host only) */}
-      <BackstagePanel isHost={isHost} />
+      <BackstagePanel isHost={isHost} roomCode={roomCode} hostToken={hostToken} />
     </div>
   )
 }

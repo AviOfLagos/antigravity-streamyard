@@ -116,7 +116,7 @@ export async function POST(
 
   try {
     // Start egress via LiveKit
-    const { egressId, status } = await startStream(code, destinations)
+    const { egressId } = await startStream(code, destinations)
 
     // Update StreamSession with egressId and LIVE status
     await prisma.streamSession.update({

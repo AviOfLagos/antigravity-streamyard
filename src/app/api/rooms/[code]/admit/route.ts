@@ -6,7 +6,7 @@ import { auth } from "@/auth"
 import { generateParticipantToken, getParticipantCount } from "@/lib/livekit"
 import { prisma } from "@/lib/prisma"
 import { getCachedRoom } from "@/lib/room-cache"
-import { deletePendingGuest, publishEvent, setApprovedGuest } from "@/lib/redis"
+import { deletePendingGuest, publishEvent, redis, setApprovedGuest } from "@/lib/redis"
 import { AdmitGuestRequestSchema } from "@/lib/schemas"
 import { validateRequestBody } from "@/lib/schemas/api"
 
@@ -65,20 +65,25 @@ export async function POST(
   }
 
   const displayName = name ?? "Guest"
+  const identity = `guest-${guestId}`
   const guestToken = await generateParticipantToken(code, guestId, displayName)
   await setApprovedGuest(code, guestId, guestToken)
   await deletePendingGuest(code, guestId)
-  await publishEvent(code, { type: "GUEST_ADMITTED", data: { guestId, token: guestToken } })
+
+  // Clean up pending-names so the name slot is freed
+  await redis.srem(`room:${code}:pending-names`, displayName.trim())
+
+  await publishEvent(code, { type: "GUEST_ADMITTED", data: { guestId, token: guestToken, identity, name: displayName } })
 
   // Create Participant record in DB
   await prisma.participant.create({
     data: {
       roomId: room.id,
       name: displayName,
-      identity: `guest-${guestId}`,
+      identity,
       role: ParticipantRole.GUEST,
     },
   })
 
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({ ok: true, identity })
 }

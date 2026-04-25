@@ -41,6 +41,7 @@ export async function POST(req: Request) {
   if (!validation.success) return validation.response
 
   const title = validation.data.title?.trim() || null
+  const autoAdmit = validation.data.autoAdmit ?? false
   const rawPlatforms = validation.data.selectedPlatforms ?? []
   // Validate and cast platform strings to PlatformType enum values (uppercase)
   const selectedPlatforms: PlatformType[] = rawPlatforms
@@ -57,7 +58,7 @@ export async function POST(req: Request) {
     while (true) {
       try {
         await prisma.room.create({
-          data: { code, hostId: session.user.id, status: RoomStatus.LOBBY, title, selectedPlatforms },
+          data: { code, hostId: session.user.id, status: RoomStatus.LOBBY, title, autoAdmit, selectedPlatforms },
         })
         break
       } catch (err: unknown) {

@@ -108,6 +108,12 @@ export default async function LandingPage() {
             >
               Status
             </Link>
+            <Link
+              href="/feedback"
+              className="hidden sm:block text-sm text-gray-400 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-white/5"
+            >
+              Feedback
+            </Link>
 
             <div className="w-px h-4 bg-white/10 mx-2 hidden sm:block" />
 
@@ -304,6 +310,12 @@ export default async function LandingPage() {
               className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
             >
               Status
+            </Link>
+            <Link
+              href="/feedback"
+              className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
+            >
+              Feedback
             </Link>
             <a
               href="https://github.com/AviOfLagos/antigravity-streamyard"

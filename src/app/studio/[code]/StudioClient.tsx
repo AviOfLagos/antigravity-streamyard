@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 
-import { LiveKitRoom, RoomAudioRenderer, StartAudio, useConnectionState } from "@livekit/components-react"
-import { MessageSquare, X, Zap } from "lucide-react"
+import { LiveKitRoom, RoomAudioRenderer, StartAudio, useConnectionState, useParticipants } from "@livekit/components-react"
+import { MessageSquare, Users, X, Zap } from "lucide-react"
 import { ConnectionState } from "livekit-client"
 import { toast } from "sonner"
 
@@ -69,6 +69,16 @@ function ConnectionMonitor() {
   return null
 }
 
+function ParticipantCount() {
+  const participants = useParticipants()
+  return (
+    <span className="inline-flex items-center gap-1 text-xs text-gray-500">
+      <Users className="w-3 h-3" />
+      {participants.length}
+    </span>
+  )
+}
+
 function LiveBadge() {
   const isLive = useStudioStore((s) => s.isLive)
   if (!isLive) return null
@@ -91,6 +101,7 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, c
   const setLiveState = useStudioStore((s) => s.setLiveState)
   const addStreamPlatform = useStudioStore((s) => s.addStreamPlatform)
   const removeStreamPlatform = useStudioStore((s) => s.removeStreamPlatform)
+  const sendToBackstage = useStudioStore((s) => s.sendToBackstage)
   const addMessage = useChatStore((s) => s.addMessage)
   const hydrateFilters = useChatStore((s) => s.hydrateFilters)
   const sseRef = useRef<EventSource | null>(null)
@@ -181,6 +192,11 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, c
       case "GUEST_DENIED":
         removePendingGuest(event.data.guestId)
         break
+      case "GUEST_LEFT":
+        // Clean stale participant from on-screen list
+        sendToBackstage(event.data.participantId)
+        toast.info(`${event.data.participantId} left the studio`)
+        break
       case "CHAT_MESSAGE":
         addMessage(event.data)
         break
@@ -217,7 +233,7 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, c
         })
         break
     }
-  }, [addPendingGuest, removePendingGuest, addMessage, setLiveState, addStreamPlatform, removeStreamPlatform])
+  }, [addPendingGuest, removePendingGuest, addMessage, setLiveState, addStreamPlatform, removeStreamPlatform, sendToBackstage])
 
   // F-03: Ref-based callback for stable SSE handler identity (no dependency churn)
   const handleSSEEventRef = useRef<(event: SSEEventData) => void>(handleSSEEvent)
@@ -365,10 +381,14 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, c
         <StartAudio label="Click to enable audio" className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-violet-500 hover:bg-violet-600 text-white text-sm font-medium shadow-lg transition-all animate-pulse" />
         {/* Stage: video + controls */}
         <div className="relative flex flex-col flex-1 min-w-0 overflow-hidden">
+          {/* Participant count (inside LiveKitRoom context) */}
+          <div className="absolute top-2 right-2 z-10">
+            <ParticipantCount />
+          </div>
           {/* F-12: Connection status indicator inside LiveKitRoom context */}
           <ConnectionStatus />
           <div className="flex-1 overflow-hidden">
-            <VideoGrid roomCode={roomCode} isHost={true} />
+            <VideoGrid roomCode={roomCode} isHost={true} hostToken={hostToken} />
           </div>
           {/* ControlBar is now inside LiveKitRoom -- TrackToggle hooks work here */}
           <ControlBar roomCode={roomCode} connectedPlatforms={connectedPlatforms} />

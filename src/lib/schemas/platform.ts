@@ -7,11 +7,9 @@ export type Platform = z.infer<typeof PlatformSchema>
 
 // Accepts both lowercase and uppercase (DB returns uppercase PlatformType enum)
 // and normalizes to lowercase for client consumption.
-const PLATFORM_VALUES = ["youtube", "twitch", "kick", "tiktok"] as const
-type PlatformLower = (typeof PLATFORM_VALUES)[number]
 export const PlatformFlexSchema = z
   .string()
-  .transform((v) => v.toLowerCase() as PlatformLower)
+  .transform((v) => v.toLowerCase() as Platform)
   .pipe(PlatformSchema)
 
 // ── Platform connection (as returned by GET /api/platforms) ──────────────────

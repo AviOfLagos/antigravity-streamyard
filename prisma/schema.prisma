@@ -107,11 +107,13 @@ model Room {
   hostId            String
   host              User           @relation(fields: [hostId], references: [id])
   status            RoomStatus     @default(LOBBY)
+  autoAdmit         Boolean        @default(false)
   selectedPlatforms PlatformType[]
   createdAt         DateTime       @default(now())
   endedAt           DateTime?
   participants      Participant[]
   streamSessions    StreamSession[]
+  guestLeads        GuestLead[]
 }
 
 model Participant {
@@ -125,6 +127,18 @@ model Participant {
   leftAt   DateTime?
 
   @@index([roomId])
+}
+
+model GuestLead {
+  id        String   @id @default(cuid())
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  name      String
+  email     String
+  joinedAt  DateTime @default(now())
+
+  @@index([roomId])
+  @@index([email])
 }
 
 model StreamSession {

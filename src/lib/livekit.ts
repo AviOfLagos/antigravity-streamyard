@@ -34,6 +34,26 @@ export async function getParticipantCount(roomName: string): Promise<number> {
   }
 }
 
+export async function removeParticipant(roomName: string, identity: string): Promise<void> {
+  const svc = getRoomService()
+  await svc.removeParticipant(roomName, identity)
+}
+
+export async function muteParticipantTrack(
+  roomName: string,
+  identity: string,
+  trackSid: string,
+  muted: boolean,
+): Promise<void> {
+  const svc = getRoomService()
+  await svc.mutePublishedTrack(roomName, identity, trackSid, muted)
+}
+
+export async function listParticipants(roomName: string) {
+  const svc = getRoomService()
+  return svc.listParticipants(roomName)
+}
+
 // livekit-server-sdk v2.x: toJwt() is async — must be awaited.
 // Previously cast as `string` with `as unknown as string` which silently
 // passed an unresolved Promise to the LiveKit client, causing immediate disconnect.

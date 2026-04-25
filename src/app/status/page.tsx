@@ -238,18 +238,64 @@ export default async function StatusPage() {
           </form>
         </div>
 
+        {/* Feature status */}
+        <section className="mb-12">
+          <h2 className="text-lg font-semibold text-white mb-4">Feature Status</h2>
+          <div className="flex flex-col gap-2">
+            {[
+              { name: "Studio & Video Grid", status: "Live", color: "emerald" },
+              { name: "Guest Join & Queue", status: "Live", color: "emerald" },
+              { name: "Auto-Admit Mode", status: "Live", color: "emerald" },
+              { name: "Host Moderation (Mute/Kick)", status: "Live", color: "emerald" },
+              { name: "Multi-Platform Chat", status: "Live", color: "emerald" },
+              { name: "Multi-Platform Streaming", status: "Live", color: "emerald" },
+              { name: "Guest Lead Capture", status: "Live", color: "emerald" },
+              { name: "Session Summary", status: "Live", color: "emerald" },
+              { name: "Feedback System", status: "Live", color: "emerald" },
+              { name: "RTMP Custom Ingest", status: "Planned", color: "gray" },
+            ].map((feature) => (
+              <div
+                key={feature.name}
+                className="flex items-center justify-between bg-[#111111] border border-white/6 rounded-xl px-4 py-2.5"
+              >
+                <span className="text-sm text-gray-300">{feature.name}</span>
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                  feature.color === "emerald"
+                    ? "bg-emerald-500/10 text-emerald-400"
+                    : "bg-gray-500/10 text-gray-500"
+                }`}>
+                  {feature.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* Incident history */}
-        <section>
+        <section className="mb-12">
           <h2 className="text-lg font-semibold text-white mb-4">Recent Incidents</h2>
           <div className="bg-[#111111] border border-white/6 rounded-2xl px-5 py-6">
             <p className="text-gray-500 text-sm">No incidents reported in the last 30 days.</p>
           </div>
         </section>
+
+        {/* Version */}
+        <div className="text-center text-gray-600 text-xs">
+          Zerocast v1.1.0 · <Link href="/changelog" className="text-gray-500 hover:text-gray-300 transition-colors">View changelog</Link>
+        </div>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-white/6 px-6 py-8 text-center text-gray-500 text-sm">
-        &copy; 2026 Zerocast
+      <footer className="border-t border-white/6 py-8 px-6">
+        <div className="max-w-2xl mx-auto flex items-center justify-between">
+          <span className="text-gray-600 text-sm">&copy; 2026 Zerocast</span>
+          <Link
+            href="/feedback"
+            className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
+          >
+            Report an issue
+          </Link>
+        </div>
       </footer>
     </div>
   )

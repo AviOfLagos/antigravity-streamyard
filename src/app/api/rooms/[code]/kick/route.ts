@@ -2,10 +2,16 @@ import { jwtVerify } from "jose"
 import { NextResponse } from "next/server"
 
 import { auth } from "@/auth"
+import { removeParticipant } from "@/lib/livekit"
+import { prisma } from "@/lib/prisma"
 import { getCachedRoom } from "@/lib/room-cache"
-import { deletePendingGuest, publishEvent, redis } from "@/lib/redis"
-import { DenyGuestRequestSchema } from "@/lib/schemas"
-import { validateRequestBody } from "@/lib/schemas/api"
+import { publishEvent } from "@/lib/redis"
+
+import { z } from "zod"
+
+const KickSchema = z.object({
+  identity: z.string().min(1),
+})
 
 export async function POST(
   req: Request,
@@ -13,19 +19,20 @@ export async function POST(
 ) {
   const { code } = await params
   const body = await req.json().catch(() => ({}))
-  const validation = validateRequestBody(DenyGuestRequestSchema, body)
-  if (!validation.success) return validation.response
+  const parsed = KickSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Missing identity" }, { status: 400 })
+  }
 
-  const { guestId } = validation.data
-
+  const { identity } = parsed.data
   const room = await getCachedRoom(code)
 
-  // ── Auth: session OR LiveKit host JWT (for demo/direct access) ──────────
+  // ── Auth: session OR LiveKit host JWT ──────────────────────────────────
   let authorized = false
 
   const session = await auth()
-  if (session?.user?.id) {
-    if (room?.hostId === session.user.id) authorized = true
+  if (session?.user?.id && room?.hostId === session.user.id) {
+    authorized = true
   }
 
   if (!authorized) {
@@ -42,27 +49,36 @@ export async function POST(
           if (room?.hostId === payload.sub) authorized = true
         }
       } catch {
-        // invalid token — keep unauthorized
+        // invalid token
       }
     }
   }
 
   if (!authorized) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-
   if (!room) return NextResponse.json({ error: "Room not found" }, { status: 404 })
 
-  await deletePendingGuest(code, guestId)
-  await publishEvent(code, { type: "GUEST_DENIED", data: { guestId } })
-
-  // Clean up pending name so the guest can re-request with the same name
-  const pendingKey = `room:${code}:pending:${guestId}`
-  const pendingRaw = await redis.get(pendingKey)
-  if (pendingRaw) {
-    const pending = typeof pendingRaw === "string" ? JSON.parse(pendingRaw) : pendingRaw
-    if (pending?.name) {
-      await redis.srem(`room:${code}:pending-names`, pending.name)
-    }
+  // Prevent host from kicking themselves
+  if (identity.startsWith("host-")) {
+    return NextResponse.json({ error: "Cannot kick the host" }, { status: 400 })
   }
+
+  try {
+    await removeParticipant(code, identity)
+  } catch (err) {
+    // Participant may have already left
+    console.warn("[kick] removeParticipant failed (may have already left):", err)
+  }
+
+  // Mark participant as left in DB
+  await prisma.participant.updateMany({
+    where: { roomId: room.id, identity, leftAt: null },
+    data: { leftAt: new Date() },
+  })
+
+  await publishEvent(code, {
+    type: "GUEST_LEFT",
+    data: { participantId: identity },
+  })
 
   return NextResponse.json({ ok: true })
 }

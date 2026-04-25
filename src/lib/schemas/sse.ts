@@ -22,6 +22,8 @@ export const SSEGuestAdmittedEventSchema = z.object({
   data: z.object({
     guestId: z.string(),
     token: z.string(),
+    identity: z.string().optional(),
+    name: z.string().optional(),
   }),
 })
 

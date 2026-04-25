@@ -21,6 +21,7 @@ export const CreateRoomRequestSchema = z.object({
       return stripHtml(val).trim().slice(0, 100) || undefined
     }),
   selectedPlatforms: z.array(PlatformSchema).optional().default([]),
+  autoAdmit: z.boolean().optional().default(false),
 })
 export type CreateRoomRequest = z.infer<typeof CreateRoomRequestSchema>
 

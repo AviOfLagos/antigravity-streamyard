@@ -31,6 +31,80 @@ const tagLabels: Record<Tag, string> = {
 
 const entries: ChangelogEntry[] = [
   {
+    date: "Apr 24, 2026",
+    version: "v1.1.0",
+    title: "Access Control & Guest Leads",
+    changes: [
+      { tag: "feat", text: "Auto-admit mode — guests join instantly without host approval when enabled" },
+      { tag: "feat", text: "Manual approval mode — host reviews and admits each guest individually (default)" },
+      { tag: "feat", text: "Guest email capture — optional email field on join form for lead collection, no account needed" },
+      { tag: "feat", text: "Guest lead database — emails and names stored per room for marketing teams" },
+      { tag: "improvement", text: "Access control toggle in studio creation modal with clear descriptions" },
+    ],
+  },
+  {
+    date: "Apr 24, 2026",
+    version: "v1.0.0",
+    title: "Host Moderation & Edge Case Hardening",
+    changes: [
+      { tag: "feat", text: "Mute/unmute guest mic and camera — host can toggle any guest's audio or video" },
+      { tag: "feat", text: "Kick participant — remove a guest from the studio with one click" },
+      { tag: "feat", text: "Participant count shown in studio view" },
+      { tag: "feat", text: "Feedback page — users can submit bug reports, feature requests, and general feedback" },
+      { tag: "fix", text: "Deny route now supports demo mode (LiveKit JWT auth)" },
+      { tag: "fix", text: "Guest leave now sends identity — participant leftAt properly recorded in DB" },
+      { tag: "fix", text: "Pending names freed on admit/deny — guests can re-request with the same name" },
+      { tag: "fix", text: "Admit errors now shown to host as toast notifications instead of silent failures" },
+      { tag: "fix", text: "GUEST_LEFT events clean stale participant IDs from on-screen list" },
+      { tag: "improvement", text: "Backstage panel shows empty state when no guests have joined" },
+      { tag: "improvement", text: "ParticipantRow shows host badge, mic/cam/kick controls for guests" },
+      { tag: "improvement", text: "Changelog updated to cover all releases from v0.1.0 to v1.1.0" },
+    ],
+  },
+  {
+    date: "Apr 24, 2026",
+    version: "v0.9.0",
+    title: "Feedback System",
+    changes: [
+      { tag: "feat", text: "Feedback page at /feedback — submit bug reports, feature requests, or general feedback" },
+      { tag: "feat", text: "Feedback stored in Redis with 90-day TTL (last 1000 entries)" },
+      { tag: "improvement", text: "Feedback links added to landing page nav, footer, and changelog" },
+    ],
+  },
+  {
+    date: "Apr 20, 2026",
+    version: "v0.8.0",
+    title: "Audio Autoplay & DB Resilience",
+    changes: [
+      { tag: "fix", text: "Browser audio autoplay — StartAudio button appears when browser blocks audio without user gesture" },
+      { tag: "fix", text: "Neon DB resilience — 3-layer retry with exponential backoff for free-tier connection drops" },
+      { tag: "improvement", text: "Redis caching (60s TTL) eliminates ~80% of DB reads across 15+ routes" },
+      { tag: "improvement", text: "Cache invalidation on room status mutations for data freshness" },
+    ],
+  },
+  {
+    date: "Apr 19, 2026",
+    version: "v0.7.0",
+    title: "Platform Connections & Streaming",
+    changes: [
+      { tag: "feat", text: "Platform connection management — connect YouTube, Twitch, Kick, TikTok stream keys" },
+      { tag: "feat", text: "Live streaming to connected platforms from the studio" },
+      { tag: "improvement", text: "Studio UI improvements — refined controls and layout" },
+      { tag: "security", text: "Rate limiting on guest requests and API routes" },
+    ],
+  },
+  {
+    date: "Apr 19, 2026",
+    version: "v0.6.0",
+    title: "Schema Migration & Sign-in Fix",
+    changes: [
+      { tag: "fix", text: "Schema enum migration — resolved Prisma enum conflicts on deploy" },
+      { tag: "fix", text: "Auto sign-in after OAuth — no more redirect loops" },
+      { tag: "fix", text: "Neon retry logic improved with pgbouncer params" },
+      { tag: "improvement", text: "Room status UX — clearer lobby/live/ended states" },
+    ],
+  },
+  {
     date: "Apr 18, 2026",
     version: "v0.5.0",
     title: "Edge Case Hardening",
@@ -174,8 +248,16 @@ export default function ChangelogPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-white/6 py-8 text-center text-gray-600 text-sm">
-        &copy; 2026 Zerocast
+      <footer className="border-t border-white/6 py-8 px-6">
+        <div className="max-w-3xl mx-auto flex items-center justify-between">
+          <span className="text-gray-600 text-sm">&copy; 2026 Zerocast</span>
+          <Link
+            href="/feedback"
+            className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
+          >
+            Report an issue
+          </Link>
+        </div>
       </footer>
     </div>
   )

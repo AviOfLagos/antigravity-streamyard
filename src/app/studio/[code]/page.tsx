@@ -9,7 +9,8 @@ import { generateHostToken } from "@/lib/livekit"
 import { prisma } from "@/lib/prisma"
 import { getCachedRoom } from "@/lib/room-cache"
 import { setRoomInfo } from "@/lib/redis"
-import StudioClient from "./StudioClient"
+// F-04: Client wrapper with dynamic import (ssr:false not allowed in server components)
+import StudioClientLoader from "./StudioClientLoader"
 
 /** Skeleton loader matching the studio layout dimensions to avoid CLS */
 function StudioSkeleton() {
@@ -98,7 +99,7 @@ export default async function StudioPage({ params }: Props) {
   return (
     <Suspense fallback={<StudioSkeleton />}>
       <StudioErrorBoundary roomCode={code}>
-        <StudioClient
+        <StudioClientLoader
           roomCode={code}
           hostToken={hostToken}
           livekitUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}

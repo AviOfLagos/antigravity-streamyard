@@ -15,7 +15,8 @@ interface ChatPanelProps {
   isHost: boolean
 }
 
-export default function ChatPanel({ roomCode: _roomCode, isHost: _isHost }: ChatPanelProps) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export default function ChatPanel({ roomCode, isHost }: ChatPanelProps) {
   const parentRef = useRef<HTMLDivElement>(null)
   const storeMessages = useChatStore((s) => s.messages)
   const filters = useChatStore((s) => s.filters)
