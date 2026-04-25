@@ -49,5 +49,5 @@ __pycache__/
 next-env.d.ts
 
 
-/docs
-docs
+# docs - keep project docs tracked
+# /docs

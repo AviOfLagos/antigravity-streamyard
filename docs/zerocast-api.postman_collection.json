@@ -1,0 +1,329 @@
+{
+  "info": {
+    "name": "Zerocast API v1.2.0",
+    "description": "Complete API documentation for Zerocast streaming studio.\n\nSetup:\n1. Set `baseUrl` variable to your server URL\n2. Sign in via browser to get a session cookie\n3. Copy the cookie value to the `sessionCookie` variable\n4. Create a room first to get a `roomCode` for other endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "roomCode", "value": "abc123" },
+    { "key": "guestId", "value": "" },
+    { "key": "hostToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health & Public",
+      "item": [
+        {
+          "name": "System Status",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/status",
+            "description": "Returns health status of Database, Redis, and LiveKit services.\n\nNo auth required."
+          }
+        },
+        {
+          "name": "Submit Feedback",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/feedback",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"bug\",\n  \"title\": \"Audio cuts out on layout switch\",\n  \"description\": \"When switching from Grid to Spotlight layout, audio drops for 2 seconds.\",\n  \"email\": \"tester@example.com\"\n}"
+            },
+            "description": "Submit bug report, feature request, or general feedback.\n\n**type**: `bug` | `feature` | `other`\n**title**: Required, max 200 chars\n**description**: Required, max 5000 chars\n**email**: Optional, for follow-up\n\nNo auth required."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rooms",
+      "item": [
+        {
+          "name": "Create Room",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/rooms",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"My Live Stream\",\n  \"selectedPlatforms\": [\"youtube\", \"twitch\"],\n  \"autoAdmit\": false\n}"
+            },
+            "description": "Create a new studio room.\n\n**Auth**: Session cookie required\n**Rate limit**: 5/min per user\n\n**Body**:\n- `title` (string, optional): Room title, max 100 chars\n- `selectedPlatforms` (string[], optional): `youtube`, `twitch`, `kick`, `tiktok`\n- `autoAdmit` (boolean, optional): If true, guests join without host approval. Default: false\n\n**Response**: `{ code, hostToken }`\n\nSave `code` as `roomCode` variable and `hostToken` as `hostToken` variable."
+          }
+        },
+        {
+          "name": "Get Room Platforms",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/rooms/{{roomCode}}/platforms",
+            "description": "Get list of platforms selected for this room.\n\n**Auth**: None (public)\n\n**Response**: `{ platforms: [{ platform, channelName }] }`"
+          }
+        },
+        {
+          "name": "Get Room State",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/rooms/{{roomCode}}/state",
+            "description": "Get persisted studio state (layout, pinned participant, on-screen IDs, chat filters).\n\n**Auth**: None\n\n**Response**: `{ state: { activeLayout, pinnedParticipantId, onScreenParticipantIds, filters } }`"
+          }
+        },
+        {
+          "name": "Save Room State",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/rooms/{{roomCode}}/state",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activeLayout\": \"spotlight\",\n  \"pinnedParticipantId\": null,\n  \"onScreenParticipantIds\": [],\n  \"filters\": { \"youtube\": true, \"twitch\": true, \"kick\": true, \"tiktok\": true }\n}"
+            },
+            "description": "Persist studio state to Redis.\n\n**Auth**: None (called by client-side debounced save)"
+          }
+        },
+        {
+          "name": "End Room",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/rooms/{{roomCode}}/end",
+            "description": "End the studio session. Saves summary, notifies all participants, cleans up LiveKit room.\n\n**Auth**: Session cookie (host only)\n**Idempotent**: Safe to call multiple times\n\n**Response**: `{ ok: true }`"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Guest Flow",
+      "item": [
+        {
+          "name": "Request to Join",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/rooms/{{roomCode}}/request",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alice\",\n  \"email\": \"alice@example.com\"\n}"
+            },
+            "description": "Guest requests to join a studio room.\n\n**Auth**: None (public)\n**Rate limit**: 3/min per IP\n\n**Body**:\n- `name` (string, required): Display name, max 50 chars, HTML stripped\n- `email` (string, optional): For lead capture, no account created\n\n**Response**:\n- Manual admit: `{ guestId }` — guest enters waiting state\n- Auto-admit: `{ guestId, autoAdmitted: true }` — guest gets token via SSE\n\n**Errors**:\n- 404: Room not found or ended\n- 400: Room is full (max 6)\n- 409: Duplicate pending request for same name\n- 429: Rate limited\n\nSave `guestId` as `guestId` variable."
+          }
+        },
+        {
+          "name": "Admit Guest",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/rooms/{{roomCode}}/admit",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{hostToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"guestId\": \"{{guestId}}\",\n  \"name\": \"Alice\"\n}"
+            },
+            "description": "Host admits a pending guest.\n\n**Auth**: Session cookie OR `Authorization: Bearer {hostToken}` (for demo mode)\n\n**Body**:\n- `guestId` (string, required)\n- `name` (string, optional): Display name override\n\n**Response**: `{ ok: true, identity: \"guest-{guestId}\" }`\n\n**Side effects**:\n- Generates LiveKit token\n- Creates Participant record in DB\n- Publishes GUEST_ADMITTED SSE event\n- Frees pending name slot\n\n**Errors**:\n- 401: Unauthorized\n- 400: Room full\n- 410: Room ended"
+          }
+        },
+        {
+          "name": "Deny Guest",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/rooms/{{roomCode}}/deny",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{hostToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"guestId\": \"{{guestId}}\"\n}"
+            },
+            "description": "Host denies a pending guest.\n\n**Auth**: Session cookie OR `Authorization: Bearer {hostToken}`\n\n**Side effects**:\n- Removes pending request from Redis\n- Publishes GUEST_DENIED SSE event\n- Frees pending name slot"
+          }
+        },
+        {
+          "name": "Guest Leave",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/rooms/{{roomCode}}/leave",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"displayName\": \"Alice\",\n  \"identity\": \"guest-abc123\"\n}"
+            },
+            "description": "Guest voluntarily leaves the studio.\n\n**Auth**: None\n**Idempotent**: Safe if room already ended\n\n**Side effects**:\n- Sets Participant.leftAt in DB\n- Publishes GUEST_LEFT SSE event"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Moderation",
+      "item": [
+        {
+          "name": "Kick Participant",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/rooms/{{roomCode}}/kick",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{hostToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identity\": \"guest-abc123\"\n}"
+            },
+            "description": "Remove a participant from the studio.\n\n**Auth**: Session cookie OR `Authorization: Bearer {hostToken}`\n\n**Body**:\n- `identity` (string, required): LiveKit identity (e.g. `guest-{guestId}`)\n\n**Errors**:\n- 400: Cannot kick the host (identity starts with `host-`)\n- 404: Room not found\n\n**Side effects**:\n- Calls LiveKit removeParticipant\n- Sets Participant.leftAt in DB\n- Publishes GUEST_LEFT SSE event"
+          }
+        },
+        {
+          "name": "Mute/Unmute Participant",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/rooms/{{roomCode}}/mute",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{hostToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identity\": \"guest-abc123\",\n  \"trackType\": \"audio\",\n  \"muted\": true\n}"
+            },
+            "description": "Mute or unmute a participant's audio or video track.\n\n**Auth**: Session cookie OR `Authorization: Bearer {hostToken}`\n\n**Body**:\n- `identity` (string, required): LiveKit identity\n- `trackType` (string, required): `audio` or `video`\n- `muted` (boolean, required): true to mute, false to unmute\n\n**Errors**:\n- 404: Participant not found in room, or no matching track"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Chat",
+      "item": [
+        {
+          "name": "Connect Chat Platforms",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/rooms/{{roomCode}}/chat/connect",
+            "description": "Start chat connectors for the room's selected platforms.\n\n**Auth**: Session cookie (host only)\n**Rate limit**: 2/min per user\n\n**Response**: `{ ok: true, platforms: [\"youtube\", \"twitch\"] }`\n\n**Side effects**: Starts background connectors for YouTube, Twitch, Kick, TikTok (based on room's selectedPlatforms). Connectors publish messages to Redis."
+          }
+        },
+        {
+          "name": "Send Chat Message",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/rooms/{{roomCode}}/chat/send",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Hello from Zerocast!\",\n  \"platforms\": [\"youtube\", \"twitch\"]\n}"
+            },
+            "description": "Send a chat message to connected platforms.\n\n**Auth**: Session cookie (host only)\n\n**Body**:\n- `message` (string, required): Message text, max 500 chars\n- `platforms` (string[], optional): Which platforms to send to. Default: `[\"youtube\", \"twitch\"]`\n\n**Response**: `{ ok: true, results: { youtube: true, twitch: true, kick: false, tiktok: false } }`\n\n**Notes**:\n- YouTube: costs 50 API quota units per message\n- Twitch: uses tmi.js client.say()\n- Kick: Not yet supported (needs OAuth 2.1)\n- TikTok: Not yet supported (needs session cookies)"
+          }
+        },
+        {
+          "name": "SSE Event Stream",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/rooms/{{roomCode}}/stream?since={{$timestamp}}",
+            "description": "Server-Sent Events stream for real-time studio events.\n\n**Auth**: None (public, rate limited)\n**Rate limit**: 3 connections/min per IP\n**Runtime**: Edge\n\n**Query params**:\n- `since` (number): Unix timestamp in ms — only events after this time\n\n**Event types delivered**:\n- `GUEST_REQUEST` — `{ guestId, name }`\n- `GUEST_ADMITTED` — `{ guestId, token, identity?, name? }`\n- `GUEST_DENIED` — `{ guestId }`\n- `GUEST_LEFT` — `{ participantId }`\n- `STUDIO_ENDED` — no data\n- `CHAT_MESSAGE` — `{ id, platform, author, message, timestamp, eventType?, donation?, subscription?, raid?, replyTo?, likeCount? }`\n- `CHAT_CONNECTOR_STATUS` — `{ platform, status, error? }`\n- `STREAM_STARTED` — `{ platforms, egressId }`\n- `STREAM_STOPPED` — no data\n- `STREAM_DESTINATION_CHANGED` — `{ action, platform }`\n- `STREAM_ERROR` — `{ platform?, error }`\n- `PING` — keepalive\n- `CONNECTION_ERROR` — SSE connection failing\n\n**Chat message eventType values**: `text`, `donation`, `subscription`, `follow`, `raid`, `like`, `join`, `system`"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Streaming",
+      "item": [
+        {
+          "name": "Start Stream (Go Live)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/rooms/{{roomCode}}/stream-live",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"platforms\": [\"youtube\", \"twitch\"]\n}"
+            },
+            "description": "Start streaming to selected platforms via LiveKit egress.\n\n**Auth**: Session cookie (host only)\n\n**Body**:\n- `platforms` (string[], required): Platforms to stream to\n\n**Response**: `{ ok: true, egressId }`"
+          }
+        },
+        {
+          "name": "Stop Stream",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/rooms/{{roomCode}}/stream-live",
+            "description": "Stop the active stream.\n\n**Auth**: Session cookie (host only)"
+          }
+        },
+        {
+          "name": "Add/Remove Stream Platform",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/rooms/{{roomCode}}/stream-live",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"add\",\n  \"platform\": \"kick\"\n}"
+            },
+            "description": "Add or remove a platform from the active stream.\n\n**Auth**: Session cookie (host only)\n\n**Body**:\n- `action` (string): `add` or `remove`\n- `platform` (string): Platform to add/remove"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Platforms",
+      "item": [
+        {
+          "name": "List Connected Platforms",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/platforms",
+            "description": "Get all platforms connected by the current user.\n\n**Auth**: Session cookie\n\n**Response**: `{ platforms: [{ platform, channelName }] }`"
+          }
+        },
+        {
+          "name": "Connect Platform",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/platforms/connect",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"platform\": \"twitch\",\n  \"channelName\": \"my_channel\"\n}"
+            },
+            "description": "Connect a streaming platform.\n\n**Auth**: Session cookie\n\n**Body**:\n- `platform` (string): `youtube`, `twitch`, `kick`, `tiktok`\n- `channelName` (string, required): Channel/username"
+          }
+        },
+        {
+          "name": "Disconnect Platform",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/platforms/disconnect",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"platform\": \"twitch\"\n}"
+            },
+            "description": "Disconnect a streaming platform.\n\n**Auth**: Session cookie"
+          }
+        },
+        {
+          "name": "Set Stream Key",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/platforms/stream-key",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"platform\": \"kick\",\n  \"streamKey\": \"live_abc123def456\",\n  \"ingestUrl\": \"rtmp://ingest.kick.com/live/\"\n}"
+            },
+            "description": "Set RTMP stream key for a platform.\n\n**Auth**: Session cookie\n\n**Body**:\n- `platform` (string): Platform name\n- `streamKey` (string, required): RTMP stream key\n- `ingestUrl` (string, optional): Custom ingest URL (mainly for TikTok)"
+          }
+        },
+        {
+          "name": "Get Stream Keys",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/platforms/stream-key",
+            "description": "Get stream key status for connected platforms.\n\n**Auth**: Session cookie"
+          }
+        }
+      ]
+    }
+  ]
+}
