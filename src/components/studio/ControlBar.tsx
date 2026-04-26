@@ -8,6 +8,7 @@ import { LogOut, Mic, MicOff, Monitor, MonitorOff, Video, VideoOff } from "lucid
 import { Track } from "livekit-client"
 import { useRouter } from "next/navigation"
 
+import DeviceSelector from "./DeviceSelector"
 import GoLivePanel from "./GoLivePanel"
 import InviteLink from "./InviteLink"
 import LayoutSelector from "./LayoutSelector"
@@ -86,6 +87,11 @@ export default function ControlBar({ roomCode, connectedPlatforms = [] }: Contro
           onLabel="Screen"
           offLabel="Screen"
         />
+      </div>
+
+      {/* Device selectors (hidden on mobile) */}
+      <div className="hidden md:flex items-center">
+        <DeviceSelector />
       </div>
 
       {/* Center: invite link */}

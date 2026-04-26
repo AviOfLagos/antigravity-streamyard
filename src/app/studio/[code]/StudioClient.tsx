@@ -372,6 +372,11 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, c
         connect={true}
         video={true}
         audio={true}
+        options={{
+          audioCaptureDefaults: { autoGainControl: true, noiseSuppression: true, echoCancellation: true },
+          videoCaptureDefaults: { resolution: { width: 1280, height: 720, frameRate: 30 } },
+          publishDefaults: { simulcast: true },
+        }}
         className="flex flex-1 overflow-hidden"
       >
         {/* Render remote participants' audio */}

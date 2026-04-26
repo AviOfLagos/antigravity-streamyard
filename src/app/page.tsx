@@ -114,6 +114,12 @@ export default async function LandingPage() {
             >
               Feedback
             </Link>
+            <Link
+              href="/qa"
+              className="hidden sm:block text-sm text-gray-400 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-white/5"
+            >
+              QA
+            </Link>
 
             <div className="w-px h-4 bg-white/10 mx-2 hidden sm:block" />
 

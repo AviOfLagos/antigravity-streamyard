@@ -1,7 +1,6 @@
 "use client"
 
 import { Check, Copy, Loader2, Plus } from "lucide-react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
@@ -155,26 +154,15 @@ export default function CreateStudioButton() {
                 />
               </div>
 
-              {/* Platform selection */}
+              {/* Platform selection + inline connect */}
               <div className="mb-5">
-                <p
-                  id="stream-to-label"
-                  className="block text-xs text-gray-500 uppercase tracking-wide mb-2"
-                >
-                  Stream to
+                <p className="block text-xs text-gray-500 uppercase tracking-wide mb-2">
+                  Platforms
                 </p>
-                {availablePlatforms.length === 0 ? (
-                  <p className="text-sm text-gray-500">
-                    No platforms connected yet.{" "}
-                    <Link
-                      href="/settings/platforms"
-                      className="text-violet-400 hover:text-violet-300"
-                    >
-                      Connect platforms →
-                    </Link>
-                  </p>
-                ) : (
-                  <ul className="space-y-2">
+
+                {/* Connected platforms */}
+                {availablePlatforms.length > 0 && (
+                  <ul className="space-y-2 mb-3">
                     {availablePlatforms.map(({ platform, channelName }) => {
                       const isChecked = selectedPlatforms.includes(platform)
                       const color = PLATFORM_COLORS[platform.toLowerCase()] ?? "#94a3b8"
@@ -199,6 +187,20 @@ export default function CreateStudioButton() {
                     })}
                   </ul>
                 )}
+
+                {/* Quick-connect for platforms not yet connected */}
+                <InlineConnectPlatforms
+                  connectedPlatforms={availablePlatforms.map((p) => p.platform.toLowerCase())}
+                  onConnected={(platform, channelName) => {
+                    setAvailablePlatforms((prev) => [
+                      ...prev.filter((p) => p.platform !== platform),
+                      { platform, channelName },
+                    ])
+                    setSelectedPlatforms((prev) =>
+                      prev.includes(platform) ? prev : [...prev, platform]
+                    )
+                  }}
+                />
 
                 {title.trim() && availablePlatforms.length > 0 && (
                   <p className="text-xs text-gray-500 mt-2">
@@ -343,5 +345,113 @@ export default function CreateStudioButton() {
         </div>
       )}
     </>
+  )
+}
+
+// ── Inline platform connect ──────────────────────────────────────────────────
+
+const ALL_PLATFORMS = [
+  { id: "youtube", label: "YouTube", color: "#ef4444", placeholder: "Channel ID (UC...)" },
+  { id: "twitch", label: "Twitch", color: "#a855f7", placeholder: "Channel name" },
+  { id: "kick", label: "Kick", color: "#22c55e", placeholder: "Channel name" },
+  { id: "tiktok", label: "TikTok", color: "#94a3b8", placeholder: "@username" },
+]
+
+function InlineConnectPlatforms({
+  connectedPlatforms,
+  onConnected,
+}: {
+  connectedPlatforms: string[]
+  onConnected: (platform: string, channelName: string) => void
+}) {
+  const [expandedPlatform, setExpandedPlatform] = useState<string | null>(null)
+  const [channelInput, setChannelInput] = useState("")
+  const [connecting, setConnecting] = useState(false)
+
+  const unconnected = ALL_PLATFORMS.filter(
+    (p) => !connectedPlatforms.includes(p.id)
+  )
+
+  if (unconnected.length === 0) return null
+
+  const handleConnect = async (platformId: string) => {
+    if (!channelInput.trim() || connecting) return
+    setConnecting(true)
+    try {
+      const res = await fetch("/api/platforms/connect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          platform: platformId,
+          channelName: channelInput.trim(),
+          channelId: channelInput.trim(),
+        }),
+      })
+      if (res.ok) {
+        onConnected(platformId, channelInput.trim())
+        setExpandedPlatform(null)
+        setChannelInput("")
+      }
+    } catch {
+      // Silent fail
+    } finally {
+      setConnecting(false)
+    }
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <p className="text-[10px] text-gray-600 uppercase tracking-wide">Quick connect</p>
+      {unconnected.map((platform) => (
+        <div key={platform.id}>
+          {expandedPlatform === platform.id ? (
+            <div className="flex items-center gap-2 bg-[#1a1a1a] rounded-xl px-3 py-2">
+              <span
+                className="w-2.5 h-2.5 rounded-full shrink-0"
+                style={{ backgroundColor: platform.color }}
+              />
+              <input
+                type="text"
+                value={channelInput}
+                onChange={(e) => setChannelInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleConnect(platform.id)}
+                placeholder={platform.placeholder}
+                className="flex-1 bg-transparent text-sm text-white placeholder:text-gray-600 outline-none"
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={() => handleConnect(platform.id)}
+                disabled={!channelInput.trim() || connecting}
+                className="text-xs text-violet-400 hover:text-violet-300 font-medium disabled:opacity-40"
+              >
+                {connecting ? "..." : "Connect"}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setExpandedPlatform(null); setChannelInput("") }}
+                className="text-xs text-gray-600 hover:text-gray-400"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setExpandedPlatform(platform.id)}
+              className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl hover:bg-white/4 transition-colors text-left"
+            >
+              <span
+                className="w-2.5 h-2.5 rounded-full shrink-0"
+                style={{ backgroundColor: platform.color }}
+              />
+              <span className="text-sm text-gray-500">
+                + Connect {platform.label}
+              </span>
+            </button>
+          )}
+        </div>
+      ))}
+    </div>
   )
 }

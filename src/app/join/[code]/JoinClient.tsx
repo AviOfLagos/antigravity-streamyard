@@ -547,6 +547,10 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
         connect={true}
         video={videoEnabled}
         audio={audioEnabled}
+        options={{
+          audioCaptureDefaults: { autoGainControl: true, noiseSuppression: true, echoCancellation: true },
+          publishDefaults: { simulcast: true },
+        }}
         className="h-screen"
       >
         <RoomAudioRenderer />
