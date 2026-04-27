@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import Navbar from "@/components/ui/Navbar"
 import { getTokenHealth, type PlatformConnectionRow } from "@/lib/auth/token-refresh"
 
+import CustomRtmpSection from "@/components/dashboard/CustomRtmpSection"
 import PlatformConnectForm from "@/components/dashboard/PlatformConnectForm"
 
 export default async function PlatformsPage() {
@@ -70,6 +71,15 @@ export default async function PlatformsPage() {
             helpText="Your TikTok username. Get RTMP URL + stream key from TikTok Live Center (requires 1000+ followers)."
             connection={connectedMap.tiktok ?? null}
           />
+        </div>
+
+        {/* Custom RTMP */}
+        <div className="mt-10">
+          <h2 className="text-xl font-bold text-white mb-2">Custom RTMP</h2>
+          <p className="text-gray-400 text-sm mb-6">
+            Stream to any platform that supports RTMP — Facebook Live, LinkedIn Live, Restream, your own server, etc.
+          </p>
+          <CustomRtmpSection />
         </div>
       </div>
     </div>

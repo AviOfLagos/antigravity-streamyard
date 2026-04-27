@@ -31,6 +31,22 @@ const tagLabels: Record<Tag, string> = {
 
 const entries: ChangelogEntry[] = [
   {
+    date: "Apr 27, 2026",
+    version: "v1.3.0",
+    title: "Broadcast Details, Custom RTMP & Stream Fixes",
+    changes: [
+      { tag: "feat", text: "Broadcast description — set a description when creating a studio, sent to all streaming platforms" },
+      { tag: "feat", text: "Custom RTMP destinations — stream to Facebook Live, LinkedIn, Restream, or any RTMP endpoint" },
+      { tag: "feat", text: "Custom RTMP management in Settings with add/remove UI (max 10 per user)" },
+      { tag: "feat", text: "Custom RTMP destinations shown in GoLive panel alongside platform checkboxes" },
+      { tag: "feat", text: "GoLive panel shows broadcast title + description preview before going live" },
+      { tag: "fix", text: "GoLive panel was calling wrong API endpoints — fixed all URLs to use /stream-live" },
+      { tag: "fix", text: "Stream stop now uses DELETE method (was incorrectly POST)" },
+      { tag: "improvement", text: "Real platform SVG logos throughout the entire app (YouTube, Twitch, Kick, TikTok)" },
+      { tag: "improvement", text: "Device selector — pick camera, microphone, and speaker from the studio ControlBar" },
+    ],
+  },
+  {
     date: "Apr 25, 2026",
     version: "v1.2.0",
     title: "Platform Connector Upgrades & Chat Reply",

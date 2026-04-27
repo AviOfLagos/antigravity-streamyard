@@ -250,13 +250,15 @@ export default async function StatusPage() {
               { name: "Multi-Platform Chat (YouTube, Twitch, Kick, TikTok)", status: "Live", color: "emerald" },
               { name: "Chat Reply (Send to YouTube & Twitch)", status: "Live", color: "emerald" },
               { name: "Donations & Events (Super Chat, Bits, Gifts)", status: "Live", color: "emerald" },
-              { name: "Multi-Platform Streaming", status: "Live", color: "emerald" },
+              { name: "Multi-Platform RTMP Streaming", status: "Live", color: "emerald" },
+              { name: "Custom RTMP Destinations", status: "Live", color: "emerald" },
+              { name: "Broadcast Description", status: "Live", color: "emerald" },
+              { name: "Device Selection (Camera/Mic/Speaker)", status: "Live", color: "emerald" },
               { name: "Guest Lead Capture", status: "Live", color: "emerald" },
               { name: "Session Summary", status: "Live", color: "emerald" },
               { name: "Feedback System", status: "Live", color: "emerald" },
               { name: "Unit Test Suite (114 tests)", status: "Live", color: "emerald" },
               { name: "Chat Reply to Kick & TikTok", status: "Planned", color: "gray" },
-              { name: "RTMP Custom Ingest", status: "Planned", color: "gray" },
             ].map((feature) => (
               <div
                 key={feature.name}
@@ -285,7 +287,7 @@ export default async function StatusPage() {
 
         {/* Version */}
         <div className="text-center text-gray-600 text-xs">
-          Zerocast v1.2.0 · <Link href="/changelog" className="text-gray-500 hover:text-gray-300 transition-colors">View changelog</Link>
+          Zerocast v1.3.0 · <Link href="/changelog" className="text-gray-500 hover:text-gray-300 transition-colors">View changelog</Link>
         </div>
       </main>
 

@@ -1,4 +1,4 @@
-# Zerocast QA Test Plan v1.2.0
+# Zerocast QA Test Plan v1.3.0
 
 ## Overview
 
@@ -39,6 +39,9 @@ All of these should redirect to `/login` when not authenticated:
 | 5 | Manual approval default | Don't change access control | "Manual approval" is pre-selected |
 | 6 | Copy invite link | Click "Copy" on invite URL | URL copied to clipboard, button shows "Copied!" |
 | 7 | Enter studio | Click "Enter Studio" | Navigated to `/studio/{code}` |
+| 8 | Add description | Enter description text | Description saved and shown in GoLive panel |
+| 9 | Inline connect platform | Click "+ Connect Twitch" → Enter name | Platform connected and auto-selected |
+| 10 | Platform icons | View platform checkboxes | Real SVG logos (not letter placeholders) |
 
 ### 2.2 Room List
 | # | Test Case | Steps | Expected |
@@ -150,7 +153,17 @@ All of these should redirect to `/login` when not authenticated:
 | 10 | Send message | Type in chat input → Enter | Message sent to YouTube + Twitch |
 | 11 | Empty send | Press Enter with empty input | Nothing happens |
 
-### 4.6 Streaming (Go Live)
+### 4.6 Device Selection
+| # | Test Case | Steps | Expected |
+|---|-----------|-------|----------|
+| 1 | Camera picker | Click camera dropdown in ControlBar | List of available cameras, active one highlighted |
+| 2 | Mic picker | Click mic dropdown | List of available mics |
+| 3 | Speaker picker | Click speaker dropdown | List of audio output devices |
+| 4 | Switch camera | Select different camera | Video feed switches |
+| 5 | Switch mic | Select different mic | Audio input switches |
+| 6 | Single device | Only one camera/mic | Dropdown not shown |
+
+### 4.7 Streaming (Go Live)
 | # | Test Case | Steps | Expected |
 |---|-----------|-------|----------|
 | 1 | Start stream | Click Go Live → Select platforms | LIVE badge appears in header |
@@ -158,6 +171,9 @@ All of these should redirect to `/login` when not authenticated:
 | 3 | Add platform mid-stream | Add platform while live | Toast: "Added {platform} to stream" |
 | 4 | Remove platform mid-stream | Remove platform while live | Toast: "Removed {platform}" |
 | 5 | Stream error | Platform connection fails | Error toast with details |
+| 6 | Broadcast info preview | Open GoLive panel with title/description | Title + description shown before going live |
+| 7 | Custom RTMP in GoLive | Have custom RTMP destinations | Shown as checkboxes alongside platforms |
+| 8 | Select custom RTMP | Check a custom RTMP destination | Included in Go Live count |
 
 ---
 
@@ -183,6 +199,16 @@ All of these should redirect to `/login` when not authenticated:
 | 2 | Set stream key | Enter RTMP stream key | Key saved (masked in UI) |
 | 3 | Disconnect platform | Click Disconnect | Platform removed |
 | 4 | View connected | Visit page | All connected platforms listed |
+| 5 | Platform icons | View connected platforms | Real SVG logos, not letter placeholders |
+
+### 6.1 Custom RTMP Destinations
+| # | Test Case | Steps | Expected |
+|---|-----------|-------|----------|
+| 1 | Add custom RTMP | Click "+ Add Custom RTMP" → Fill form → Add | Destination added to list |
+| 2 | Remove custom RTMP | Click Remove on a destination | Destination removed |
+| 3 | Stream key masked | View custom RTMP form | Stream key field is password type with toggle |
+| 4 | Max 10 limit | Add 10 destinations | "Maximum 10" message shown, can't add more |
+| 5 | Validation | Submit with empty fields | Button disabled |
 
 ---
 

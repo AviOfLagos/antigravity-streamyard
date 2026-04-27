@@ -52,10 +52,18 @@ interface GoLivePanelProps {
   streamDescription?: string
 }
 
+interface CustomRtmpDest {
+  id: string
+  name: string
+  ingestUrl: string
+}
+
 export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle, streamDescription }: GoLivePanelProps) {
   const [open, setOpen] = useState(false)
   const [platformStatuses, setPlatformStatuses] = useState<PlatformStreamStatus[]>([])
+  const [customRtmpDests, setCustomRtmpDests] = useState<CustomRtmpDest[]>([])
   const [selectedPlatforms, setSelectedPlatforms] = useState<Set<string>>(new Set())
+  const [selectedCustomRtmp, setSelectedCustomRtmp] = useState<Set<string>>(new Set())
   const [starting, setStarting] = useState(false)
   const [stopping, setStopping] = useState(false)
   const fetchedRef = useRef(false)
@@ -70,39 +78,34 @@ export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle,
     if (!open || fetchedRef.current) return
     fetchedRef.current = true
 
-    fetch("/api/platforms/stream-key")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.platforms) {
-          const statuses = connectedPlatforms.map((cp) => {
-            const match = data.platforms.find(
-              (p: { platform: string; hasStreamKey: boolean }) =>
-                p.platform.toLowerCase() === cp.platform.toLowerCase()
-            )
-            return {
-              platform: cp.platform,
-              channelName: cp.channelName,
-              hasStreamKey: match?.hasStreamKey ?? false,
-            }
-          })
-          setPlatformStatuses(statuses)
-          // Auto-select platforms with stream keys
-          const autoSelected = new Set(
-            statuses.filter((s) => s.hasStreamKey).map((s) => s.platform)
-          )
-          setSelectedPlatforms(autoSelected)
+    // Fetch platform stream keys + custom RTMP in parallel
+    Promise.all([
+      fetch("/api/platforms/stream-key").then((r) => r.json()).catch(() => ({ platforms: [] })),
+      fetch("/api/platforms/custom-rtmp").then((r) => r.json()).catch(() => ({ destinations: [] })),
+    ]).then(([keyData, rtmpData]) => {
+      // Platform statuses
+      const statuses = connectedPlatforms.map((cp) => {
+        const match = (keyData.platforms ?? []).find(
+          (p: { platform: string; hasStreamKey: boolean }) =>
+            p.platform.toLowerCase() === cp.platform.toLowerCase()
+        )
+        return {
+          platform: cp.platform,
+          channelName: cp.channelName,
+          hasStreamKey: match?.hasStreamKey ?? false,
         }
       })
-      .catch(() => {
-        // Fallback: mark all as no key
-        setPlatformStatuses(
-          connectedPlatforms.map((cp) => ({
-            platform: cp.platform,
-            channelName: cp.channelName,
-            hasStreamKey: false,
-          }))
-        )
-      })
+      setPlatformStatuses(statuses)
+      const autoSelected = new Set(
+        statuses.filter((s) => s.hasStreamKey).map((s) => s.platform)
+      )
+      setSelectedPlatforms(autoSelected)
+
+      // Custom RTMP destinations
+      if (rtmpData.destinations) {
+        setCustomRtmpDests(rtmpData.destinations)
+      }
+    })
   }, [open, connectedPlatforms])
 
   // Reset fetch ref when dialog closes
@@ -123,7 +126,7 @@ export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle,
     if (selectedPlatforms.size === 0) return
     setStarting(true)
     try {
-      const res = await fetch(`/api/rooms/${roomCode}/stream/start`, {
+      const res = await fetch(`/api/rooms/${roomCode}/stream-live`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ platforms: Array.from(selectedPlatforms) }),
@@ -146,7 +149,7 @@ export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle,
   const handleEndStream = useCallback(async () => {
     setStopping(true)
     try {
-      const res = await fetch(`/api/rooms/${roomCode}/stream/stop`, { method: "POST" })
+      const res = await fetch(`/api/rooms/${roomCode}/stream-live`, { method: "DELETE" })
       if (res.ok) {
         setLiveState(false)
         toast.info("Stream ended", { description: "You are no longer live." })
@@ -162,7 +165,7 @@ export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle,
 
   const handleAddDestination = useCallback(async (platform: string) => {
     try {
-      const res = await fetch(`/api/rooms/${roomCode}/stream/destinations`, {
+      const res = await fetch(`/api/rooms/${roomCode}/stream-live`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "add", platform }),
@@ -178,7 +181,7 @@ export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle,
 
   const handleRemoveDestination = useCallback(async (platform: string) => {
     try {
-      const res = await fetch(`/api/rooms/${roomCode}/stream/destinations`, {
+      const res = await fetch(`/api/rooms/${roomCode}/stream-live`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "remove", platform }),
@@ -373,6 +376,59 @@ export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle,
                 ))}
               </div>
 
+              {/* Custom RTMP destinations */}
+              {customRtmpDests.length > 0 && (
+                <div className="space-y-2 mt-3">
+                  <p className="text-xs text-gray-400">Custom RTMP destinations:</p>
+                  {customRtmpDests.map((dest) => (
+                    <label
+                      key={dest.id}
+                      className={[
+                        "flex items-center justify-between px-3 py-2.5 rounded-lg border transition-all cursor-pointer",
+                        selectedCustomRtmp.has(dest.id)
+                          ? "bg-violet-500/10 border-violet-500/30"
+                          : "bg-white/5 border-white/5 hover:border-white/10",
+                      ].join(" ")}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <input
+                          type="checkbox"
+                          checked={selectedCustomRtmp.has(dest.id)}
+                          onChange={() => {
+                            setSelectedCustomRtmp((prev) => {
+                              const next = new Set(prev)
+                              if (next.has(dest.id)) next.delete(dest.id)
+                              else next.add(dest.id)
+                              return next
+                            })
+                          }}
+                          className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-violet-500 focus:ring-violet-500/30 focus:ring-offset-0"
+                        />
+                        <div className="w-[18px] h-[18px] rounded bg-gray-700 flex items-center justify-center text-[8px] font-bold text-white">
+                          R
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-white">{dest.name}</p>
+                          <p className="text-[11px] text-gray-500 truncate max-w-48">{dest.ingestUrl}</p>
+                        </div>
+                      </div>
+                      <span className="inline-flex items-center gap-1 text-[10px] text-green-400">
+                        <CheckCircle2 className="w-3 h-3" /> Ready
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              )}
+
+              {customRtmpDests.length === 0 && (
+                <a
+                  href="/settings/platforms"
+                  className="block text-center text-[11px] text-gray-600 hover:text-gray-400 mt-2 transition-colors"
+                >
+                  + Add custom RTMP destination
+                </a>
+              )}
+
               <div className="flex gap-2 mt-2">
                 <Button
                   variant="ghost"
@@ -383,7 +439,7 @@ export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle,
                 </Button>
                 <Button
                   onClick={handleGoLive}
-                  disabled={starting || selectedPlatforms.size === 0}
+                  disabled={starting || (selectedPlatforms.size + selectedCustomRtmp.size) === 0}
                   className="flex-1 bg-gradient-to-r from-red-600 to-violet-600 hover:from-red-500 hover:to-violet-500 text-white font-semibold shadow-lg shadow-violet-500/20 disabled:opacity-40 disabled:shadow-none"
                 >
                   {starting ? (
@@ -394,7 +450,7 @@ export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle,
                   ) : (
                     <span className="flex items-center gap-2">
                       <Radio className="w-4 h-4" />
-                      Go Live ({selectedPlatforms.size})
+                      Go Live ({selectedPlatforms.size + selectedCustomRtmp.size})
                     </span>
                   )}
                 </Button>
