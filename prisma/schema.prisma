@@ -43,6 +43,7 @@ model User {
   accounts            Account[]
   sessions            Session[]
   platformConnections PlatformConnection[]
+  customRtmp          CustomRtmpDestination[]
   rooms               Room[]
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
@@ -104,6 +105,7 @@ model Room {
   id                String         @id @default(cuid())
   code              String         @unique
   title             String?
+  description       String?        // Broadcast description (sent to platforms)
   hostId            String
   host              User           @relation(fields: [hostId], references: [id])
   status            RoomStatus     @default(LOBBY)
@@ -139,6 +141,18 @@ model GuestLead {
 
   @@index([roomId])
   @@index([email])
+}
+
+model CustomRtmpDestination {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String   // Display name (e.g. "Facebook", "LinkedIn", "My Server")
+  ingestUrl String   // RTMP server URL
+  streamKey String   // Stream key
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model StreamSession {

@@ -45,9 +45,11 @@ function TrackButton({ source, onIcon, offIcon, onLabel, offLabel }: TrackButton
 interface ControlBarProps {
   roomCode: string
   connectedPlatforms?: { platform: string; channelName: string }[]
+  streamTitle?: string
+  streamDescription?: string
 }
 
-export default function ControlBar({ roomCode, connectedPlatforms = [] }: ControlBarProps) {
+export default function ControlBar({ roomCode, connectedPlatforms = [], streamTitle, streamDescription }: ControlBarProps) {
   const router = useRouter()
   const [ending, setEnding] = useState(false)
 
@@ -103,7 +105,7 @@ export default function ControlBar({ roomCode, connectedPlatforms = [] }: Contro
       <LayoutSelector />
 
       {/* Go Live / LIVE button */}
-      <GoLivePanel roomCode={roomCode} connectedPlatforms={connectedPlatforms} />
+      <GoLivePanel roomCode={roomCode} connectedPlatforms={connectedPlatforms} streamTitle={streamTitle} streamDescription={streamDescription} />
 
       {/* Right: end studio */}
       <button

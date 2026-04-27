@@ -24,6 +24,7 @@ interface StudioClientProps {
   hostToken: string
   livekitUrl: string
   title?: string
+  description?: string
   connectedPlatforms?: { platform: string; channelName: string }[]
 }
 
@@ -94,7 +95,7 @@ function LiveBadge() {
   )
 }
 
-export default function StudioClient({ roomCode, hostToken, livekitUrl, title, connectedPlatforms: initialPlatforms }: StudioClientProps) {
+export default function StudioClient({ roomCode, hostToken, livekitUrl, title, description, connectedPlatforms: initialPlatforms }: StudioClientProps) {
   const addPendingGuest = useStudioStore((s) => s.addPendingGuest)
   const removePendingGuest = useStudioStore((s) => s.removePendingGuest)
   const hydrateFromSaved = useStudioStore((s) => s.hydrateFromSaved)
@@ -396,7 +397,7 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, c
             <VideoGrid roomCode={roomCode} isHost={true} hostToken={hostToken} />
           </div>
           {/* ControlBar is now inside LiveKitRoom -- TrackToggle hooks work here */}
-          <ControlBar roomCode={roomCode} connectedPlatforms={connectedPlatforms} />
+          <ControlBar roomCode={roomCode} connectedPlatforms={connectedPlatforms} streamTitle={title} streamDescription={description} />
 
           {/* G35 -- LiveKit connection state overlay */}
           <ConnectionMonitor />

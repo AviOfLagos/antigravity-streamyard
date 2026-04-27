@@ -20,6 +20,13 @@ export const CreateRoomRequestSchema = z.object({
       if (!val) return val
       return stripHtml(val).trim().slice(0, 100) || undefined
     }),
+  description: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val) return val
+      return stripHtml(val).trim().slice(0, 2000) || undefined
+    }),
   selectedPlatforms: z.array(PlatformSchema).optional().default([]),
   autoAdmit: z.boolean().optional().default(false),
 })

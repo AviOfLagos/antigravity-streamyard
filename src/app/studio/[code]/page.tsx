@@ -104,6 +104,7 @@ export default async function StudioPage({ params }: Props) {
           hostToken={hostToken}
           livekitUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
           title={room.title ?? undefined}
+          description={room.description ?? undefined}
           connectedPlatforms={connectedPlatforms}
         />
       </StudioErrorBoundary>

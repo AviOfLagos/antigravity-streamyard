@@ -11,6 +11,7 @@ interface StudioClientLoaderProps {
   hostToken: string
   livekitUrl: string
   title?: string
+  description?: string
   connectedPlatforms?: { platform: string; channelName: string }[]
 }
 

@@ -48,9 +48,11 @@ function LiveTimer({ startedAt }: { startedAt: Date }) {
 interface GoLivePanelProps {
   roomCode: string
   connectedPlatforms: { platform: string; channelName: string }[]
+  streamTitle?: string
+  streamDescription?: string
 }
 
-export default function GoLivePanel({ roomCode, connectedPlatforms }: GoLivePanelProps) {
+export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle, streamDescription }: GoLivePanelProps) {
   const [open, setOpen] = useState(false)
   const [platformStatuses, setPlatformStatuses] = useState<PlatformStreamStatus[]>([])
   const [selectedPlatforms, setSelectedPlatforms] = useState<Set<string>>(new Set())
@@ -305,6 +307,19 @@ export default function GoLivePanel({ roomCode, connectedPlatforms }: GoLivePane
           ) : (
             /* ── Pre-live state: select destinations ── */
             <>
+              {/* Broadcast info preview */}
+              {(streamTitle || streamDescription) && (
+                <div className="bg-white/[0.03] rounded-lg px-3 py-2.5 mb-3 border border-white/5">
+                  {streamTitle && (
+                    <p className="text-sm font-medium text-white truncate">{streamTitle}</p>
+                  )}
+                  {streamDescription && (
+                    <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-2">{streamDescription}</p>
+                  )}
+                  <p className="text-[10px] text-gray-600 mt-1">This info is sent to your streaming platforms.</p>
+                </div>
+              )}
+
               <p className="text-xs text-gray-400">Select platforms to stream to:</p>
               <div className="space-y-2">
                 {platformStatuses.length === 0 && connectedPlatforms.length === 0 && (
@@ -335,9 +350,7 @@ export default function GoLivePanel({ roomCode, connectedPlatforms }: GoLivePane
                       ) : (
                         <AlertCircle className="w-4 h-4 text-gray-600" />
                       )}
-                      <span className={`w-4 h-4 rounded ${PLATFORM_COLORS[ps.platform] ?? "bg-gray-600"} flex items-center justify-center text-[8px] font-bold text-white`}>
-                        {(PLATFORM_LABELS[ps.platform] ?? ps.platform)[0]}
-                      </span>
+                      <PlatformIcon platform={ps.platform} size={18} />
                       <div>
                         <p className="text-sm font-medium text-white">{PLATFORM_META[ps.platform]?.label ?? ps.platform}</p>
                         <p className="text-[11px] text-gray-500">{ps.channelName}</p>
