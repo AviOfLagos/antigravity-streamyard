@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { Radio, Square, ExternalLink, CheckCircle2, AlertCircle } from "lucide-react"
 import { toast } from "sonner"
+import PlatformIcon, { PLATFORM_META } from "@/components/ui/PlatformIcon"
 import { useStudioStore } from "@/store/studio"
 
 interface PlatformStreamStatus {
@@ -19,19 +20,6 @@ interface PlatformStreamStatus {
   hasStreamKey: boolean
 }
 
-const PLATFORM_LABELS: Record<string, string> = {
-  youtube: "YouTube",
-  twitch: "Twitch",
-  kick: "Kick",
-  tiktok: "TikTok",
-}
-
-const PLATFORM_COLORS: Record<string, string> = {
-  youtube: "bg-red-600",
-  twitch: "bg-purple-600",
-  kick: "bg-green-600",
-  tiktok: "bg-gray-600",
-}
 
 function formatDuration(seconds: number): string {
   const h = Math.floor(seconds / 3600)
@@ -179,7 +167,7 @@ export default function GoLivePanel({ roomCode, connectedPlatforms }: GoLivePane
       })
       if (res.ok) {
         useStudioStore.getState().addStreamPlatform(platform)
-        toast.success(`Added ${PLATFORM_LABELS[platform] ?? platform}`)
+        toast.success(`Added ${PLATFORM_META[platform]?.label ?? platform}`)
       }
     } catch {
       toast.error("Failed to add destination")
@@ -195,7 +183,7 @@ export default function GoLivePanel({ roomCode, connectedPlatforms }: GoLivePane
       })
       if (res.ok) {
         useStudioStore.getState().removeStreamPlatform(platform)
-        toast.info(`Removed ${PLATFORM_LABELS[platform] ?? platform}`)
+        toast.info(`Removed ${PLATFORM_META[platform]?.label ?? platform}`)
       }
     } catch {
       toast.error("Failed to remove destination")
@@ -262,11 +250,9 @@ export default function GoLivePanel({ roomCode, connectedPlatforms }: GoLivePane
                       className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-white/5 border border-white/5"
                     >
                       <div className="flex items-center gap-2.5">
-                        <span className={`w-4 h-4 rounded ${PLATFORM_COLORS[ps.platform] ?? "bg-gray-600"} flex items-center justify-center text-[8px] font-bold text-white`}>
-                          {(PLATFORM_LABELS[ps.platform] ?? ps.platform)[0]}
-                        </span>
+                        <PlatformIcon platform={ps.platform} size={18} />
                         <div>
-                          <p className="text-sm font-medium text-white">{PLATFORM_LABELS[ps.platform] ?? ps.platform}</p>
+                          <p className="text-sm font-medium text-white">{PLATFORM_META[ps.platform]?.label ?? ps.platform}</p>
                           <p className="text-[11px] text-gray-500">{ps.channelName}</p>
                         </div>
                       </div>
@@ -353,7 +339,7 @@ export default function GoLivePanel({ roomCode, connectedPlatforms }: GoLivePane
                         {(PLATFORM_LABELS[ps.platform] ?? ps.platform)[0]}
                       </span>
                       <div>
-                        <p className="text-sm font-medium text-white">{PLATFORM_LABELS[ps.platform] ?? ps.platform}</p>
+                        <p className="text-sm font-medium text-white">{PLATFORM_META[ps.platform]?.label ?? ps.platform}</p>
                         <p className="text-[11px] text-gray-500">{ps.channelName}</p>
                       </div>
                     </div>

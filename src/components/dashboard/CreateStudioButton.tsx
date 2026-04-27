@@ -5,18 +5,13 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import PlatformIcon from "@/components/ui/PlatformIcon"
 import { PlatformListResponseSchema } from "@/lib/schemas/platform"
 import { CreateRoomResponseSchema } from "@/lib/schemas/room"
 import type { PlatformConnection } from "@/lib/schemas/platform"
 
 type Step = "idle" | "creating-modal" | "submitting" | "ready"
 
-const PLATFORM_COLORS: Record<string, string> = {
-  youtube: "#ef4444",
-  twitch: "#a855f7",
-  kick: "#22c55e",
-  tiktok: "#94a3b8",
-}
 
 export default function CreateStudioButton() {
   const router = useRouter()
@@ -165,7 +160,6 @@ export default function CreateStudioButton() {
                   <ul className="space-y-2 mb-3">
                     {availablePlatforms.map(({ platform, channelName }) => {
                       const isChecked = selectedPlatforms.includes(platform)
-                      const color = PLATFORM_COLORS[platform.toLowerCase()] ?? "#94a3b8"
                       return (
                         <li key={platform}>
                           <label className="flex items-center gap-3 cursor-pointer">
@@ -175,10 +169,7 @@ export default function CreateStudioButton() {
                               checked={isChecked}
                               onChange={() => handleTogglePlatform(platform)}
                             />
-                            <span
-                              className="w-2.5 h-2.5 rounded-full shrink-0"
-                              style={{ backgroundColor: color }}
-                            />
+                            <PlatformIcon platform={platform} size={18} />
                             <span className="text-sm text-white capitalize">{platform}</span>
                             <span className="text-sm text-gray-500">{channelName}</span>
                           </label>
@@ -192,9 +183,10 @@ export default function CreateStudioButton() {
                 <InlineConnectPlatforms
                   connectedPlatforms={availablePlatforms.map((p) => p.platform.toLowerCase())}
                   onConnected={(platform, channelName) => {
+                    const typedPlatform = platform as "youtube" | "twitch" | "kick" | "tiktok"
                     setAvailablePlatforms((prev) => [
-                      ...prev.filter((p) => p.platform !== platform),
-                      { platform, channelName },
+                      ...prev.filter((p) => p.platform !== typedPlatform),
+                      { platform: typedPlatform, channelName },
                     ])
                     setSelectedPlatforms((prev) =>
                       prev.includes(platform) ? prev : [...prev, platform]
@@ -351,10 +343,10 @@ export default function CreateStudioButton() {
 // ── Inline platform connect ──────────────────────────────────────────────────
 
 const ALL_PLATFORMS = [
-  { id: "youtube", label: "YouTube", color: "#ef4444", placeholder: "Channel ID (UC...)" },
-  { id: "twitch", label: "Twitch", color: "#a855f7", placeholder: "Channel name" },
-  { id: "kick", label: "Kick", color: "#22c55e", placeholder: "Channel name" },
-  { id: "tiktok", label: "TikTok", color: "#94a3b8", placeholder: "@username" },
+  { id: "youtube", label: "YouTube", placeholder: "Channel name" },
+  { id: "twitch", label: "Twitch", placeholder: "Channel name" },
+  { id: "kick", label: "Kick", placeholder: "Channel name" },
+  { id: "tiktok", label: "TikTok", placeholder: "@username" },
 ]
 
 function InlineConnectPlatforms({
@@ -406,10 +398,7 @@ function InlineConnectPlatforms({
         <div key={platform.id}>
           {expandedPlatform === platform.id ? (
             <div className="flex items-center gap-2 bg-[#1a1a1a] rounded-xl px-3 py-2">
-              <span
-                className="w-2.5 h-2.5 rounded-full shrink-0"
-                style={{ backgroundColor: platform.color }}
-              />
+              <PlatformIcon platform={platform.id} size={16} />
               <input
                 type="text"
                 value={channelInput}
@@ -441,10 +430,7 @@ function InlineConnectPlatforms({
               onClick={() => setExpandedPlatform(platform.id)}
               className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl hover:bg-white/4 transition-colors text-left"
             >
-              <span
-                className="w-2.5 h-2.5 rounded-full shrink-0"
-                style={{ backgroundColor: platform.color }}
-              />
+              <PlatformIcon platform={platform.id} size={16} />
               <span className="text-sm text-gray-500">
                 + Connect {platform.label}
               </span>

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Loader2, CheckCircle2, Trash2, RefreshCw, AlertCircle, Clock, Eye, EyeOff, Key } from "lucide-react"
 import { toast } from "sonner"
+import PlatformIcon from "@/components/ui/PlatformIcon"
 
 type TokenHealth = "connected" | "expiring_soon" | "expired" | "no_token"
 
@@ -19,7 +20,7 @@ const STREAM_KEY_HINTS: Record<string, string> = {
 interface PlatformConnectFormProps {
   platform: string
   label: string
-  color: string
+  color?: string
   placeholder: string
   helpText: string
   connection: {
@@ -186,7 +187,7 @@ function StreamKeySection({ platform, hasStreamKey: initialHasStreamKey, hasInge
 }
 
 export default function PlatformConnectForm({
-  platform, label, color, placeholder, helpText, connection
+  platform, label, placeholder, helpText, connection
 }: PlatformConnectFormProps) {
   const [channelName, setChannelName] = useState(connection?.channelName ?? "")
   const [loading, setLoading] = useState(false)
@@ -247,9 +248,7 @@ export default function PlatformConnectForm({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-base">
-            <span className={`w-5 h-5 rounded ${color} flex items-center justify-center text-[10px] font-bold text-white`}>
-              {label[0]}
-            </span>
+            <PlatformIcon platform={platform} size={22} />
             {label}
           </CardTitle>
           {connected && (
