@@ -7,7 +7,9 @@ import { useLocalParticipant, useParticipants, useTracks, useTrackToggle } from 
 import { LogOut, Mic, MicOff, Video, VideoOff, Zap } from "lucide-react"
 import { Track } from "livekit-client"
 
+import { LocalAudioLevel } from "@/components/studio/AudioLevelIndicator"
 import ChatPanel from "@/components/chat/ChatPanel"
+import DeviceSelector from "@/components/studio/DeviceSelector"
 import VideoTile from "@/components/studio/VideoTile"
 import type { SSEEventData } from "@/lib/chat/types"
 import { SSEEventDataSchema } from "@/lib/schemas/sse"
@@ -152,21 +154,31 @@ export default function GuestStudio({ roomCode, displayName }: GuestStudioProps)
       </div>
 
       {/* Guest controls */}
-      <div className="flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-[#080808] border-t border-white/6">
-        <GuestTrackButton
-          source={Track.Source.Microphone}
-          onIcon={<Mic className="w-5 h-5" />}
-          offIcon={<MicOff className="w-5 h-5" />}
-          onLabel="Mic"
-          offLabel="Muted"
-        />
-        <GuestTrackButton
-          source={Track.Source.Camera}
-          onIcon={<Video className="w-5 h-5" />}
-          offIcon={<VideoOff className="w-5 h-5" />}
-          onLabel="Camera"
-          offLabel="Cam off"
-        />
+      <div className="flex-none flex items-center justify-between px-4 py-2.5 bg-[#080808] border-t border-white/6">
+        <div className="flex items-center gap-2">
+          <GuestTrackButton
+            source={Track.Source.Microphone}
+            onIcon={<Mic className="w-5 h-5" />}
+            offIcon={<MicOff className="w-5 h-5" />}
+            onLabel="Mic"
+            offLabel="Muted"
+          />
+          {/* Live audio level — confirms mic is working */}
+          <LocalAudioLevel barCount={5} />
+          <GuestTrackButton
+            source={Track.Source.Camera}
+            onIcon={<Video className="w-5 h-5" />}
+            offIcon={<VideoOff className="w-5 h-5" />}
+            onLabel="Camera"
+            offLabel="Cam off"
+          />
+        </div>
+
+        {/* Device selectors — mic, camera, speaker (hidden on small screens) */}
+        <div className="hidden md:flex items-center">
+          <DeviceSelector />
+        </div>
+
         <button
           type="button"
           onClick={handleLeave}

@@ -8,6 +8,7 @@ import { LogOut, Mic, MicOff, Monitor, MonitorOff, Video, VideoOff } from "lucid
 import { Track } from "livekit-client"
 import { useRouter } from "next/navigation"
 
+import { LocalAudioLevel } from "./AudioLevelIndicator"
 import DeviceSelector from "./DeviceSelector"
 import GoLivePanel from "./GoLivePanel"
 import InviteLink from "./InviteLink"
@@ -75,6 +76,8 @@ export default function ControlBar({ roomCode, connectedPlatforms = [], streamTi
           onLabel="Mic"
           offLabel="Muted"
         />
+        {/* Live audio level — confirms mic is active */}
+        <LocalAudioLevel barCount={5} />
         <TrackButton
           source={Track.Source.Camera}
           onIcon={<Video className="w-5 h-5" />}

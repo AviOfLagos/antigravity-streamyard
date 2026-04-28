@@ -254,6 +254,8 @@ export default async function StatusPage() {
               { name: "Custom RTMP Destinations", status: "Live", color: "emerald" },
               { name: "Broadcast Description", status: "Live", color: "emerald" },
               { name: "Device Selection (Camera/Mic/Speaker)", status: "Live", color: "emerald" },
+              { name: "Audio Level Monitoring (VU Meters)", status: "Live", color: "emerald" },
+              { name: "Guest Device Selector", status: "Live", color: "emerald" },
               { name: "Guest Lead Capture", status: "Live", color: "emerald" },
               { name: "Session Summary", status: "Live", color: "emerald" },
               { name: "Feedback System", status: "Live", color: "emerald" },
@@ -287,7 +289,7 @@ export default async function StatusPage() {
 
         {/* Version */}
         <div className="text-center text-gray-600 text-xs">
-          Zerocast v1.3.0 · <Link href="/changelog" className="text-gray-500 hover:text-gray-300 transition-colors">View changelog</Link>
+          Zerocast v1.4.0 · <Link href="/changelog" className="text-gray-500 hover:text-gray-300 transition-colors">View changelog</Link>
         </div>
       </main>
 

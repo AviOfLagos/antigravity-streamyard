@@ -5,6 +5,7 @@ import Link from "next/link"
 import { LiveKitRoom, RoomAudioRenderer, StartAudio, usePreviewTracks } from "@livekit/components-react"
 import { LocalVideoTrack } from "livekit-client"
 import { AlertCircle, Camera, CameraOff, Mic, MicOff, UserX, Video } from "lucide-react"
+import { AudioLevelBar } from "@/components/studio/AudioLevelIndicator"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -44,6 +45,10 @@ function DevicePreview({
   )
 
   const videoRef = useRef<HTMLVideoElement>(null)
+
+  // Extract raw audio MediaStreamTrack for level meter
+  const audioTrack = tracks?.find((t) => t.kind === "audio")
+  const audioMediaStreamTrack = audioTrack?.mediaStreamTrack ?? null
 
   // Attach/detach video track to the preview element
   useEffect(() => {
@@ -89,7 +94,7 @@ function DevicePreview({
         )}
       </div>
 
-      {/* Device toggle buttons */}
+      {/* Device toggle buttons + audio level */}
       <div className="flex items-center justify-center gap-3">
         <button
           type="button"
@@ -118,6 +123,15 @@ function DevicePreview({
           {audioEnabled ? "Mic On" : "Mic Off"}
         </button>
       </div>
+
+      {/* Audio level meter — confirms mic is picking up sound */}
+      {audioEnabled && audioMediaStreamTrack && (
+        <div className="flex items-center justify-center gap-2">
+          <Mic className="w-3.5 h-3.5 text-gray-500" />
+          <AudioLevelBar mediaStreamTrack={audioMediaStreamTrack} barCount={7} />
+          <span className="text-[10px] text-gray-500">Speak to test your mic</span>
+        </div>
+      )}
     </div>
   )
 }
@@ -138,6 +152,8 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
   const [audioEnabled, setAudioEnabled] = useState(true)
   const [deviceError, setDeviceError] = useState<string | null>(null)
   const [permissionDenied, setPermissionDenied] = useState(false)
+  // Track whether preview tracks have been released (prevents mic conflict with LiveKit room)
+  const [previewReleased, setPreviewReleased] = useState(false)
 
   // F-13: Denial cooldown (30 seconds)
   const [denialCooldown, setDenialCooldown] = useState(0)
@@ -146,8 +162,12 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
   const handleSSEEvent = useCallback((event: SSEEventData) => {
     if (event.type === "GUEST_ADMITTED" && event.data.guestId === guestId) {
       setLivekitToken(event.data.token)
+      // Small delay to ensure preview tracks are fully released before LiveKit room acquires mic
       setStatus("joining")
-      setTimeout(() => setStatus("joined"), 500)
+      setTimeout(() => {
+        setPreviewReleased(true)
+        setStatus("joined")
+      }, 600)
     }
     if (event.type === "GUEST_DENIED" && event.data.guestId === guestId) {
       setStatus("denied")
@@ -544,7 +564,7 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
       <LiveKitRoom
         token={livekitToken}
         serverUrl={livekitUrl}
-        connect={true}
+        connect={previewReleased}
         video={videoEnabled}
         audio={audioEnabled}
         options={{
@@ -553,7 +573,10 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
         }}
         className="h-screen"
       >
+        {/* RoomAudioRenderer creates hidden <audio> elements for each remote participant.
+            This is the primary mechanism for participants to hear each other (like StreamYard/Meet SFU model). */}
         <RoomAudioRenderer />
+        {/* StartAudio handles browser autoplay policy — shows button when audio context is suspended */}
         <StartAudio label="Click to enable audio" className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-violet-500 hover:bg-violet-600 text-white text-sm font-medium shadow-lg transition-all animate-pulse" />
         <GuestStudio roomCode={roomCode} displayName={displayName} />
       </LiveKitRoom>

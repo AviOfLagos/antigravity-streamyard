@@ -31,6 +31,19 @@ const tagLabels: Record<Tag, string> = {
 
 const entries: ChangelogEntry[] = [
   {
+    date: "Apr 28, 2026",
+    version: "v1.4.0",
+    title: "Audio Reliability & VU Meters",
+    changes: [
+      { tag: "feat", text: "Audio level indicator (VU meter) — real-time mic level bars for host and guest, powered by Web Audio AnalyserNode" },
+      { tag: "feat", text: "Mic level preview on guest join screen — speak to verify your microphone before entering the studio" },
+      { tag: "feat", text: "Guest device selector — guests can now pick camera, microphone, and speaker (previously host-only)" },
+      { tag: "fix", text: "Preview-to-room mic handoff — 600ms release guard prevents browser mic conflict when transitioning from device preview to LiveKit room" },
+      { tag: "fix", text: "LiveKit room now defers connect until preview tracks are fully released (connect={previewReleased})" },
+      { tag: "improvement", text: "Audio architecture matches StreamYard/Google Meet SFU model — RoomAudioRenderer creates hidden audio elements per remote participant" },
+    ],
+  },
+  {
     date: "Apr 27, 2026",
     version: "v1.3.0",
     title: "Broadcast Details, Custom RTMP & Stream Fixes",
