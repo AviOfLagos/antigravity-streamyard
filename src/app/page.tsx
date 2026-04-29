@@ -97,6 +97,12 @@ export default async function LandingPage() {
           {/* Right */}
           <div className="flex items-center gap-1">
             <Link
+              href="/features"
+              className="hidden sm:block text-sm text-gray-400 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-white/5"
+            >
+              Features
+            </Link>
+            <Link
               href="/changelog"
               className="hidden sm:block text-sm text-gray-400 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-white/5"
             >
@@ -305,6 +311,12 @@ export default async function LandingPage() {
 
           {/* Links */}
           <div className="flex items-center gap-5">
+            <Link
+              href="/features"
+              className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
+            >
+              Features
+            </Link>
             <Link
               href="/changelog"
               className="text-sm text-gray-500 hover:text-gray-300 transition-colors"

@@ -31,6 +31,21 @@ const tagLabels: Record<Tag, string> = {
 
 const entries: ChangelogEntry[] = [
   {
+    date: "Apr 29, 2026",
+    version: "v1.5.0",
+    title: "Chat Polish, Host Echo & Responsive UI",
+    changes: [
+      { tag: "feat", text: "Chat filter shows only connected platforms with real SVG logos and green ring indicator" },
+      { tag: "feat", text: "Host-sent messages appear in chat window instantly with violet 'You' badge, broadcast to guests via SSE" },
+      { tag: "feat", text: "YouTube backup ingest URL support — prevents 'duplicate ingestion' warnings on poor network" },
+      { tag: "feat", text: "Collapsible chat panel on all screen sizes — floating badge with unread message count" },
+      { tag: "feat", text: "Backup Server URL field in YouTube platform settings" },
+      { tag: "fix", text: "Control bar (GoLive, End) always visible — no longer hidden behind chat on small screens" },
+      { tag: "fix", text: "LayoutSelector hidden on mobile to free space for essential controls" },
+      { tag: "improvement", text: "Guest studio gets chat toggle, collapsible panel, and unread badge matching host experience" },
+    ],
+  },
+  {
     date: "Apr 28, 2026",
     version: "v1.4.0",
     title: "Audio Reliability & VU Meters",
