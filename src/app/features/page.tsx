@@ -57,7 +57,8 @@ const categories: FeatureCategory[] = [
     features: [
       { icon: <Users className="w-4 h-4" />, name: "Guest Join Flow", detail: "Share a link — guests preview their camera/mic, request to join, and wait for approval. No account needed.", status: "live" },
       { icon: <Shield className="w-4 h-4" />, name: "Auto-Admit Mode", detail: "Toggle between manual approval and auto-admit. Perfect for open panels or invite-only sessions.", status: "live" },
-      { icon: <UserX className="w-4 h-4" />, name: "Mute & Kick", detail: "Mute any guest's mic or camera. Remove disruptive participants with one click.", status: "live" },
+      { icon: <UserX className="w-4 h-4" />, name: "Mute & Kick", detail: "Mute any guest's mic or camera. Remove disruptive participants with one click. Kicked guests see a clear notification with rejoin option.", status: "live" },
+      { icon: <LayoutGrid className="w-4 h-4" />, name: "Layout Sync", detail: "Guests see the exact same layout the host selects — Grid, Spotlight, Screen+Grid — synced in real time via LiveKit data messages.", status: "live" },
       { icon: <Download className="w-4 h-4" />, name: "Guest Lead Capture", detail: "Optional email field on the join form. Collect guest contact info for follow-up — no account needed.", status: "live" },
     ],
   },
@@ -78,7 +79,7 @@ const categories: FeatureCategory[] = [
       { icon: <Radio className="w-4 h-4" />, name: "Multi-Platform RTMP", detail: "Stream to YouTube, Twitch, Kick, and TikTok at the same time via LiveKit Egress.", status: "live" },
       { icon: <Radio className="w-4 h-4" />, name: "Custom RTMP", detail: "Add up to 10 custom RTMP destinations — Facebook Live, LinkedIn, Restream, or your own server.", status: "live" },
       { icon: <Radio className="w-4 h-4" />, name: "YouTube Backup URL", detail: "Automatic backup ingest URL support prevents 'duplicate ingestion' warnings on unstable connections.", status: "live" },
-      { icon: <Camera className="w-4 h-4" />, name: "Stream Thumbnail", detail: "Upload a custom thumbnail for YouTube and platforms that support it.", status: "coming-soon" },
+      { icon: <Camera className="w-4 h-4" />, name: "Stream Thumbnail", detail: "Set a custom thumbnail URL when creating your studio — uploaded to YouTube via the Data API when OAuth is connected.", status: "live" },
       { icon: <Video className="w-4 h-4" />, name: "Recording", detail: "Record your entire session — audio, video, and screen — for later editing and publishing.", status: "coming-soon" },
     ],
   },

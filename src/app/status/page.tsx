@@ -264,9 +264,9 @@ export default async function StatusPage() {
               { name: "Session Summary", status: "Live", color: "emerald" },
               { name: "Feedback System", status: "Live", color: "emerald" },
               { name: "Unit Test Suite (114 tests)", status: "Live", color: "emerald" },
-              { name: "Guest Layout Sync with Host", status: "Planned", color: "gray" },
-              { name: "Kick Notification + Rejoin", status: "Planned", color: "gray" },
-              { name: "Stream Thumbnail Upload", status: "Planned", color: "gray" },
+              { name: "Guest Layout Sync with Host", status: "Live", color: "emerald" },
+              { name: "Kick Notification + Rejoin", status: "Live", color: "emerald" },
+              { name: "YouTube Broadcast Metadata (Title/Description/Thumbnail)", status: "Live", color: "emerald" },
               { name: "Canvas Text Overlays", status: "Planned", color: "gray" },
               { name: "Recording (Audio + Video)", status: "Planned", color: "gray" },
               { name: "Chat Reply to Kick & TikTok", status: "Planned", color: "gray" },
@@ -298,7 +298,7 @@ export default async function StatusPage() {
 
         {/* Version */}
         <div className="text-center text-gray-600 text-xs">
-          Zerocast v1.5.0 · <Link href="/changelog" className="text-gray-500 hover:text-gray-300 transition-colors">View changelog</Link>
+          Zerocast v1.6.0 · <Link href="/changelog" className="text-gray-500 hover:text-gray-300 transition-colors">View changelog</Link>
         </div>
       </main>
 

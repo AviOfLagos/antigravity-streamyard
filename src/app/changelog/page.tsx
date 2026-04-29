@@ -32,6 +32,20 @@ const tagLabels: Record<Tag, string> = {
 const entries: ChangelogEntry[] = [
   {
     date: "Apr 29, 2026",
+    version: "v1.6.0",
+    title: "Layout Sync, Kick Notifications & YouTube Metadata",
+    changes: [
+      { tag: "feat", text: "Guest layout sync — guests now see the same layout preset the host selects (Grid, Spotlight, Screen+Grid, etc.) via LiveKit data messages" },
+      { tag: "feat", text: "Kick notification — removed guests see a clear 'You were removed' screen with a 'Request to Rejoin' button" },
+      { tag: "feat", text: "YouTube broadcast metadata — title, description, and thumbnail sent via YouTube Data API v3 when OAuth token is available" },
+      { tag: "feat", text: "Thumbnail URL field in Create Studio modal for YouTube broadcasts" },
+      { tag: "fix", text: "Host toast now says 'was removed' when kicking vs 'left the studio' when guest leaves voluntarily" },
+      { tag: "improvement", text: "GoLivePanel shows per-platform OAuth status — auto metadata vs manual YouTube Studio link" },
+      { tag: "improvement", text: "Kicked guest rejoin flow re-enters device preview with same name and email" },
+    ],
+  },
+  {
+    date: "Apr 29, 2026",
     version: "v1.5.0",
     title: "Chat Polish, Host Echo & Responsive UI",
     changes: [
