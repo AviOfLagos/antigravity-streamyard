@@ -107,6 +107,7 @@ model Room {
   code              String         @unique
   title             String?
   description       String?        // Broadcast description (sent to platforms)
+  thumbnailUrl      String?        // Optional thumbnail URL for YouTube broadcasts
   hostId            String
   host              User           @relation(fields: [hostId], references: [id])
   status            RoomStatus     @default(LOBBY)

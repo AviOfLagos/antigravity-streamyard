@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 
-import { LiveKitRoom, RoomAudioRenderer, StartAudio, useConnectionState, useParticipants } from "@livekit/components-react"
+import { LiveKitRoom, RoomAudioRenderer, StartAudio, useConnectionState, useLocalParticipant, useParticipants } from "@livekit/components-react"
 import { MessageSquare, Users, X, Zap } from "lucide-react"
 import { ConnectionState } from "livekit-client"
 import { toast } from "sonner"
@@ -93,6 +93,32 @@ function LiveBadge() {
       LIVE
     </span>
   )
+}
+
+// Broadcasts layout changes to all guests via LiveKit data messages.
+// Must be rendered inside a <LiveKitRoom> so localParticipant is available.
+function LayoutBroadcaster() {
+  const { localParticipant } = useLocalParticipant()
+  const activeLayout = useStudioStore((s) => s.activeLayout)
+  const pinnedParticipantId = useStudioStore((s) => s.pinnedParticipantId)
+  const hasBroadcastedRef = useRef(false)
+
+  useEffect(() => {
+    if (!localParticipant) return
+    // Broadcast on every change (and once on first render for late-joining guests)
+    const payload: Record<string, unknown> = {
+      type: "LAYOUT_CHANGE",
+      layout: activeLayout,
+      pinnedParticipantId: pinnedParticipantId ?? null,
+    }
+    const encoder = new TextEncoder()
+    localParticipant
+      .publishData(encoder.encode(JSON.stringify(payload)), { reliable: true })
+      .catch(() => {/* non-critical -- guest will fall back to default layout */})
+    hasBroadcastedRef.current = true
+  }, [localParticipant, activeLayout, pinnedParticipantId])
+
+  return null
 }
 
 export default function StudioClient({ roomCode, hostToken, livekitUrl, title, description, connectedPlatforms: initialPlatforms }: StudioClientProps) {
@@ -202,11 +228,17 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
       case "GUEST_DENIED":
         removePendingGuest(event.data.guestId)
         break
-      case "GUEST_LEFT":
+      case "GUEST_LEFT": {
         // Clean stale participant from on-screen list
         sendToBackstage(event.data.participantId)
-        toast.info(`${event.data.participantId} left the studio`)
+        const guestLabel = event.data.name ?? event.data.participantId
+        if (event.data.reason === "kicked") {
+          toast.info(`${guestLabel} was removed from the studio`)
+        } else {
+          toast.info(`${guestLabel} left the studio`)
+        }
         break
+      }
       case "CHAT_MESSAGE":
         addMessage(event.data)
         // Count unread messages when desktop chat sidebar is collapsed
@@ -400,6 +432,8 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
       >
         {/* Render remote participants' audio */}
         <RoomAudioRenderer />
+        {/* Broadcast layout changes to all guests via LiveKit data messages */}
+        <LayoutBroadcaster />
         {/* Fix: Browser autoplay policy blocks audio until user gesture on this page.
             StartAudio shows a button only when audio is blocked, auto-hides otherwise. */}
         <StartAudio label="Click to enable audio" className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-violet-500 hover:bg-violet-600 text-white text-sm font-medium shadow-lg transition-all animate-pulse" />

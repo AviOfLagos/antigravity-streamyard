@@ -38,6 +38,8 @@ export const SSEGuestLeftEventSchema = z.object({
   type: z.literal("GUEST_LEFT"),
   data: z.object({
     participantId: z.string(),
+    name: z.string().optional(),
+    reason: z.enum(["kicked", "left"]).optional(),
   }),
 })
 

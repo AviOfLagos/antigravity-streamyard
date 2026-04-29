@@ -99,7 +99,7 @@ const ParticipantRow = React.memo(function ParticipantRow({
       const res = await fetch(`/api/rooms/${roomCode}/kick`, {
         method: "POST",
         headers: authHeaders,
-        body: JSON.stringify({ identity: participant.identity }),
+        body: JSON.stringify({ identity: participant.identity, name: displayName }),
       })
       if (res.ok) {
         sendToBackstage(participant.identity)

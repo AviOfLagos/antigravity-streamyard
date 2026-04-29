@@ -27,6 +27,12 @@ export const CreateRoomRequestSchema = z.object({
       if (!val) return val
       return stripHtml(val).trim().slice(0, 2000) || undefined
     }),
+  thumbnailUrl: z
+    .string()
+    .url("Thumbnail URL must be a valid URL")
+    .optional()
+    .or(z.literal(""))
+    .transform((val) => (val === "" ? undefined : val)),
   selectedPlatforms: z.array(PlatformSchema).optional().default([]),
   autoAdmit: z.boolean().optional().default(false),
 })

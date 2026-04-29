@@ -2,7 +2,7 @@ import { jwtVerify } from "jose"
 import { NextResponse } from "next/server"
 
 import { auth } from "@/auth"
-import { removeParticipant } from "@/lib/livekit"
+import { removeParticipant, sendDataToParticipant } from "@/lib/livekit"
 import { prisma } from "@/lib/prisma"
 import { getCachedRoom } from "@/lib/room-cache"
 import { publishEvent } from "@/lib/redis"
@@ -11,6 +11,7 @@ import { z } from "zod"
 
 const KickSchema = z.object({
   identity: z.string().min(1),
+  name: z.string().optional(),
 })
 
 export async function POST(
@@ -24,7 +25,7 @@ export async function POST(
     return NextResponse.json({ error: "Missing identity" }, { status: 400 })
   }
 
-  const { identity } = parsed.data
+  const { identity, name } = parsed.data
   const room = await getCachedRoom(code)
 
   // ── Auth: session OR LiveKit host JWT ──────────────────────────────────
@@ -62,6 +63,23 @@ export async function POST(
     return NextResponse.json({ error: "Cannot kick the host" }, { status: 400 })
   }
 
+  // Send a KICKED data message to the participant BEFORE removing them.
+  // This gives the client ~250ms to receive and set the wasKicked flag so the
+  // disconnection handler can show the correct "you were removed" UI instead
+  // of the generic "connection lost" screen.
+  try {
+    await sendDataToParticipant(code, identity, {
+      type: "KICKED",
+      reason: "removed_by_host",
+    })
+    // Brief delay — ensures the data message is flushed to the participant
+    // before the WebRTC connection is torn down by removeParticipant.
+    await new Promise((resolve) => setTimeout(resolve, 250))
+  } catch (err) {
+    // Non-fatal: participant may have already left or room may not exist.
+    console.warn("[kick] sendDataToParticipant failed:", err)
+  }
+
   try {
     await removeParticipant(code, identity)
   } catch (err) {
@@ -77,7 +95,7 @@ export async function POST(
 
   await publishEvent(code, {
     type: "GUEST_LEFT",
-    data: { participantId: identity },
+    data: { participantId: identity, name: name ?? identity, reason: "kicked" },
   })
 
   return NextResponse.json({ ok: true })

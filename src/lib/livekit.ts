@@ -1,4 +1,5 @@
 import { AccessToken, RoomServiceClient } from "livekit-server-sdk"
+import { DataPacket_Kind } from "@livekit/protocol"
 
 const apiKey = process.env.LIVEKIT_API_KEY!
 const apiSecret = process.env.LIVEKIT_API_SECRET!
@@ -37,6 +38,20 @@ export async function getParticipantCount(roomName: string): Promise<number> {
 export async function removeParticipant(roomName: string, identity: string): Promise<void> {
   const svc = getRoomService()
   await svc.removeParticipant(roomName, identity)
+}
+
+/**
+ * Send a UTF-8 data message to a specific participant using the server SDK.
+ * The `destinationIdentities` field scopes delivery to only that participant.
+ */
+export async function sendDataToParticipant(
+  roomName: string,
+  identity: string,
+  payload: Record<string, unknown>,
+): Promise<void> {
+  const svc = getRoomService()
+  const encoded = new TextEncoder().encode(JSON.stringify(payload))
+  await svc.sendData(roomName, encoded, DataPacket_Kind.RELIABLE, { destinationIdentities: [identity] })
 }
 
 export async function muteParticipantTrack(

@@ -18,6 +18,7 @@ interface PlatformStreamStatus {
   platform: string
   channelName: string
   hasStreamKey: boolean
+  hasOAuthToken: boolean
 }
 
 
@@ -86,13 +87,14 @@ export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle,
       // Platform statuses
       const statuses = connectedPlatforms.map((cp) => {
         const match = (keyData.platforms ?? []).find(
-          (p: { platform: string; hasStreamKey: boolean }) =>
+          (p: { platform: string; hasStreamKey: boolean; hasOAuthToken?: boolean }) =>
             p.platform.toLowerCase() === cp.platform.toLowerCase()
         )
         return {
           platform: cp.platform,
           channelName: cp.channelName,
           hasStreamKey: match?.hasStreamKey ?? false,
+          hasOAuthToken: match?.hasOAuthToken ?? false,
         }
       })
       setPlatformStatuses(statuses)
@@ -310,7 +312,7 @@ export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle,
           ) : (
             /* ── Pre-live state: select destinations ── */
             <>
-              {/* Broadcast info preview */}
+              {/* Broadcast info preview + YouTube metadata status */}
               {(streamTitle || streamDescription) && (
                 <div className="bg-white/[0.03] rounded-lg px-3 py-2.5 mb-3 border border-white/5">
                   {streamTitle && (
@@ -319,7 +321,33 @@ export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle,
                   {streamDescription && (
                     <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-2">{streamDescription}</p>
                   )}
-                  <p className="text-[10px] text-gray-600 mt-1">This info is sent to your streaming platforms.</p>
+                  {/* Per-platform metadata status hint */}
+                  {(() => {
+                    const ytStatus = platformStatuses.find((ps) => ps.platform.toLowerCase() === "youtube")
+                    if (!ytStatus || !selectedPlatforms.has(ytStatus.platform)) return (
+                      <p className="text-[10px] text-gray-600 mt-1">This info is sent to your streaming platforms.</p>
+                    )
+                    if (ytStatus.hasOAuthToken) return (
+                      <p className="text-[10px] text-green-600 mt-1 flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 inline" />
+                        Title &amp; description will be set automatically on YouTube.
+                      </p>
+                    )
+                    return (
+                      <p className="text-[10px] text-amber-600 mt-1">
+                        YouTube connected via stream key only — update title &amp; description in{" "}
+                        <a
+                          href="https://studio.youtube.com"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline hover:text-amber-400 transition-colors"
+                        >
+                          YouTube Studio
+                        </a>{" "}
+                        before going live.
+                      </p>
+                    )
+                  })()}
                 </div>
               )}
 

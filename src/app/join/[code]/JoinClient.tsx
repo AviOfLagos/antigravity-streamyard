@@ -15,7 +15,7 @@ import { SSEEventDataSchema } from "@/lib/schemas/sse"
 import { GuestRequestResponseSchema } from "@/lib/schemas/guest"
 import GuestStudio from "./GuestStudio"
 
-type JoinStatus = "form" | "preview" | "waiting" | "denied" | "joining" | "joined" | "timeout" | "room-full"
+type JoinStatus = "form" | "preview" | "waiting" | "denied" | "joining" | "joined" | "timeout" | "room-full" | "kicked"
 
 interface JoinClientProps {
   roomCode: string
@@ -146,6 +146,8 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
   const [sseError, setSseError] = useState(false)
   const [studioEnded, setStudioEnded] = useState(false)
   const sseRef = useRef<EventSource | null>(null)
+  // Persists across LiveKit disconnect so onDisconnected can differentiate kick vs. drop
+  const wasKickedRef = useRef(false)
 
   // F-13: Device preview state
   const [videoEnabled, setVideoEnabled] = useState(true)
@@ -556,6 +558,47 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
     )
   }
 
+  // Kicked state — shown when the host removes the guest from the studio
+  if (status === "kicked") {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
+        <Card className="w-full max-w-md bg-gray-900 border-gray-800 text-center">
+          <CardContent className="py-10 space-y-4">
+            <div className="w-14 h-14 bg-red-500/10 rounded-full flex items-center justify-center mx-auto">
+              <UserX className="w-7 h-7 text-red-400" />
+            </div>
+            <div>
+              <h2 className="text-white font-semibold text-lg mb-1">You were removed from the studio</h2>
+              <p className="text-gray-400 text-sm">
+                The host has removed you from this session.
+              </p>
+            </div>
+            <div className="pt-2 space-y-3">
+              <Button
+                onClick={() => {
+                  setGuestId(null)
+                  setLivekitToken(null)
+                  setPreviewReleased(false)
+                  setError(null)
+                  setStatus("preview")
+                }}
+                className="w-full bg-red-500 hover:bg-red-600"
+              >
+                Request to Rejoin
+              </Button>
+              <p className="text-xs text-gray-600">
+                The host will need to approve your request.
+              </p>
+            </div>
+            <p className="text-xs text-gray-700 pt-1">
+              If you believe this was a mistake, contact the host.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   // Joining / connected state
   if (status === "joining" || status === "joined") {
     if (!livekitToken) return null
@@ -571,6 +614,14 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
           audioCaptureDefaults: { autoGainControl: true, noiseSuppression: true, echoCancellation: true },
           publishDefaults: { simulcast: true },
         }}
+        onDisconnected={() => {
+          if (wasKickedRef.current) {
+            wasKickedRef.current = false
+            setStatus("kicked")
+          }
+          // If not kicked, LiveKit's own reconnect logic handles transient drops.
+          // A studio-ended event comes via SSE and redirects separately.
+        }}
         className="h-screen"
       >
         {/* RoomAudioRenderer creates hidden <audio> elements for each remote participant.
@@ -578,7 +629,11 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
         <RoomAudioRenderer />
         {/* StartAudio handles browser autoplay policy — shows button when audio context is suspended */}
         <StartAudio label="Click to enable audio" className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-violet-500 hover:bg-violet-600 text-white text-sm font-medium shadow-lg transition-all animate-pulse" />
-        <GuestStudio roomCode={roomCode} displayName={displayName} />
+        <GuestStudio
+          roomCode={roomCode}
+          displayName={displayName}
+          onKicked={() => { wasKickedRef.current = true }}
+        />
       </LiveKitRoom>
     )
   }

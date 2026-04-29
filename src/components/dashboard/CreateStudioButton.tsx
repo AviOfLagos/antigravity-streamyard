@@ -18,6 +18,7 @@ export default function CreateStudioButton() {
   const [step, setStep] = useState<Step>("idle")
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
+  const [thumbnailUrl, setThumbnailUrl] = useState("")
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([])
   const [autoAdmit, setAutoAdmit] = useState(false)
   const [availablePlatforms, setAvailablePlatforms] = useState<PlatformConnection[]>([])
@@ -46,6 +47,7 @@ export default function CreateStudioButton() {
     setStep("idle")
     setTitle("")
     setDescription("")
+    setThumbnailUrl("")
     setSelectedPlatforms([])
     setAutoAdmit(false)
     setAvailablePlatforms([])
@@ -66,7 +68,7 @@ export default function CreateStudioButton() {
       const res = await fetch("/api/rooms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: title.trim(), description: description.trim() || undefined, selectedPlatforms, autoAdmit }),
+        body: JSON.stringify({ title: title.trim(), description: description.trim() || undefined, thumbnailUrl: thumbnailUrl.trim() || undefined, selectedPlatforms, autoAdmit }),
       })
       const data = await res.json()
       if (!res.ok || !data.code) {
@@ -107,6 +109,7 @@ export default function CreateStudioButton() {
     setStep("idle")
     setRoomCode(null)
     setTitle("")
+    setThumbnailUrl("")
     setSelectedPlatforms([])
     setAutoAdmit(false)
     setAvailablePlatforms([])
@@ -168,6 +171,27 @@ export default function CreateStudioButton() {
                   maxLength={2000}
                   className="w-full bg-[#1a1a1a] border border-white/8 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-gray-600 outline-none focus:ring-1 focus:ring-violet-500/50 focus:border-violet-500/40 transition-colors resize-y"
                 />
+              </div>
+
+              {/* Thumbnail URL (optional, used for YouTube OAuth broadcasts) */}
+              <div className="mb-5">
+                <label
+                  htmlFor="studio-thumbnail"
+                  className="block text-xs text-gray-500 uppercase tracking-wide mb-1.5"
+                >
+                  Thumbnail URL <span className="text-gray-700 normal-case">(optional, YouTube OAuth only)</span>
+                </label>
+                <input
+                  id="studio-thumbnail"
+                  type="url"
+                  placeholder="https://example.com/thumbnail.jpg"
+                  value={thumbnailUrl}
+                  onChange={(e) => setThumbnailUrl(e.target.value)}
+                  className="w-full bg-[#1a1a1a] border border-white/8 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-gray-600 outline-none focus:ring-1 focus:ring-violet-500/50 focus:border-violet-500/40 transition-colors"
+                />
+                <p className="text-[10px] text-gray-600 mt-1">
+                  If YouTube is connected via OAuth, this image will be set as the broadcast thumbnail when you go live.
+                </p>
               </div>
 
               {/* Platform selection + inline connect */}

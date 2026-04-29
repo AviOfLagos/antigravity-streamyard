@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { StreamKeyRequestSchema } from "@/lib/schemas"
 import { validateRequestBody } from "@/lib/schemas/api"
+import { hasValidAccessToken } from "@/lib/youtube-api"
 
 const toPrismaPlat = (p: string): PlatformType =>
   PlatformType[p.toUpperCase() as keyof typeof PlatformType]
@@ -68,12 +69,14 @@ export async function GET() {
 
   const connections = await prisma.platformConnection.findMany({
     where: { userId: session.user.id },
-    select: { platform: true, streamKey: true },
+    select: { platform: true, streamKey: true, accessToken: true, expiresAt: true },
   })
 
   const platforms = connections.map((c) => ({
     platform: c.platform,
     hasStreamKey: !!c.streamKey,
+    // Expose whether this connection has a live OAuth token (YouTube only uses it)
+    hasOAuthToken: hasValidAccessToken(c.accessToken, c.expiresAt),
   }))
 
   return NextResponse.json({ platforms })

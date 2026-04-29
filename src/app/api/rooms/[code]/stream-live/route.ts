@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma"
 import { getCachedRoom, invalidateRoomCache } from "@/lib/room-cache"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { publishEvent } from "@/lib/redis"
+import { updateBroadcastMetadata, uploadThumbnail, hasValidAccessToken } from "@/lib/youtube-api"
 
 // ── POST — Start streaming (Go Live) ──────────────────────────────────────
 
@@ -77,7 +78,7 @@ export async function POST(
       userId: session.user.id,
       platform: { in: requestedPlatforms },
     },
-    select: { platform: true, streamKey: true, ingestUrl: true, backupIngestUrl: true },
+    select: { platform: true, streamKey: true, ingestUrl: true, backupIngestUrl: true, accessToken: true, expiresAt: true },
   })
 
   // Check which platforms are missing stream keys
@@ -136,6 +137,33 @@ export async function POST(
       data: { status: RoomStatus.LIVE },
     })
     await invalidateRoomCache(code)
+
+    // ── YouTube metadata update (best-effort, non-blocking) ──────────────────
+    // If YouTube is one of the destinations and the connection has a valid OAuth
+    // access token, push the room's title + description and thumbnail to YouTube.
+    if (requestedPlatforms.includes(PlatformType.YOUTUBE)) {
+      const ytConn = connectionMap.get(PlatformType.YOUTUBE)
+      const ytToken = ytConn?.accessToken ?? null
+      const ytExpiry = ytConn?.expiresAt ?? null
+
+      if (hasValidAccessToken(ytToken, ytExpiry)) {
+        const ytTitle = room.title ?? ""
+        const ytDesc = room.description ?? ""
+
+        // Fire-and-forget: errors are logged inside the helpers, never thrown
+        Promise.all([
+          ytTitle || ytDesc
+            ? updateBroadcastMetadata(ytToken, ytTitle, ytDesc)
+            : Promise.resolve(false),
+          room.thumbnailUrl
+            ? uploadThumbnail(ytToken, room.thumbnailUrl)
+            : Promise.resolve(false),
+        ]).catch(() => {/* already handled inside helpers */})
+      } else if (ytConn) {
+        // Stream-key-only connection — log that metadata won't be auto-set
+        console.info(`[stream-live] YouTube connected via stream key only — metadata not auto-set for room ${code}`)
+      }
+    }
 
     // Publish SSE event
     await publishEvent(code, {

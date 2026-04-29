@@ -1,11 +1,11 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { type ToggleSource } from "@livekit/components-core"
-import { useLocalParticipant, useParticipants, useTracks, useTrackToggle } from "@livekit/components-react"
+import { useLocalParticipant, useParticipants, useRoomContext, useTracks, useTrackToggle } from "@livekit/components-react"
 import { LogOut, MessageSquare, Mic, MicOff, Video, VideoOff, X, Zap } from "lucide-react"
-import { Track } from "livekit-client"
+import { RoomEvent, Track } from "livekit-client"
 
 import { LocalAudioLevel } from "@/components/studio/AudioLevelIndicator"
 import ChatPanel from "@/components/chat/ChatPanel"
@@ -14,10 +14,18 @@ import VideoTile from "@/components/studio/VideoTile"
 import type { SSEEventData } from "@/lib/chat/types"
 import { SSEEventDataSchema } from "@/lib/schemas/sse"
 import { useChatStore } from "@/store/chat"
+import type { StudioLayout } from "@/store/studio"
 
 interface GuestStudioProps {
   roomCode: string
   displayName: string
+  onKicked?: () => void
+}
+
+function gridCols(count: number) {
+  if (count === 1) return "grid-cols-1"
+  if (count <= 4) return "grid-cols-2"
+  return "grid-cols-3"
 }
 
 function GuestTrackButton({
@@ -53,14 +61,47 @@ function GuestTrackButton({
   )
 }
 
-export default function GuestStudio({ roomCode, displayName }: GuestStudioProps) {
+export default function GuestStudio({ roomCode, displayName, onKicked }: GuestStudioProps) {
   const { localParticipant } = useLocalParticipant()
+  const room = useRoomContext()
+
   // chatOpen: mobile overlay toggle (< lg screens)
   const [chatOpen, setChatOpen] = useState(false)
   // chatCollapsed: desktop sidebar collapse (lg+ screens)
   const [chatCollapsed, setChatCollapsed] = useState(false)
   // unreadCount: messages received while desktop chat is collapsed
   const [unreadCount, setUnreadCount] = useState(0)
+
+  // Layout state mirrored from the host via LiveKit data messages
+  const [activeLayout, setActiveLayout] = useState<StudioLayout>("grid")
+  const [pinnedParticipantId, setPinnedParticipantId] = useState<string | null>(null)
+
+  // Keep a stable ref so the RoomEvent listener never captures a stale callback
+  const onKickedRef = useRef(onKicked)
+  useEffect(() => { onKickedRef.current = onKicked }, [onKicked])
+
+  // Listen for LiveKit data messages: KICKED (from server) + LAYOUT_CHANGE (from host)
+  useEffect(() => {
+    if (!room) return
+    const decoder = new TextDecoder()
+    const handler = (payload: Uint8Array) => {
+      try {
+        const msg = JSON.parse(decoder.decode(payload)) as Record<string, unknown>
+        if (msg.type === "KICKED") {
+          onKickedRef.current?.()
+        } else if (msg.type === "LAYOUT_CHANGE") {
+          const validLayouts: StudioLayout[] = ["grid", "spotlight", "screen-grid", "screen-only", "single"]
+          const layout = msg.layout as StudioLayout
+          if (validLayouts.includes(layout)) {
+            setActiveLayout(layout)
+          }
+          setPinnedParticipantId((msg.pinnedParticipantId as string | null) ?? null)
+        }
+      } catch { /* ignore malformed data */ }
+    }
+    room.on(RoomEvent.DataReceived, handler)
+    return () => { room.off(RoomEvent.DataReceived, handler) }
+  }, [room])
 
   const handleLeave = async () => {
     try {
@@ -116,14 +157,103 @@ export default function GuestStudio({ roomCode, displayName }: GuestStudioProps)
     return () => es.close()
   }, [roomCode, handleSSEEvent])
 
-  const visibleTracks = tracks.filter(
-    (t) => t.source === Track.Source.Camera || t.source === Track.Source.ScreenShare
+  // Build the same track sets VideoGrid uses
+  const { stageTracks, screenshareTracks, cameraTracks } = useMemo(() => {
+    const allTracks = tracks.filter(
+      (t) => t.source === Track.Source.Camera || t.source === Track.Source.ScreenShare
+    )
+    const screenshare = allTracks.filter((t) => t.source === Track.Source.ScreenShare)
+    const camera = allTracks.filter((t) => t.source === Track.Source.Camera)
+    return { stageTracks: allTracks, screenshareTracks: screenshare, cameraTracks: camera }
+  }, [tracks])
+
+  // Determine pinned track — mirrors VideoGrid logic
+  const pinnedTrack =
+    pinnedParticipantId != null
+      ? stageTracks.find((t) => t.participant.identity === pinnedParticipantId) ?? null
+      : null
+  const primaryTrack = pinnedTrack ?? stageTracks[0]
+  const sidebarTracks = stageTracks.filter((t) => t !== primaryTrack)
+
+  const renderTile = (trackRef: (typeof stageTracks)[number]) => (
+    <VideoTile
+      key={`${trackRef.participant.identity}-${trackRef.source}`}
+      trackRef={trackRef}
+      isVisible={true}
+      isLocal={trackRef.participant.isLocal}
+      isHost={false}
+    />
   )
 
-  function gridCols(n: number) {
-    if (n <= 1) return "grid-cols-1"
-    if (n <= 2) return "grid-cols-2"
-    return "grid-cols-3"
+  // Mirror the exact layout switch from VideoGrid.tsx
+  let stageContent: React.ReactNode
+
+  if (activeLayout === "spotlight" && stageTracks.length > 0) {
+    stageContent = (
+      <div className="flex gap-2 h-full">
+        <div className="flex-3 min-w-0">
+          {primaryTrack && renderTile(primaryTrack)}
+        </div>
+        {sidebarTracks.length > 0 && (
+          <div className="flex flex-col gap-2 flex-1 min-w-0 overflow-y-auto">
+            {sidebarTracks.map((t) => renderTile(t))}
+          </div>
+        )}
+      </div>
+    )
+  } else if (activeLayout === "screen-grid") {
+    const hasScreenshare = screenshareTracks.length > 0
+    stageContent = (
+      <div className="flex flex-col gap-2 h-full">
+        <div className="flex-3 min-h-0">
+          {hasScreenshare ? (
+            <div className="flex gap-2 h-full">
+              {screenshareTracks.map((t) => renderTile(t))}
+            </div>
+          ) : (
+            <div className="h-full flex items-center justify-center">
+              <p className="text-gray-600 text-sm">No screenshare active</p>
+            </div>
+          )}
+        </div>
+        {cameraTracks.length > 0 && (
+          <div className="flex-1 flex gap-2 min-h-0">
+            {cameraTracks.map((t) => renderTile(t))}
+          </div>
+        )}
+      </div>
+    )
+  } else if (activeLayout === "screen-only") {
+    stageContent =
+      screenshareTracks.length > 0 ? (
+        <div className="flex gap-2 h-full">
+          {screenshareTracks.map((t) => renderTile(t))}
+        </div>
+      ) : (
+        <div className="h-full flex items-center justify-center">
+          <p className="text-gray-600 text-sm">No screenshare active</p>
+        </div>
+      )
+  } else if (activeLayout === "single") {
+    stageContent = primaryTrack ? (
+      renderTile(primaryTrack)
+    ) : (
+      <div className="h-full flex items-center justify-center">
+        <p className="text-gray-600 text-sm">No participant selected</p>
+      </div>
+    )
+  } else {
+    // "grid" — default equal grid
+    stageContent =
+      stageTracks.length > 0 ? (
+        <div className={`grid ${gridCols(stageTracks.length)} gap-2 h-full content-center`}>
+          {stageTracks.map((t) => renderTile(t))}
+        </div>
+      ) : (
+        <div className="h-full flex items-center justify-center">
+          <p className="text-gray-600 text-sm">Waiting for video…</p>
+        </div>
+      )
   }
 
   return (
@@ -172,22 +302,9 @@ export default function GuestStudio({ roomCode, displayName }: GuestStudioProps)
 
       {/* Main */}
       <div className="relative flex flex-1 overflow-hidden">
-        {/* Video grid — always fills available space, never obscured by chat */}
-        <div className={`flex-1 grid ${gridCols(visibleTracks.length)} gap-2 p-3 content-center min-w-0`}>
-          {visibleTracks.map((trackRef) => (
-            <VideoTile
-              key={`${trackRef.participant.identity}-${trackRef.source}`}
-              trackRef={trackRef}
-              isVisible={true}
-              isLocal={trackRef.participant.isLocal}
-              isHost={false}
-            />
-          ))}
-          {visibleTracks.length === 0 && (
-            <div className="aspect-video flex items-center justify-center">
-              <p className="text-gray-600 text-sm">Waiting for video…</p>
-            </div>
-          )}
+        {/* Video stage — mirrors host layout, never obscured by chat */}
+        <div className="flex-1 min-h-0 p-3 min-w-0">
+          {stageContent}
         </div>
 
         {/* Chat panel — desktop: collapsible sidebar; mobile: absolute overlay */}
