@@ -77,13 +77,18 @@ export async function POST(
       userId: session.user.id,
       platform: { in: requestedPlatforms },
     },
-    select: { platform: true, streamKey: true, ingestUrl: true },
+    select: { platform: true, streamKey: true, ingestUrl: true, backupIngestUrl: true },
   })
 
   // Check which platforms are missing stream keys
   const connectionMap = new Map(connections.map((c) => [c.platform, c]))
   const missingKeys: string[] = []
-  const destinations: { platform: PlatformType; streamKey: string; ingestUrl?: string | null }[] = []
+  const destinations: {
+    platform: PlatformType
+    streamKey: string
+    ingestUrl?: string | null
+    backupIngestUrl?: string | null
+  }[] = []
 
   for (const platform of requestedPlatforms) {
     const conn = connectionMap.get(platform)
@@ -94,6 +99,7 @@ export async function POST(
         platform,
         streamKey: conn.streamKey,
         ingestUrl: conn.ingestUrl,
+        backupIngestUrl: conn.backupIngestUrl,
       })
     }
   }

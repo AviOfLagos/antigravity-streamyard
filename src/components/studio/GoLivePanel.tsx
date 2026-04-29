@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Radio, Square, ExternalLink, CheckCircle2, AlertCircle } from "lucide-react"
+import { Radio, Square, ExternalLink, CheckCircle2, AlertCircle, Info } from "lucide-react"
 import { toast } from "sonner"
 import PlatformIcon, { PLATFORM_META } from "@/components/ui/PlatformIcon"
 import { useStudioStore } from "@/store/studio"
@@ -375,6 +375,20 @@ export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle,
                   </label>
                 ))}
               </div>
+
+              {/* YouTube backup server tip */}
+              {selectedPlatforms.has("youtube") && (
+                <div className="flex items-start gap-2 rounded-lg bg-blue-950/40 border border-blue-800/40 px-3 py-2.5 mt-1">
+                  <Info className="w-3.5 h-3.5 text-blue-400 mt-0.5 shrink-0" />
+                  <p className="text-[11px] text-blue-300 leading-relaxed">
+                    Tip: Add a backup server URL in{" "}
+                    <a href="/settings/platforms" className="underline hover:text-blue-200 transition-colors">
+                      Settings
+                    </a>{" "}
+                    to prevent &quot;duplicate ingestion&quot; warnings if your connection drops.
+                  </p>
+                </div>
+              )}
 
               {/* Custom RTMP destinations */}
               {customRtmpDests.length > 0 && (

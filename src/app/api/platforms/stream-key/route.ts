@@ -34,7 +34,7 @@ export async function PUT(req: Request) {
   const validation = validateRequestBody(StreamKeyRequestSchema, body)
   if (!validation.success) return validation.response
 
-  const { platform, streamKey, ingestUrl } = validation.data
+  const { platform, streamKey, ingestUrl, backupIngestUrl } = validation.data
   const dbPlatform = toPrismaPlat(platform)
 
   // Ensure the platform connection exists
@@ -48,7 +48,11 @@ export async function PUT(req: Request) {
 
   await prisma.platformConnection.update({
     where: { userId_platform: { userId: session.user.id, platform: dbPlatform } },
-    data: { streamKey, ingestUrl: ingestUrl ?? null },
+    data: {
+      streamKey,
+      ingestUrl: ingestUrl ?? null,
+      backupIngestUrl: backupIngestUrl ?? null,
+    },
   })
 
   return NextResponse.json({ ok: true })

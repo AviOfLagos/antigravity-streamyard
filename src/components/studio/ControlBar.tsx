@@ -105,7 +105,9 @@ export default function ControlBar({ roomCode, connectedPlatforms = [], streamTi
       </div>
 
       {/* Layout presets (hidden on mobile) */}
-      <LayoutSelector />
+      <div className="hidden sm:block">
+        <LayoutSelector />
+      </div>
 
       {/* Go Live / LIVE button */}
       <GoLivePanel roomCode={roomCode} connectedPlatforms={connectedPlatforms} streamTitle={streamTitle} streamDescription={streamDescription} />

@@ -1,10 +1,10 @@
 "use client"
 
-import { useCallback, useEffect, useRef } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import { type ToggleSource } from "@livekit/components-core"
 import { useLocalParticipant, useParticipants, useTracks, useTrackToggle } from "@livekit/components-react"
-import { LogOut, Mic, MicOff, Video, VideoOff, Zap } from "lucide-react"
+import { LogOut, MessageSquare, Mic, MicOff, Video, VideoOff, X, Zap } from "lucide-react"
 import { Track } from "livekit-client"
 
 import { LocalAudioLevel } from "@/components/studio/AudioLevelIndicator"
@@ -55,6 +55,12 @@ function GuestTrackButton({
 
 export default function GuestStudio({ roomCode, displayName }: GuestStudioProps) {
   const { localParticipant } = useLocalParticipant()
+  // chatOpen: mobile overlay toggle (< lg screens)
+  const [chatOpen, setChatOpen] = useState(false)
+  // chatCollapsed: desktop sidebar collapse (lg+ screens)
+  const [chatCollapsed, setChatCollapsed] = useState(false)
+  // unreadCount: messages received while desktop chat is collapsed
+  const [unreadCount, setUnreadCount] = useState(0)
 
   const handleLeave = async () => {
     try {
@@ -78,9 +84,19 @@ export default function GuestStudio({ roomCode, displayName }: GuestStudioProps)
   const addMessage = useChatStore((s) => s.addMessage)
   const sseRef = useRef<EventSource | null>(null)
 
+  // Ref to read chatCollapsed inside SSE handler without stale closure
+  const chatCollapsedRef = useRef(chatCollapsed)
+  useEffect(() => { chatCollapsedRef.current = chatCollapsed }, [chatCollapsed])
+
   const handleSSEEvent = useCallback(
     (event: SSEEventData) => {
-      if (event.type === "CHAT_MESSAGE") addMessage(event.data)
+      if (event.type === "CHAT_MESSAGE") {
+        addMessage(event.data)
+        // Count unread messages when desktop chat sidebar is collapsed
+        if (chatCollapsedRef.current) {
+          setUnreadCount((n) => n + 1)
+        }
+      }
       if (event.type === "STUDIO_ENDED") window.location.href = "/studio-ended"
     },
     [addMessage]
@@ -122,15 +138,42 @@ export default function GuestStudio({ roomCode, displayName }: GuestStudioProps)
         <span className="font-mono text-[11px] text-gray-500 tracking-widest uppercase">
           {roomCode}
         </span>
-        <span className="ml-auto text-xs text-gray-600">
+        <span className="text-xs text-gray-600">
           {participants.length} in room · {displayName}
         </span>
+        {/* Chat toggle: always on mobile; on desktop only when collapsed */}
+        <button
+          type="button"
+          className={[
+            "ml-auto relative p-2 rounded-lg text-gray-500 hover:text-white hover:bg-white/6 transition-colors",
+            chatCollapsed ? "flex" : "flex lg:hidden",
+          ].join(" ")}
+          onClick={() => {
+            if (chatCollapsed) {
+              setChatCollapsed(false)
+              setUnreadCount(0)
+            } else {
+              setChatOpen((o) => {
+                if (!o) setUnreadCount(0)
+                return !o
+              })
+            }
+          }}
+          aria-label="Toggle chat"
+        >
+          {(chatOpen && !chatCollapsed) ? <X className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
+          {unreadCount > 0 && (
+            <span className="absolute top-0.5 right-0.5 min-w-[14px] h-[14px] flex items-center justify-center bg-red-500 text-white text-[8px] font-bold rounded-full px-0.5 leading-none">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
+        </button>
       </header>
 
       {/* Main */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Video grid */}
-        <div className={`flex-1 grid ${gridCols(visibleTracks.length)} gap-2 p-3 content-center`}>
+      <div className="relative flex flex-1 overflow-hidden">
+        {/* Video grid — always fills available space, never obscured by chat */}
+        <div className={`flex-1 grid ${gridCols(visibleTracks.length)} gap-2 p-3 content-center min-w-0`}>
           {visibleTracks.map((trackRef) => (
             <VideoTile
               key={`${trackRef.participant.identity}-${trackRef.source}`}
@@ -147,13 +190,52 @@ export default function GuestStudio({ roomCode, displayName }: GuestStudioProps)
           )}
         </div>
 
-        {/* Chat — hidden on small screens */}
-        <div className="hidden lg:flex flex-col w-72 border-l border-white/6">
-          <ChatPanel roomCode={roomCode} isHost={false} />
+        {/* Chat panel — desktop: collapsible sidebar; mobile: absolute overlay */}
+        <div
+          className={[
+            "flex-col border-l border-white/6 bg-[#0d0d0d] transition-all duration-200",
+            chatCollapsed ? "lg:hidden" : "lg:flex lg:w-72",
+            chatOpen
+              ? "flex absolute right-0 top-0 bottom-0 w-full sm:w-80 z-30 shadow-2xl"
+              : "hidden",
+          ].join(" ")}
+        >
+          <ChatPanel
+            roomCode={roomCode}
+            isHost={false}
+            connectedPlatforms={[]}
+            onCollapse={() => {
+              setChatCollapsed(true)
+              setChatOpen(false)
+              setUnreadCount(0)
+            }}
+            collapsed={chatCollapsed}
+          />
         </div>
+
+        {/* Floating badge — desktop only, shown when chat sidebar is collapsed */}
+        {chatCollapsed && (
+          <button
+            type="button"
+            onClick={() => {
+              setChatCollapsed(false)
+              setUnreadCount(0)
+            }}
+            className="hidden lg:flex absolute top-3 right-3 z-40 items-center justify-center w-10 h-10 bg-violet-500 hover:bg-violet-400 text-white rounded-full shadow-lg transition-all duration-200"
+            aria-label="Open chat"
+            title="Open chat"
+          >
+            <MessageSquare className="w-4 h-4" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 text-white text-[9px] font-bold rounded-full px-1 leading-none">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
+          </button>
+        )}
       </div>
 
-      {/* Guest controls */}
+      {/* Guest controls — always visible at bottom */}
       <div className="flex-none flex items-center justify-between px-4 py-2.5 bg-[#080808] border-t border-white/6">
         <div className="flex items-center gap-2">
           <GuestTrackButton

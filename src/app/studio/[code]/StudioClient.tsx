@@ -107,7 +107,12 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
   const hydrateFilters = useChatStore((s) => s.hydrateFilters)
   const sseRef = useRef<EventSource | null>(null)
   const startedConnectors = useRef(false)
+  // chatOpen: mobile overlay toggle (< lg screens)
   const [chatOpen, setChatOpen] = useState(false)
+  // chatCollapsed: desktop sidebar collapse (lg+ screens)
+  const [chatCollapsed, setChatCollapsed] = useState(false)
+  // unreadCount: messages received while desktop chat is collapsed
+  const [unreadCount, setUnreadCount] = useState(0)
   const [sseOk, setSseOk] = useState(true)
   const [connectedPlatforms, setConnectedPlatforms] = useState<{ platform: string; channelName: string }[]>(initialPlatforms ?? [])
 
@@ -183,6 +188,10 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
     }
   }, [roomCode])
 
+  // Ref to read chatCollapsed inside SSE handler without stale closure
+  const chatCollapsedRef = useRef(chatCollapsed)
+  useEffect(() => { chatCollapsedRef.current = chatCollapsed }, [chatCollapsed])
+
   // SSE event handler with streaming event support
   const handleSSEEvent = useCallback((event: SSEEventData) => {
     switch (event.type) {
@@ -200,6 +209,10 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
         break
       case "CHAT_MESSAGE":
         addMessage(event.data)
+        // Count unread messages when desktop chat sidebar is collapsed
+        if (chatCollapsedRef.current) {
+          setUnreadCount((n) => n + 1)
+        }
         break
       case "CHAT_CONNECTOR_STATUS":
         console.info(`[ConnectorStatus] ${event.data.platform}: ${event.data.status}${event.data.error ? ` -- ${event.data.error}` : ""}`)
@@ -355,11 +368,16 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
             </div>
           )}
         </div>
-        {/* Mobile chat toggle */}
+        {/* Mobile chat toggle (< lg) */}
         <button
           type="button"
-          className="lg:hidden p-2 rounded-lg text-gray-500 hover:text-white hover:bg-white/6 transition-colors"
-          onClick={() => setChatOpen(o => !o)}
+          className="lg:hidden relative p-2 rounded-lg text-gray-500 hover:text-white hover:bg-white/6 transition-colors"
+          onClick={() => {
+            setChatOpen((o) => {
+              if (!o) setUnreadCount(0)
+              return !o
+            })
+          }}
           aria-label="Toggle chat"
         >
           {chatOpen ? <X className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
@@ -385,7 +403,7 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
         {/* Fix: Browser autoplay policy blocks audio until user gesture on this page.
             StartAudio shows a button only when audio is blocked, auto-hides otherwise. */}
         <StartAudio label="Click to enable audio" className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-violet-500 hover:bg-violet-600 text-white text-sm font-medium shadow-lg transition-all animate-pulse" />
-        {/* Stage: video + controls */}
+        {/* Stage: video + controls — always fills available width, never obscured */}
         <div className="relative flex flex-col flex-1 min-w-0 overflow-hidden">
           {/* Participant count (inside LiveKitRoom context) */}
           <div className="absolute top-2 right-2 z-10">
@@ -403,19 +421,50 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
           <ConnectionMonitor />
         </div>
 
-        {/* Chat panel -- slide in from right on mobile */}
+        {/* Chat panel — desktop: collapsible sidebar; mobile: absolute overlay */}
         <div
           className={[
-            "flex-col border-l border-white/6 bg-[#0d0d0d]",
-            "lg:flex lg:w-72 xl:w-80",
-            // Mobile: absolute overlay
+            "flex-col border-l border-white/6 bg-[#0d0d0d] transition-all duration-200",
+            // Desktop lg+: visible by default, hidden when collapsed
+            chatCollapsed ? "lg:hidden" : "lg:flex lg:w-72 xl:w-80",
+            // Mobile: absolute overlay driven by chatOpen
             chatOpen
               ? "flex absolute right-0 top-12 bottom-0 w-full sm:w-80 z-30 shadow-2xl"
               : "hidden",
           ].join(" ")}
         >
-          <ChatPanel roomCode={roomCode} isHost={true} />
+          <ChatPanel
+            roomCode={roomCode}
+            isHost={true}
+            connectedPlatforms={connectedPlatforms}
+            onCollapse={() => {
+              setChatCollapsed(true)
+              setUnreadCount(0)
+            }}
+            collapsed={chatCollapsed}
+          />
         </div>
+
+        {/* Floating badge — desktop only, shown when chat sidebar is collapsed */}
+        {chatCollapsed && (
+          <button
+            type="button"
+            onClick={() => {
+              setChatCollapsed(false)
+              setUnreadCount(0)
+            }}
+            className="hidden lg:flex absolute top-3 right-3 z-40 items-center justify-center w-10 h-10 bg-violet-500 hover:bg-violet-400 text-white rounded-full shadow-lg transition-all duration-200"
+            aria-label="Open chat"
+            title="Open chat"
+          >
+            <MessageSquare className="w-4 h-4" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 text-white text-[9px] font-bold rounded-full px-1 leading-none">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
+          </button>
+        )}
       </LiveKitRoom>
 
       {/* G13 -- SSE connection error banner */}

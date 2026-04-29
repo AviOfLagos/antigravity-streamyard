@@ -30,6 +30,7 @@ interface PlatformConnectFormProps {
     expiresAt?: string | null
     hasStreamKey?: boolean
     hasIngestUrl?: boolean
+    hasBackupIngestUrl?: boolean
   } | null
 }
 
@@ -72,18 +73,21 @@ function TokenHealthBadge({ health, platform }: { health: TokenHealth; platform:
   )
 }
 
-function StreamKeySection({ platform, hasStreamKey: initialHasStreamKey, hasIngestUrl: initialHasIngestUrl }: {
+function StreamKeySection({ platform, hasStreamKey: initialHasStreamKey, hasIngestUrl: initialHasIngestUrl, hasBackupIngestUrl: initialHasBackupIngestUrl }: {
   platform: string
   hasStreamKey: boolean
   hasIngestUrl: boolean
+  hasBackupIngestUrl: boolean
 }) {
   const [streamKey, setStreamKey] = useState("")
   const [ingestUrl, setIngestUrl] = useState("")
+  const [backupIngestUrl, setBackupIngestUrl] = useState("")
   const [showKey, setShowKey] = useState(false)
   const [showUrl, setShowUrl] = useState(false)
   const [saving, setSaving] = useState(false)
   const [hasStreamKey, setHasStreamKey] = useState(initialHasStreamKey)
   const [hasIngestUrl, setHasIngestUrl] = useState(initialHasIngestUrl)
+  const [hasBackupIngestUrl, setHasBackupIngestUrl] = useState(initialHasBackupIngestUrl)
 
   const handleSaveStreamKey = async () => {
     if (!streamKey.trim()) return
@@ -96,13 +100,16 @@ function StreamKeySection({ platform, hasStreamKey: initialHasStreamKey, hasInge
           platform,
           streamKey: streamKey.trim(),
           ...(platform === "tiktok" && ingestUrl.trim() ? { ingestUrl: ingestUrl.trim() } : {}),
+          ...(platform === "youtube" && backupIngestUrl.trim() ? { backupIngestUrl: backupIngestUrl.trim() } : {}),
         }),
       })
       if (res.ok) {
         setHasStreamKey(true)
         if (platform === "tiktok" && ingestUrl.trim()) setHasIngestUrl(true)
+        if (platform === "youtube" && backupIngestUrl.trim()) setHasBackupIngestUrl(true)
         setStreamKey("")
         setIngestUrl("")
+        setBackupIngestUrl("")
         toast.success("Stream key saved", { description: `${platform} stream key updated successfully.` })
       } else {
         toast.error("Failed to save stream key")
@@ -182,6 +189,39 @@ function StreamKeySection({ platform, hasStreamKey: initialHasStreamKey, hasInge
           {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Save"}
         </Button>
       </div>
+
+      {/* YouTube backup server URL — prevents duplicate ingestion warning on reconnect */}
+      {platform === "youtube" && (
+        <div className="mt-3 pt-3 border-t border-gray-800/60">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[11px] font-medium text-gray-400">Backup Server URL</span>
+            {hasBackupIngestUrl ? (
+              <span className="inline-flex items-center gap-1 text-[10px] text-blue-400 bg-blue-950/60 px-2 py-0.5 rounded-full">
+                <CheckCircle2 className="w-3 h-3" />
+                Backup saved
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-[10px] text-gray-600 bg-gray-800/40 px-2 py-0.5 rounded-full">
+                Using default
+              </span>
+            )}
+          </div>
+          <p className="text-[10px] text-gray-600 mb-1.5">
+            Optional. Prevents YouTube&apos;s &quot;duplicate ingestion&quot; warning when your connection drops and reconnects.
+            Leave blank to use the default backup server (<span className="font-mono">rtmp://b.rtmp.youtube.com/live2</span>).
+          </p>
+          <Input
+            type="text"
+            value={backupIngestUrl}
+            onChange={(e) => setBackupIngestUrl(e.target.value)}
+            placeholder={hasBackupIngestUrl ? "rtmp://b.rtmp.youtube.com/live2?backup=1 (saved)" : "rtmp://b.rtmp.youtube.com/live2?backup=1"}
+            className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-600 text-xs font-mono"
+          />
+          <p className="text-[10px] text-gray-600 mt-1">
+            Save your stream key above to also save this backup URL.
+          </p>
+        </div>
+      )}
     </div>
   )
 }
@@ -295,6 +335,7 @@ export default function PlatformConnectForm({
               platform={platform}
               hasStreamKey={connection?.hasStreamKey ?? false}
               hasIngestUrl={connection?.hasIngestUrl ?? false}
+              hasBackupIngestUrl={connection?.hasBackupIngestUrl ?? false}
             />
           </div>
         ) : (

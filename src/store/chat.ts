@@ -24,6 +24,8 @@ export const useChatStore = create<ChatStore>((set) => ({
     twitch: true,
     kick: true,
     tiktok: true,
+    // Host messages are always shown and not user-togglable
+    host: true,
   },
 
   addMessage: (msg) =>

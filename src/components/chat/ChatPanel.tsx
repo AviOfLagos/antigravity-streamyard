@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { useVirtualizer } from "@tanstack/react-virtual"
-import { ArrowDown, MessageSquare, Send } from "lucide-react"
+import { ArrowDown, ChevronRight, MessageSquare, Send } from "lucide-react"
 
 import { useChatStore } from "@/store/chat"
+import type { ChatMessage as ChatMessageType } from "@/lib/chat/types"
 
 import ChatMessage from "./ChatMessage"
 import PlatformFilter from "./PlatformFilter"
@@ -13,9 +14,12 @@ import PlatformFilter from "./PlatformFilter"
 interface ChatPanelProps {
   roomCode: string
   isHost: boolean
+  onCollapse?: () => void
+  collapsed?: boolean
+  connectedPlatforms?: { platform: string; channelName: string }[]
 }
 
-export default function ChatPanel({ roomCode, isHost }: ChatPanelProps) {
+export default function ChatPanel({ roomCode, isHost, onCollapse, collapsed, connectedPlatforms }: ChatPanelProps) {
   const parentRef = useRef<HTMLDivElement>(null)
   const storeMessages = useChatStore((s) => s.messages)
   const filters = useChatStore((s) => s.filters)
@@ -84,14 +88,25 @@ export default function ChatPanel({ roomCode, isHost }: ChatPanelProps) {
         <MessageSquare className="w-3.5 h-3.5 text-violet-400" />
         <span className="text-xs font-semibold text-white tracking-wide">Live Chat</span>
         {messages.length > 0 && (
-          <span className="ml-auto text-[10px] text-gray-600 tabular-nums">
+          <span className="text-[10px] text-gray-600 tabular-nums">
             {messages.length}
           </span>
+        )}
+        {onCollapse && (
+          <button
+            type="button"
+            onClick={onCollapse}
+            className="ml-auto p-1 rounded-md text-gray-500 hover:text-white hover:bg-white/6 transition-colors"
+            aria-label={collapsed ? "Expand chat" : "Collapse chat"}
+            title={collapsed ? "Expand chat" : "Collapse chat"}
+          >
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
         )}
       </div>
 
       {/* Platform filters */}
-      <PlatformFilter />
+      <PlatformFilter connectedPlatforms={connectedPlatforms} />
 
       {/* Messages — virtualized */}
       <div
@@ -159,17 +174,31 @@ export default function ChatPanel({ roomCode, isHost }: ChatPanelProps) {
 function ChatInput({ roomCode }: { roomCode: string }) {
   const [text, setText] = useState("")
   const [sending, setSending] = useState(false)
+  const addMessage = useChatStore((s) => s.addMessage)
 
   const handleSend = async () => {
     const msg = text.trim()
     if (!msg || sending) return
     setSending(true)
     try {
-      await fetch(`/api/rooms/${roomCode}/chat/send`, {
+      const res = await fetch(`/api/rooms/${roomCode}/chat/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: msg }),
       })
+      // Add the host's own message to the local chat store immediately
+      // Use the hostMessageId returned by the API so it matches the Redis
+      // entry and the SSE dedup layer won't show it twice.
+      const data = await res.json().catch(() => ({}))
+      const hostMsg: ChatMessageType = {
+        id: (data.hostMessageId as string | undefined) ?? crypto.randomUUID(),
+        platform: "host",
+        author: { name: "You" },
+        message: msg,
+        timestamp: new Date().toISOString(),
+        eventType: "text",
+      }
+      addMessage(hostMsg)
       setText("")
     } catch {
       // Silent fail — non-critical

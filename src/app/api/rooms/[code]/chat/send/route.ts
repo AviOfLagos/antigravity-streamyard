@@ -5,6 +5,7 @@ import { auth } from "@/auth"
 import { getCachedRoom } from "@/lib/room-cache"
 import { sendYouTubeMessage } from "@/lib/chat/youtube"
 import { sendTwitchMessage } from "@/lib/chat/twitch"
+import { publishChat } from "@/lib/redis"
 
 const SendMessageSchema = z.object({
   message: z.string().min(1).max(500),
@@ -61,5 +62,18 @@ export async function POST(
 
   await Promise.allSettled(sends)
 
-  return NextResponse.json({ ok: true, results })
+  // Publish host message to the room's chat Redis list so guests can see it via SSE
+  const hostChatMessage = {
+    id: crypto.randomUUID(),
+    platform: "host" as const,
+    author: { name: "Host" },
+    message,
+    timestamp: new Date().toISOString(),
+    eventType: "text" as const,
+  }
+  await publishChat(code, hostChatMessage).catch(() => {
+    // Non-critical — guests may not see the message but host will
+  })
+
+  return NextResponse.json({ ok: true, results, hostMessageId: hostChatMessage.id })
 }

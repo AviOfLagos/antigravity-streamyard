@@ -26,6 +26,7 @@ export default async function PlatformsPage() {
         expiresAt: c.expiresAt?.toISOString() ?? null,
         hasStreamKey: !!c.streamKey,
         hasIngestUrl: !!c.ingestUrl,
+        hasBackupIngestUrl: !!c.backupIngestUrl,
       },
     ])
   )

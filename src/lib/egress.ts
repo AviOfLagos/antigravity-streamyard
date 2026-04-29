@@ -30,6 +30,9 @@ const RTMP_INGEST_URLS: Record<string, string> = {
   KICK: "rtmp://live.kick.com/app",
 }
 
+// YouTube's well-known backup ingest server — used when no custom backup URL is configured.
+export const YOUTUBE_BACKUP_INGEST_URL = "rtmp://b.rtmp.youtube.com/live2?backup=1"
+
 /**
  * Build the full RTMP URL for a given platform and stream key.
  * TikTok requires a user-provided ingest URL.
@@ -53,16 +56,37 @@ export function buildRtmpUrl(
   return `${baseUrl}/${streamKey}`
 }
 
+/**
+ * Build the backup RTMP URL for YouTube.
+ * Uses the user-configured backup URL if provided, otherwise falls back to the
+ * well-known YouTube backup ingest server.
+ */
+export function buildYouTubeBackupUrl(
+  streamKey: string,
+  backupIngestUrl?: string | null,
+): string {
+  const base = backupIngestUrl ?? YOUTUBE_BACKUP_INGEST_URL
+  // If the backup URL already ends with the stream key (user pasted full URL) use it as-is.
+  if (base.includes(streamKey)) return base
+  // Strip trailing slash before appending key.
+  return `${base.replace(/\/$/, "")}/${streamKey}`
+}
+
 // ── Egress operations ──────────────────────────────────────────────────────
 
 export interface StreamDestination {
   platform: PlatformType
   streamKey: string
   ingestUrl?: string | null
+  /** YouTube-only: backup ingest URL to prevent "duplicate ingestion" warnings on reconnect */
+  backupIngestUrl?: string | null
 }
 
 /**
  * Start a room composite egress to one or more RTMP destinations.
+ * For YouTube destinations, the backup ingest URL is automatically included so that
+ * LiveKit egress reconnects use the backup server instead of re-hitting the primary,
+ * which would cause YouTube's "duplicate ingestion" warning.
  * Returns the LiveKit egress ID and status string.
  */
 export async function startStream(
@@ -73,7 +97,15 @@ export async function startStream(
     throw new Error("At least one destination is required")
   }
 
-  const urls = destinations.map((d) => buildRtmpUrl(d.platform, d.streamKey, d.ingestUrl))
+  const urls: string[] = []
+  for (const d of destinations) {
+    urls.push(buildRtmpUrl(d.platform, d.streamKey, d.ingestUrl))
+    // YouTube: always include the backup server URL so egress reconnects go to b.rtmp
+    // instead of re-sending to a.rtmp, which triggers the duplicate ingestion warning.
+    if (d.platform === PlatformType.YOUTUBE) {
+      urls.push(buildYouTubeBackupUrl(d.streamKey, d.backupIngestUrl))
+    }
+  }
 
   const output = new StreamOutput({
     protocol: StreamProtocol.RTMP,

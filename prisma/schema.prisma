@@ -93,8 +93,9 @@ model PlatformConnection {
   accessToken  String?
   refreshToken String?
   expiresAt    DateTime?
-  streamKey    String?      // RTMP stream key (encrypted at rest by Neon)
-  ingestUrl    String?      // Custom RTMP ingest URL (mainly for TikTok)
+  streamKey       String?      // RTMP stream key (encrypted at rest by Neon)
+  ingestUrl       String?      // Custom RTMP ingest URL (mainly for TikTok)
+  backupIngestUrl String?      // YouTube backup ingest URL (rtmp://b.rtmp.youtube.com/live2)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
