@@ -3,19 +3,45 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { type ToggleSource } from "@livekit/components-core"
-import { useLocalParticipant, useParticipants, useRoomContext, useTracks, useTrackToggle } from "@livekit/components-react"
-import { LogOut, MessageSquare, Mic, MicOff, Video, VideoOff, X, Zap } from "lucide-react"
-import { RoomEvent, Track } from "livekit-client"
+import {
+  useConnectionQualityIndicator,
+  useConnectionState,
+  useLocalParticipant,
+  useParticipants,
+  useRoomContext,
+  useTracks,
+  useTrackToggle,
+} from "@livekit/components-react"
+import {
+  Check,
+  Link2,
+  LogOut,
+  MessageSquare,
+  Mic,
+  MicOff,
+  Monitor,
+  MonitorOff,
+  Users,
+  Video,
+  VideoOff,
+  Wifi,
+  WifiOff,
+  WifiZero,
+  X,
+  Zap,
+} from "lucide-react"
+import { ConnectionQuality, ConnectionState, Participant, RoomEvent, Track } from "livekit-client"
 
 import { LocalAudioLevel } from "@/components/studio/AudioLevelIndicator"
 import ChatPanel from "@/components/chat/ChatPanel"
+import ChatOverlay from "@/components/studio/ChatOverlay"
 import DeviceSelector from "@/components/studio/DeviceSelector"
 import TextOverlayRenderer from "@/components/studio/TextOverlayRenderer"
 import VideoTile from "@/components/studio/VideoTile"
 import type { SSEEventData } from "@/lib/chat/types"
 import { SSEEventDataSchema } from "@/lib/schemas/sse"
 import { useChatStore } from "@/store/chat"
-import type { StudioLayout, TextOverlay } from "@/store/studio"
+import type { ChatOverlayPosition, StudioLayout, TextOverlay } from "@/store/studio"
 
 interface GuestStudioProps {
   roomCode: string
@@ -28,6 +54,8 @@ function gridCols(count: number) {
   if (count <= 4) return "grid-cols-2"
   return "grid-cols-3"
 }
+
+// ─── Track toggle button ────────────────────────────────────────────────────
 
 function GuestTrackButton({
   source,
@@ -48,7 +76,7 @@ function GuestTrackButton({
       {...buttonProps}
       type="button"
       className={[
-        "flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all text-[11px] font-medium min-w-15 select-none",
+        "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all text-[11px] font-medium min-w-[52px] select-none",
         enabled
           ? "bg-white/6 text-gray-300 hover:bg-white/10 hover:text-white"
           : "bg-red-500/10 text-red-400 hover:bg-red-500/20",
@@ -57,10 +85,330 @@ function GuestTrackButton({
       <span className="w-5 h-5 flex items-center justify-center">
         {enabled ? onIcon : offIcon}
       </span>
-      <span>{enabled ? onLabel : offLabel}</span>
+      <span className="hidden xs:inline">{enabled ? onLabel : offLabel}</span>
     </button>
   )
 }
+
+// ─── Screenshare toggle button ──────────────────────────────────────────────
+
+function ScreenShareButton() {
+  const { buttonProps, enabled } = useTrackToggle({ source: Track.Source.ScreenShare })
+  return (
+    <button
+      {...buttonProps}
+      type="button"
+      title={enabled ? "Stop sharing" : "Share screen"}
+      className={[
+        "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all text-[11px] font-medium min-w-[52px] select-none",
+        enabled
+          ? "bg-violet-500/20 text-violet-300 hover:bg-violet-500/30"
+          : "bg-white/6 text-gray-300 hover:bg-white/10 hover:text-white",
+      ].join(" ")}
+    >
+      <span className="w-5 h-5 flex items-center justify-center">
+        {enabled ? <MonitorOff className="w-5 h-5" /> : <Monitor className="w-5 h-5" />}
+      </span>
+      <span className="hidden xs:inline">{enabled ? "Stop" : "Share"}</span>
+    </button>
+  )
+}
+
+// ─── Connection monitor ─────────────────────────────────────────────────────
+
+const MAX_RECONNECT_ATTEMPTS = 5
+
+function GuestConnectionMonitor({ wasKicked }: { wasKicked: boolean }) {
+  const state = useConnectionState()
+  const prevStateRef = useRef<ConnectionState>(ConnectionState.Connecting)
+  const attemptCountRef = useRef(0)
+  const [attemptCount, setAttemptCount] = useState(0)
+  const [elapsedSecs, setElapsedSecs] = useState(0)
+  const elapsedTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const reconnectInProgressRef = useRef(false)
+
+  useEffect(() => {
+    const prev = prevStateRef.current
+
+    if (state === ConnectionState.Reconnecting && prev !== ConnectionState.Reconnecting) {
+      if (!reconnectInProgressRef.current) {
+        reconnectInProgressRef.current = true
+        attemptCountRef.current += 1
+        setAttemptCount(attemptCountRef.current)
+        setElapsedSecs(0)
+      }
+      if (!elapsedTimerRef.current) {
+        elapsedTimerRef.current = setInterval(() => setElapsedSecs((s) => s + 1), 1000)
+      }
+    }
+
+    if (
+      state === ConnectionState.Connected &&
+      (prev === ConnectionState.Reconnecting || prev === ConnectionState.Disconnected)
+    ) {
+      reconnectInProgressRef.current = false
+      attemptCountRef.current = 0
+      setAttemptCount(0)
+      setElapsedSecs(0)
+      if (elapsedTimerRef.current) { clearInterval(elapsedTimerRef.current); elapsedTimerRef.current = null }
+    }
+
+    if (state === ConnectionState.Disconnected && prev !== ConnectionState.Disconnected) {
+      reconnectInProgressRef.current = false
+      if (elapsedTimerRef.current) { clearInterval(elapsedTimerRef.current); elapsedTimerRef.current = null }
+    }
+
+    prevStateRef.current = state
+  }, [state])
+
+  useEffect(() => () => { if (elapsedTimerRef.current) clearInterval(elapsedTimerRef.current) }, [])
+
+  if (wasKicked) return null
+
+  if (state === ConnectionState.Connecting) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-20 pointer-events-none">
+        <div className="text-center">
+          <div className="w-6 h-6 border-2 border-violet-400 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+          <p className="text-white text-sm">Connecting to studio...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (state === ConnectionState.Reconnecting) {
+    const exhausted = attemptCount > MAX_RECONNECT_ATTEMPTS
+    return (
+      <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-20">
+        <div className="text-center space-y-2 px-6">
+          {exhausted ? (
+            <>
+              <p className="text-white font-semibold">Connection lost</p>
+              <p className="text-gray-300 text-sm">
+                Could not reconnect after {MAX_RECONNECT_ATTEMPTS} attempts.
+              </p>
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="mt-3 px-4 py-1.5 rounded-xl text-sm font-medium bg-violet-500 hover:bg-violet-400 text-white transition-colors"
+              >
+                Refresh to rejoin
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="w-6 h-6 border-2 border-violet-400 border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-white font-semibold">
+                Reconnecting... (attempt {attemptCount}/{MAX_RECONNECT_ATTEMPTS})
+              </p>
+              <p className="text-gray-400 text-sm">
+                {elapsedSecs > 0 ? `${elapsedSecs}s elapsed` : "Hang tight..."}
+              </p>
+            </>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  if (state === ConnectionState.Disconnected) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-20">
+        <div className="text-center space-y-3 px-6">
+          <p className="text-white font-semibold">Connection lost</p>
+          <p className="text-gray-300 text-sm">The studio connection was permanently dropped.</p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="px-4 py-1.5 rounded-xl text-sm font-medium bg-violet-500 hover:bg-violet-400 text-white transition-colors"
+          >
+            Refresh to rejoin
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return null
+}
+
+// ─── Network quality indicator ──────────────────────────────────────────────
+
+function GuestNetworkQualityIndicator() {
+  const { quality } = useConnectionQualityIndicator()
+
+  let icon: React.ReactNode
+  let label: string
+  let colorClass: string
+
+  if (quality === ConnectionQuality.Excellent || quality === ConnectionQuality.Good) {
+    icon = <Wifi className="w-3.5 h-3.5" />
+    label = quality === ConnectionQuality.Excellent ? "Network: Excellent" : "Network: Good"
+    colorClass = "text-emerald-400"
+  } else if (quality === ConnectionQuality.Poor) {
+    icon = <WifiZero className="w-3.5 h-3.5" />
+    label = "Network: Poor"
+    colorClass = "text-yellow-400"
+  } else {
+    icon = <WifiOff className="w-3.5 h-3.5" />
+    label = "Network: Critical"
+    colorClass = "text-red-400"
+  }
+
+  return (
+    <span title={label} className={`inline-flex items-center ${colorClass}`} aria-label={label}>
+      {icon}
+    </span>
+  )
+}
+
+// ─── Backstage participant list ─────────────────────────────────────────────
+
+function ParticipantRow({ participant, localIdentity }: { participant: Participant; localIdentity: string }) {
+  const isSpeaking = participant.isSpeaking
+  const micEnabled = participant.isMicrophoneEnabled
+  const camEnabled = participant.isCameraEnabled
+  const isLocal = participant.identity === localIdentity
+
+  let role: "Host" | "Guest" = "Guest"
+  try {
+    const meta = participant.metadata ? JSON.parse(participant.metadata) : {}
+    if (meta.role === "host") role = "Host"
+  } catch { /* ignore malformed metadata */ }
+
+  const initial = (participant.name ?? participant.identity ?? "?")[0].toUpperCase()
+
+  return (
+    <div className="flex items-center gap-2 px-3 py-1.5 hover:bg-white/3 transition-colors rounded-lg mx-1">
+      {/* Avatar with speaking indicator */}
+      <div className="relative flex-none">
+        <div
+          className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white"
+          style={{ backgroundColor: role === "Host" ? "#7c3aed40" : "#06b6d440" }}
+        >
+          {initial}
+        </div>
+        {isSpeaking && (
+          <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-violet-500 ring-1 ring-[#0d0d0d] animate-pulse" />
+        )}
+      </div>
+
+      {/* Name */}
+      <div className="flex-1 min-w-0">
+        <p className="text-[11px] font-medium text-gray-200 truncate">
+          {participant.name ?? participant.identity}
+          {isLocal && <span className="text-gray-600 font-normal"> (you)</span>}
+        </p>
+      </div>
+
+      {/* Role badge */}
+      <span
+        className={[
+          "text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0",
+          role === "Host"
+            ? "bg-violet-500/20 text-violet-400"
+            : "bg-cyan-500/20 text-cyan-400",
+        ].join(" ")}
+      >
+        {role}
+      </span>
+
+      {/* Mic / camera status dots */}
+      <div className="flex items-center gap-1 shrink-0">
+        <span
+          title={micEnabled ? "Mic on" : "Mic off"}
+          className={`w-1.5 h-1.5 rounded-full ${micEnabled ? "bg-emerald-400" : "bg-gray-700"}`}
+        />
+        <span
+          title={camEnabled ? "Camera on" : "Camera off"}
+          className={`w-1.5 h-1.5 rounded-full ${camEnabled ? "bg-emerald-400" : "bg-gray-700"}`}
+        />
+      </div>
+    </div>
+  )
+}
+
+function BackstagePanel({ participants, localIdentity, onClose }: {
+  participants: Participant[]
+  localIdentity: string
+  onClose?: () => void
+}) {
+  return (
+    <div className="flex flex-col h-full bg-[#0d0d0d]">
+      <div className="flex-none flex items-center gap-2 px-3 py-2.5 border-b border-white/6">
+        <Users className="w-3.5 h-3.5 text-violet-400" />
+        <span className="text-xs font-semibold text-white tracking-wide">Participants</span>
+        <span className="text-[10px] text-gray-600 tabular-nums">{participants.length}</span>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="ml-auto p-1 rounded-md text-gray-500 hover:text-white hover:bg-white/6 transition-colors"
+            aria-label="Close participants panel"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+      <div className="flex-1 overflow-y-auto py-1 [scrollbar-width:thin] [scrollbar-color:#ffffff10_transparent]">
+        {participants.length === 0 ? (
+          <p className="text-center text-gray-700 text-[11px] py-6">No participants</p>
+        ) : (
+          participants.map((p) => (
+            <ParticipantRow key={p.identity} participant={p} localIdentity={localIdentity} />
+          ))
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Copy link button ───────────────────────────────────────────────────────
+
+function CopyLinkButton({ roomCode }: { roomCode: string }) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async () => {
+    const url = `${window.location.origin}/join/${roomCode}`
+    try {
+      await navigator.clipboard.writeText(url)
+    } catch {
+      const ta = document.createElement("textarea")
+      ta.value = url
+      ta.style.position = "fixed"
+      ta.style.opacity = "0"
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand("copy")
+      document.body.removeChild(ta)
+    }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      title="Copy room link"
+      className="flex items-center gap-1 px-2 py-1 rounded-lg text-gray-500 hover:text-white hover:bg-white/6 transition-colors text-[11px]"
+    >
+      {copied ? (
+        <>
+          <Check className="w-3.5 h-3.5 text-emerald-400" />
+          <span className="text-emerald-400 hidden sm:inline">Copied!</span>
+        </>
+      ) : (
+        <>
+          <Link2 className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Copy link</span>
+        </>
+      )}
+    </button>
+  )
+}
+
+// ─── Main component ─────────────────────────────────────────────────────────
 
 export default function GuestStudio({ roomCode, displayName, onKicked }: GuestStudioProps) {
   const { localParticipant } = useLocalParticipant()
@@ -72,18 +420,38 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
   const [chatCollapsed, setChatCollapsed] = useState(false)
   // unreadCount: messages received while desktop chat is collapsed
   const [unreadCount, setUnreadCount] = useState(0)
+  // backstageOpen: mobile participant list overlay
+  const [backstageOpen, setBackstageOpen] = useState(false)
 
   // Layout state mirrored from the host via LiveKit data messages
   const [activeLayout, setActiveLayout] = useState<StudioLayout>("grid")
   const [pinnedParticipantId, setPinnedParticipantId] = useState<string | null>(null)
   const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([])
   const [stageBackground, setStageBackground] = useState("#0d0d0d")
+  const [chatOverlayEnabled, setChatOverlayEnabled] = useState(false)
+  const [chatOverlayPosition, setChatOverlayPosition] = useState<ChatOverlayPosition>("bottom-left")
 
   // Keep a stable ref so the RoomEvent listener never captures a stale callback
   const onKickedRef = useRef(onKicked)
   useEffect(() => { onKickedRef.current = onKicked }, [onKicked])
 
-  // Listen for LiveKit data messages: KICKED (from server) + LAYOUT_CHANGE (from host)
+  // Track kick state so GuestConnectionMonitor suppresses its overlay when kicked
+  const wasKickedInternalRef = useRef(false)
+
+  // ── Guest chat relay ───────────────────────────────────────────────────────
+  const handleGuestSend = useCallback(async (message: string) => {
+    try {
+      await fetch(`/api/rooms/${roomCode}/chat/guest-send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message, displayName }),
+      })
+    } catch {
+      // Silent fail — message already shown locally via optimistic update
+    }
+  }, [roomCode, displayName])
+
+  // Listen for LiveKit data messages: KICKED + LAYOUT_CHANGE
   useEffect(() => {
     if (!room) return
     const decoder = new TextDecoder()
@@ -91,6 +459,7 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
       try {
         const msg = JSON.parse(decoder.decode(payload)) as Record<string, unknown>
         if (msg.type === "KICKED") {
+          wasKickedInternalRef.current = true
           onKickedRef.current?.()
         } else if (msg.type === "LAYOUT_CHANGE") {
           const validLayouts: StudioLayout[] = ["grid", "spotlight", "screen-grid", "screen-only", "single"]
@@ -104,6 +473,13 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
           }
           if (typeof msg.stageBackground === "string") {
             setStageBackground(msg.stageBackground)
+          }
+          if (typeof msg.chatOverlayEnabled === "boolean") {
+            setChatOverlayEnabled(msg.chatOverlayEnabled)
+          }
+          const validPositions: ChatOverlayPosition[] = ["bottom-left", "bottom-right", "top-left", "top-right"]
+          if (typeof msg.chatOverlayPosition === "string" && validPositions.includes(msg.chatOverlayPosition as ChatOverlayPosition)) {
+            setChatOverlayPosition(msg.chatOverlayPosition as ChatOverlayPosition)
           }
         }
       } catch { /* ignore malformed data */ }
@@ -142,7 +518,6 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
     (event: SSEEventData) => {
       if (event.type === "CHAT_MESSAGE") {
         addMessage(event.data)
-        // Count unread messages when desktop chat sidebar is collapsed
         if (chatCollapsedRef.current) {
           setUnreadCount((n) => n + 1)
         }
@@ -166,7 +541,7 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
     return () => es.close()
   }, [roomCode, handleSSEEvent])
 
-  // Build the same track sets VideoGrid uses
+  // ── Track sets ─────────────────────────────────────────────────────────────
   const { stageTracks, screenshareTracks, cameraTracks } = useMemo(() => {
     const allTracks = tracks.filter(
       (t) => t.source === Track.Source.Camera || t.source === Track.Source.ScreenShare
@@ -176,7 +551,7 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
     return { stageTracks: allTracks, screenshareTracks: screenshare, cameraTracks: camera }
   }, [tracks])
 
-  // Determine pinned track — mirrors VideoGrid logic
+  // Determine pinned track
   const pinnedTrack =
     pinnedParticipantId != null
       ? stageTracks.find((t) => t.participant.identity === pinnedParticipantId) ?? null
@@ -194,7 +569,7 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
     />
   )
 
-  // Mirror the exact layout switch from VideoGrid.tsx
+  // ── Layout rendering — mirrors VideoGrid.tsx ───────────────────────────────
   let stageContent: React.ReactNode
 
   if (activeLayout === "spotlight" && stageTracks.length > 0) {
@@ -267,60 +642,92 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
 
   return (
     <div className="flex flex-col h-dvh bg-[#0d0d0d] overflow-hidden">
-      {/* Header */}
-      <header className="flex-none h-12 flex items-center px-4 bg-[#080808] border-b border-white/6 gap-2.5">
-        <div className="flex items-center gap-1.5 text-white font-bold text-sm">
+      {/* ── Header ────────────────────────────────────────────────────────── */}
+      <header className="flex-none h-12 flex items-center px-3 sm:px-4 bg-[#080808] border-b border-white/6 gap-2">
+        <div className="flex items-center gap-1.5 text-white font-bold text-sm shrink-0">
           <Zap className="w-4 h-4 text-violet-400" />
-          Zerocast
+          <span className="hidden xs:inline">Zerocast</span>
         </div>
-        <div className="h-4 w-px bg-white/10" />
-        <span className="font-mono text-[11px] text-gray-500 tracking-widest uppercase">
+        <div className="h-4 w-px bg-white/10 shrink-0" />
+        <span className="font-mono text-[11px] text-gray-500 tracking-widest uppercase shrink-0">
           {roomCode}
         </span>
-        <span className="text-xs text-gray-600">
+        {/* Copy room link */}
+        <CopyLinkButton roomCode={roomCode} />
+        {/* Participant count + name */}
+        <span className="text-xs text-gray-600 hidden md:inline truncate">
           {participants.length} in room · {displayName}
         </span>
-        {/* Chat toggle: always on mobile; on desktop only when collapsed */}
-        <button
-          type="button"
-          className={[
-            "ml-auto relative p-2 rounded-lg text-gray-500 hover:text-white hover:bg-white/6 transition-colors",
-            chatCollapsed ? "flex" : "flex lg:hidden",
-          ].join(" ")}
-          onClick={() => {
-            if (chatCollapsed) {
-              setChatCollapsed(false)
-              setUnreadCount(0)
-            } else {
-              setChatOpen((o) => {
-                if (!o) setUnreadCount(0)
-                return !o
-              })
-            }
-          }}
-          aria-label="Toggle chat"
-        >
-          {(chatOpen && !chatCollapsed) ? <X className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
-          {unreadCount > 0 && (
-            <span className="absolute top-0.5 right-0.5 min-w-[14px] h-[14px] flex items-center justify-center bg-red-500 text-white text-[8px] font-bold rounded-full px-0.5 leading-none">
-              {unreadCount > 99 ? "99+" : unreadCount}
+        {/* Network quality */}
+        <GuestNetworkQualityIndicator />
+
+        {/* Right-side header controls */}
+        <div className="ml-auto flex items-center gap-1">
+          {/* Backstage toggle — mobile only (desktop panel is always shown) */}
+          <button
+            type="button"
+            className="lg:hidden relative p-2 rounded-lg text-gray-500 hover:text-white hover:bg-white/6 transition-colors"
+            onClick={() => setBackstageOpen((o) => !o)}
+            aria-label="Toggle participants"
+          >
+            <Users className="w-4 h-4" />
+            <span className="absolute top-0.5 right-0.5 min-w-[12px] h-[12px] flex items-center justify-center bg-violet-600 text-white text-[8px] font-bold rounded-full px-0.5 leading-none">
+              {participants.length}
             </span>
-          )}
-        </button>
+          </button>
+
+          {/* Chat toggle: always on mobile; on desktop only when collapsed */}
+          <button
+            type="button"
+            className={[
+              "relative p-2 rounded-lg text-gray-500 hover:text-white hover:bg-white/6 transition-colors",
+              chatCollapsed ? "flex" : "flex lg:hidden",
+            ].join(" ")}
+            onClick={() => {
+              if (chatCollapsed) {
+                setChatCollapsed(false)
+                setUnreadCount(0)
+              } else {
+                setChatOpen((o) => {
+                  if (!o) setUnreadCount(0)
+                  return !o
+                })
+              }
+            }}
+            aria-label="Toggle chat"
+          >
+            {(chatOpen && !chatCollapsed) ? <X className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
+            {unreadCount > 0 && (
+              <span className="absolute top-0.5 right-0.5 min-w-[14px] h-[14px] flex items-center justify-center bg-red-500 text-white text-[8px] font-bold rounded-full px-0.5 leading-none">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
+          </button>
+        </div>
       </header>
 
-      {/* Main */}
+      {/* ── Main area ─────────────────────────────────────────────────────── */}
       <div className="relative flex flex-1 overflow-hidden">
-        {/* Video stage — mirrors host layout, never obscured by chat */}
+        {/* Video stage */}
         <div
-          className="flex-1 min-h-0 p-3 min-w-0 relative"
+          className="flex-1 min-h-0 p-2 sm:p-3 min-w-0 relative"
           style={{ backgroundColor: stageBackground }}
         >
           {stageContent}
           <TextOverlayRenderer overlays={textOverlays} />
+          {chatOverlayEnabled && <ChatOverlay position={chatOverlayPosition} />}
+          <GuestConnectionMonitor wasKicked={wasKickedInternalRef.current} />
         </div>
 
-        {/* Chat panel — desktop: collapsible sidebar; mobile: absolute overlay */}
+        {/* Desktop: Backstage sidebar — always-visible, left of chat panel */}
+        <div className="hidden lg:flex flex-col w-48 border-l border-white/6 bg-[#0d0d0d]">
+          <BackstagePanel
+            participants={participants}
+            localIdentity={localParticipant.identity}
+          />
+        </div>
+
+        {/* Desktop: Chat sidebar — collapsible */}
         <div
           className={[
             "flex-col border-l border-white/6 bg-[#0d0d0d] transition-all duration-200",
@@ -333,7 +740,9 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
           <ChatPanel
             roomCode={roomCode}
             isHost={false}
+            displayName={displayName}
             connectedPlatforms={[]}
+            onGuestSend={handleGuestSend}
             onCollapse={() => {
               setChatCollapsed(true)
               setChatOpen(false)
@@ -343,7 +752,7 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
           />
         </div>
 
-        {/* Floating badge — desktop only, shown when chat sidebar is collapsed */}
+        {/* Floating chat badge — desktop, shown when chat sidebar is collapsed */}
         {chatCollapsed && (
           <button
             type="button"
@@ -363,11 +772,22 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
             )}
           </button>
         )}
+
+        {/* Mobile: Backstage overlay */}
+        {backstageOpen && (
+          <div className="lg:hidden absolute inset-0 z-40 bg-[#0d0d0d]/95 backdrop-blur-sm">
+            <BackstagePanel
+              participants={participants}
+              localIdentity={localParticipant.identity}
+              onClose={() => setBackstageOpen(false)}
+            />
+          </div>
+        )}
       </div>
 
-      {/* Guest controls — always visible at bottom */}
-      <div className="flex-none flex items-center justify-between px-4 py-2.5 bg-[#080808] border-t border-white/6">
-        <div className="flex items-center gap-2">
+      {/* ── Guest controls bar ─────────────────────────────────────────────── */}
+      <div className="flex-none flex items-center justify-between px-3 sm:px-4 py-2 bg-[#080808] border-t border-white/6 gap-2">
+        <div className="flex items-center gap-1.5">
           <GuestTrackButton
             source={Track.Source.Microphone}
             onIcon={<Mic className="w-5 h-5" />}
@@ -375,7 +795,7 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
             onLabel="Mic"
             offLabel="Muted"
           />
-          {/* Live audio level — confirms mic is working */}
+          {/* Live audio level */}
           <LocalAudioLevel barCount={5} />
           <GuestTrackButton
             source={Track.Source.Camera}
@@ -384,9 +804,10 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
             onLabel="Camera"
             offLabel="Cam off"
           />
+          <ScreenShareButton />
         </div>
 
-        {/* Device selectors — mic, camera, speaker (hidden on small screens) */}
+        {/* Device selectors — hidden on small screens */}
         <div className="hidden md:flex items-center">
           <DeviceSelector />
         </div>
@@ -394,10 +815,10 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
         <button
           type="button"
           onClick={handleLeave}
-          className="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl text-[11px] font-medium min-w-15 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all select-none"
+          className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-[11px] font-medium min-w-[52px] bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all select-none"
         >
           <LogOut className="w-5 h-5" />
-          <span>Leave</span>
+          <span className="hidden xs:inline">Leave</span>
         </button>
       </div>
     </div>

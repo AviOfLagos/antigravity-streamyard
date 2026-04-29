@@ -8,6 +8,7 @@ import { Track } from "livekit-client"
 import { useStudioStore } from "@/store/studio"
 
 import BackstagePanel from "./BackstagePanel"
+import ChatOverlay from "./ChatOverlay"
 import TextOverlayRenderer from "./TextOverlayRenderer"
 import VideoTile from "./VideoTile"
 
@@ -37,15 +38,15 @@ export default function VideoGrid({ roomCode, isHost, hostToken }: VideoGridProp
   const pinnedParticipantId = useStudioStore((s) => s.pinnedParticipantId)
   const textOverlays = useStudioStore((s) => s.textOverlays)
   const stageBackground = useStudioStore((s) => s.stageBackground)
+  const chatOverlayEnabled = useStudioStore((s) => s.chatOverlayEnabled)
+  const chatOverlayPosition = useStudioStore((s) => s.chatOverlayPosition)
 
   // Memoize track filtering chains
   const { stageTracks, screenshareTracks, cameraTracks } = useMemo(() => {
-    // Filter to camera and screenshare tracks only
     const allTracks = tracks.filter(
       (t) => t.source === Track.Source.Camera || t.source === Track.Source.ScreenShare
     )
 
-    // When onScreenParticipantIds is empty, show everyone (backwards compat)
     const stage =
       onScreenParticipantIds.length === 0
         ? allTracks
@@ -57,7 +58,6 @@ export default function VideoGrid({ roomCode, isHost, hostToken }: VideoGridProp
     return { stageTracks: stage, screenshareTracks: screenshare, cameraTracks: camera }
   }, [tracks, onScreenParticipantIds])
 
-  // Determine pinned track for spotlight / single
   const pinnedTrack =
     pinnedParticipantId != null
       ? stageTracks.find((t) => t.participant.identity === pinnedParticipantId)
@@ -65,10 +65,7 @@ export default function VideoGrid({ roomCode, isHost, hostToken }: VideoGridProp
   const primaryTrack = pinnedTrack ?? stageTracks[0]
   const sidebarTracks = stageTracks.filter((t) => t !== primaryTrack)
 
-  // Suppress unused warning for participants
   void participants
-
-  // ── Render helpers ──────────────────────────────────────────────────────────
 
   const renderTile = (trackRef: (typeof stageTracks)[number]) => (
     <VideoTile
@@ -80,18 +77,14 @@ export default function VideoGrid({ roomCode, isHost, hostToken }: VideoGridProp
     />
   )
 
-  // ── Layout variants ──────────────────────────────────────────────────────────
-
   let stageContent: React.ReactNode
 
   if (activeLayout === "spotlight" && stageTracks.length > 0) {
     stageContent = (
       <div className="flex gap-2 h-full">
-        {/* Primary: large */}
         <div className="flex-3 min-w-0">
           {primaryTrack && renderTile(primaryTrack)}
         </div>
-        {/* Sidebar: stacked */}
         {sidebarTracks.length > 0 && (
           <div className="flex flex-col gap-2 flex-1 min-w-0 overflow-y-auto">
             {sidebarTracks.map((t) => renderTile(t))}
@@ -103,7 +96,6 @@ export default function VideoGrid({ roomCode, isHost, hostToken }: VideoGridProp
     const hasScreenshare = screenshareTracks.length > 0
     stageContent = (
       <div className="flex flex-col gap-2 h-full">
-        {/* Screenshare: fills most of height */}
         <div className="flex-3 min-h-0">
           {hasScreenshare ? (
             <div className="flex gap-2 h-full">
@@ -115,7 +107,6 @@ export default function VideoGrid({ roomCode, isHost, hostToken }: VideoGridProp
             </div>
           )}
         </div>
-        {/* Camera row at bottom */}
         {cameraTracks.length > 0 && (
           <div className="flex-1 flex gap-2 min-h-0">
             {cameraTracks.map((t) => renderTile(t))}
@@ -143,7 +134,6 @@ export default function VideoGrid({ roomCode, isHost, hostToken }: VideoGridProp
       </div>
     )
   } else {
-    // "grid" — default equal grid
     stageContent =
       stageTracks.length > 0 ? (
         <div className={`grid ${gridCols(stageTracks.length)} gap-2 h-full content-center`}>
@@ -158,10 +148,18 @@ export default function VideoGrid({ roomCode, isHost, hostToken }: VideoGridProp
 
   return (
     <div className="flex flex-col h-full" style={{ backgroundColor: stageBackground }}>
-      {/* Main stage — relative so overlays can be positioned absolutely */}
-      <div className="flex-1 min-h-0 p-3 relative">
-        {stageContent}
-        <TextOverlayRenderer overlays={textOverlays} />
+      {/* Main stage — max-width centered, 16:9 aspect ratio */}
+      <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
+        <div className="w-full max-w-[1280px] mx-auto px-3 py-3 h-full flex flex-col justify-center">
+          {/* 16:9 stage container: width-constrained, aspect-ratio enforced */}
+          <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
+            <div className="absolute inset-0">
+              {stageContent}
+              <TextOverlayRenderer overlays={textOverlays} />
+              {chatOverlayEnabled && <ChatOverlay position={chatOverlayPosition} />}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Backstage strip (host only) */}

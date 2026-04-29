@@ -32,6 +32,25 @@ const tagLabels: Record<Tag, string> = {
 const entries: ChangelogEntry[] = [
   {
     date: "Apr 29, 2026",
+    version: "v1.8.0",
+    title: "Guest Overhaul, UI Declutter, Chat Overlay & Reconnection",
+    changes: [
+      { tag: "feat", text: "Guest backstage panel — see all participants with role badges, mic/camera status, and speaking indicators (no moderation controls)" },
+      { tag: "feat", text: "Guest chat input — guests can now type messages in chat, shown with teal 'Guest' badge" },
+      { tag: "feat", text: "Guest screen sharing — dedicated screen share toggle button in guest control bar" },
+      { tag: "feat", text: "Copy room link button for guests in header bar" },
+      { tag: "feat", text: "TopToolbar — GoLive, Layout, Text, Invite, Settings, End moved above the stage; bottom bar is now just media controls" },
+      { tag: "feat", text: "Twitch-style chat overlay on canvas — last 4 messages with auto-fade, configurable position (4 corners)" },
+      { tag: "feat", text: "Text overlay timer — set duration in seconds, auto-hides when expired, shows countdown badge" },
+      { tag: "feat", text: "Network quality indicator — signal strength icon (green/yellow/red) for host and guest" },
+      { tag: "fix", text: "Canvas now centered with max-width 1280px and 16:9 aspect ratio — no more blank space when streaming" },
+      { tag: "fix", text: "Connection timeouts — adaptive streaming, dynacast, custom reconnect policy (5 attempts, exponential backoff)" },
+      { tag: "fix", text: "ConnectionMonitor shows attempt count, elapsed time, and refresh button after 5 failed attempts" },
+      { tag: "improvement", text: "Control bar decluttered — only essential media controls on mobile; everything else in TopToolbar" },
+    ],
+  },
+  {
+    date: "Apr 29, 2026",
     version: "v1.7.0",
     title: "End Studio Dialog, Recording & Text Overlays",
     changes: [

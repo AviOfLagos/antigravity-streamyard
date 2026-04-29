@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 
-import { LiveKitRoom, RoomAudioRenderer, StartAudio, useConnectionState, useLocalParticipant, useParticipants } from "@livekit/components-react"
-import { MessageSquare, Users, X, Zap } from "lucide-react"
-import { ConnectionState } from "livekit-client"
+import { LiveKitRoom, RoomAudioRenderer, StartAudio, useConnectionQualityIndicator, useConnectionState, useLocalParticipant, useParticipants } from "@livekit/components-react"
+import { MessageSquare, Users, Wifi, WifiOff, WifiZero, X, Zap } from "lucide-react"
+import { ConnectionQuality, ConnectionState } from "livekit-client"
 import { toast } from "sonner"
 
 import ChatPanel from "@/components/chat/ChatPanel"
@@ -12,6 +12,7 @@ import { PLATFORM_COLORS } from "@/components/chat/PlatformBadge"
 import ConnectionStatus from "@/components/studio/ConnectionStatus"
 import ControlBar from "@/components/studio/ControlBar"
 import GuestRequestToast from "@/components/studio/GuestRequestToast"
+import TopToolbar from "@/components/studio/TopToolbar"
 import VideoGrid from "@/components/studio/VideoGrid"
 import { SSEEventDataSchema } from "@/lib/schemas/sse"
 import { PlatformListResponseSchema } from "@/lib/schemas/platform"
@@ -28,24 +29,64 @@ interface StudioClientProps {
   connectedPlatforms?: { platform: string; channelName: string }[]
 }
 
+const MAX_RECONNECT_ATTEMPTS = 5
+
 function ConnectionMonitor() {
   const state = useConnectionState()
   const prevStateRef = useRef<ConnectionState>(ConnectionState.Connecting)
+  // Reconnection attempt counter
+  const attemptCountRef = useRef(0)
+  const [attemptCount, setAttemptCount] = useState(0)
+  // Elapsed seconds since disconnect began
+  const [elapsedSecs, setElapsedSecs] = useState(0)
+  const elapsedTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  // Debounce: block duplicate reconnect cycles
+  const reconnectInProgressRef = useRef(false)
 
-  // F-12: Show "Reconnected" toast when connection recovers from a lost state
   useEffect(() => {
     const prev = prevStateRef.current
+
+    if (state === ConnectionState.Reconnecting && prev !== ConnectionState.Reconnecting) {
+      // Start a new cycle only if one isn't already running
+      if (!reconnectInProgressRef.current) {
+        reconnectInProgressRef.current = true
+        attemptCountRef.current += 1
+        setAttemptCount(attemptCountRef.current)
+        setElapsedSecs(0)
+        console.debug(`[ConnectionMonitor] Reconnect attempt #${attemptCountRef.current}`)
+      }
+      if (!elapsedTimerRef.current) {
+        elapsedTimerRef.current = setInterval(() => setElapsedSecs((s) => s + 1), 1000)
+      }
+    }
+
     if (
       state === ConnectionState.Connected &&
       (prev === ConnectionState.Reconnecting || prev === ConnectionState.Disconnected)
     ) {
+      reconnectInProgressRef.current = false
+      attemptCountRef.current = 0
+      setAttemptCount(0)
+      setElapsedSecs(0)
+      if (elapsedTimerRef.current) { clearInterval(elapsedTimerRef.current); elapsedTimerRef.current = null }
+      console.debug("[ConnectionMonitor] Reconnected successfully")
       toast.success("Reconnected", {
         description: "Connection to the studio has been restored.",
         duration: 3000,
       })
     }
+
+    if (state === ConnectionState.Disconnected && prev !== ConnectionState.Disconnected) {
+      reconnectInProgressRef.current = false
+      if (elapsedTimerRef.current) { clearInterval(elapsedTimerRef.current); elapsedTimerRef.current = null }
+      console.debug("[ConnectionMonitor] Permanently disconnected")
+    }
+
     prevStateRef.current = state
   }, [state])
+
+  // Clean up elapsed timer on unmount
+  useEffect(() => () => { if (elapsedTimerRef.current) clearInterval(elapsedTimerRef.current) }, [])
 
   if (state === ConnectionState.Connecting) {
     return (
@@ -57,17 +98,90 @@ function ConnectionMonitor() {
       </div>
     )
   }
-  if (state === ConnectionState.Reconnecting || state === ConnectionState.Disconnected) {
+
+  if (state === ConnectionState.Reconnecting) {
+    const exhausted = attemptCount > MAX_RECONNECT_ATTEMPTS
     return (
-      <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-20 pointer-events-none">
-        <div className="text-center">
-          <p className="text-white font-semibold mb-1">Connection lost</p>
-          <p className="text-gray-300 text-sm">Attempting to reconnect...</p>
+      <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-20">
+        <div className="text-center space-y-2 px-6">
+          {exhausted ? (
+            <>
+              <p className="text-white font-semibold">Connection lost</p>
+              <p className="text-gray-300 text-sm">
+                Could not reconnect after {MAX_RECONNECT_ATTEMPTS} attempts.
+              </p>
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="mt-3 px-4 py-1.5 rounded-xl text-sm font-medium bg-violet-500 hover:bg-violet-400 text-white transition-colors"
+              >
+                Refresh to rejoin
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="w-6 h-6 border-2 border-violet-400 border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-white font-semibold">
+                Reconnecting... (attempt {attemptCount}/{MAX_RECONNECT_ATTEMPTS})
+              </p>
+              <p className="text-gray-400 text-sm">
+                {elapsedSecs > 0 ? `${elapsedSecs}s elapsed` : "Hang tight..."}
+              </p>
+            </>
+          )}
         </div>
       </div>
     )
   }
+
+  if (state === ConnectionState.Disconnected) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-20">
+        <div className="text-center space-y-3 px-6">
+          <p className="text-white font-semibold">Connection lost</p>
+          <p className="text-gray-300 text-sm">The studio connection was permanently dropped.</p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="px-4 py-1.5 rounded-xl text-sm font-medium bg-violet-500 hover:bg-violet-400 text-white transition-colors"
+          >
+            Refresh to rejoin
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return null
+}
+
+function NetworkQualityIndicator() {
+  const { quality } = useConnectionQualityIndicator()
+
+  let icon: React.ReactNode
+  let label: string
+  let colorClass: string
+
+  if (quality === ConnectionQuality.Excellent || quality === ConnectionQuality.Good) {
+    icon = <Wifi className="w-3.5 h-3.5" />
+    label = quality === ConnectionQuality.Excellent ? "Network: Excellent" : "Network: Good"
+    colorClass = "text-emerald-400"
+  } else if (quality === ConnectionQuality.Poor) {
+    icon = <WifiZero className="w-3.5 h-3.5" />
+    label = "Network: Poor"
+    colorClass = "text-yellow-400"
+  } else {
+    // Lost or Unknown
+    icon = <WifiOff className="w-3.5 h-3.5" />
+    label = "Network: Critical"
+    colorClass = "text-red-400"
+  }
+
+  return (
+    <span title={label} className={`inline-flex items-center ${colorClass}`} aria-label={label}>
+      {icon}
+    </span>
+  )
 }
 
 function ParticipantCount() {
@@ -103,6 +217,8 @@ function LayoutBroadcaster() {
   const pinnedParticipantId = useStudioStore((s) => s.pinnedParticipantId)
   const textOverlays = useStudioStore((s) => s.textOverlays)
   const stageBackground = useStudioStore((s) => s.stageBackground)
+  const chatOverlayEnabled = useStudioStore((s) => s.chatOverlayEnabled)
+  const chatOverlayPosition = useStudioStore((s) => s.chatOverlayPosition)
   const hasBroadcastedRef = useRef(false)
 
   useEffect(() => {
@@ -114,13 +230,15 @@ function LayoutBroadcaster() {
       pinnedParticipantId: pinnedParticipantId ?? null,
       textOverlays,
       stageBackground,
+      chatOverlayEnabled,
+      chatOverlayPosition,
     }
     const encoder = new TextEncoder()
     localParticipant
       .publishData(encoder.encode(JSON.stringify(payload)), { reliable: true })
       .catch(() => {/* non-critical -- guest will fall back to default layout */})
     hasBroadcastedRef.current = true
-  }, [localParticipant, activeLayout, pinnedParticipantId, textOverlays, stageBackground])
+  }, [localParticipant, activeLayout, pinnedParticipantId, textOverlays, stageBackground, chatOverlayEnabled, chatOverlayPosition])
 
   return null
 }
@@ -431,6 +549,19 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
           audioCaptureDefaults: { autoGainControl: true, noiseSuppression: true, echoCancellation: true },
           videoCaptureDefaults: { resolution: { width: 1280, height: 720, frameRate: 30 } },
           publishDefaults: { simulcast: true },
+          // Reduce quality on poor network instead of hard-disconnecting
+          adaptiveStream: true,
+          // Only send video layers receivers actually need
+          dynacast: true,
+          // Survive tab blur / mobile sleep without killing the connection
+          disconnectOnPageLeave: false,
+          // Exponential back-off: 1 s, 2 s, 4 s, 8 s, 8 s — give up after 5 attempts
+          reconnectPolicy: {
+            nextRetryDelayInMs: (context) => {
+              if (context.retryCount >= MAX_RECONNECT_ATTEMPTS) return null
+              return Math.min(1000 * Math.pow(2, context.retryCount), 8000)
+            },
+          },
         }}
         className="flex flex-1 overflow-hidden"
       >
@@ -443,8 +574,16 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
         <StartAudio label="Click to enable audio" className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-violet-500 hover:bg-violet-600 text-white text-sm font-medium shadow-lg transition-all animate-pulse" />
         {/* Stage: video + controls — always fills available width, never obscured */}
         <div className="relative flex flex-col flex-1 min-w-0 overflow-hidden">
-          {/* Participant count (inside LiveKitRoom context) */}
-          <div className="absolute top-2 right-2 z-10">
+          {/* Top toolbar — panels, go live, layout, text, end session */}
+          <TopToolbar
+            roomCode={roomCode}
+            connectedPlatforms={connectedPlatforms}
+            streamTitle={title}
+            streamDescription={description}
+          />
+          {/* Participant count + network quality (inside LiveKitRoom context) */}
+          <div className="absolute top-10 right-2 z-10 flex items-center gap-2">
+            <NetworkQualityIndicator />
             <ParticipantCount />
           </div>
           {/* F-12: Connection status indicator inside LiveKitRoom context */}
@@ -452,8 +591,8 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
           <div className="flex-1 overflow-hidden">
             <VideoGrid roomCode={roomCode} isHost={true} hostToken={hostToken} />
           </div>
-          {/* ControlBar is now inside LiveKitRoom -- TrackToggle hooks work here */}
-          <ControlBar roomCode={roomCode} connectedPlatforms={connectedPlatforms} streamTitle={title} streamDescription={description} />
+          {/* ControlBar — media controls only (mic, cam, screen, record) */}
+          <ControlBar roomCode={roomCode} />
 
           {/* G35 -- LiveKit connection state overlay */}
           <ConnectionMonitor />

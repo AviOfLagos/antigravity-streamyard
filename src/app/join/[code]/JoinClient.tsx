@@ -613,6 +613,19 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
         options={{
           audioCaptureDefaults: { autoGainControl: true, noiseSuppression: true, echoCancellation: true },
           publishDefaults: { simulcast: true },
+          // Reduce quality on poor network instead of hard-disconnecting
+          adaptiveStream: true,
+          // Only send video layers receivers actually need
+          dynacast: true,
+          // Survive tab blur / mobile sleep without killing the connection
+          disconnectOnPageLeave: false,
+          // Exponential back-off: 1 s, 2 s, 4 s, 8 s, 8 s — give up after 5 attempts
+          reconnectPolicy: {
+            nextRetryDelayInMs: (context) => {
+              if (context.retryCount >= 5) return null
+              return Math.min(1000 * Math.pow(2, context.retryCount), 8000)
+            },
+          },
         }}
         onDisconnected={() => {
           if (wasKickedRef.current) {

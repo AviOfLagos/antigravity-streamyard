@@ -271,6 +271,14 @@ export default async function StatusPage() {
               { name: "Canvas Text Overlays", status: "Live", color: "emerald" },
               { name: "Stage Background Color", status: "Live", color: "emerald" },
               { name: "Session Recording (MP4)", status: "Live", color: "emerald" },
+              { name: "Guest Chat Input", status: "Live", color: "emerald" },
+              { name: "Guest Backstage Panel", status: "Live", color: "emerald" },
+              { name: "Guest Screen Sharing", status: "Live", color: "emerald" },
+              { name: "Twitch-Style Chat Overlay", status: "Live", color: "emerald" },
+              { name: "Text Overlay Timer (Auto-Hide)", status: "Live", color: "emerald" },
+              { name: "Network Quality Indicator", status: "Live", color: "emerald" },
+              { name: "TopToolbar (Decluttered Controls)", status: "Live", color: "emerald" },
+              { name: "Adaptive Reconnection (5-attempt backoff)", status: "Live", color: "emerald" },
               { name: "Chat Reply to Kick & TikTok", status: "Planned", color: "gray" },
             ].map((feature) => (
               <div
@@ -300,7 +308,7 @@ export default async function StatusPage() {
 
         {/* Version */}
         <div className="text-center text-gray-600 text-xs">
-          Zerocast v1.7.0 · <Link href="/changelog" className="text-gray-500 hover:text-gray-300 transition-colors">View changelog</Link>
+          Zerocast v1.8.0 · <Link href="/changelog" className="text-gray-500 hover:text-gray-300 transition-colors">View changelog</Link>
         </div>
       </main>
 

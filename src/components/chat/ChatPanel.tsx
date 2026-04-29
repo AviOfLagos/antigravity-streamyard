@@ -14,12 +14,16 @@ import PlatformFilter from "./PlatformFilter"
 interface ChatPanelProps {
   roomCode: string
   isHost: boolean
+  /** Guest display name — used as author for guest chat messages */
+  displayName?: string
   onCollapse?: () => void
   collapsed?: boolean
   connectedPlatforms?: { platform: string; channelName: string }[]
+  /** Called when a guest submits a chat message — the parent relays it to the room */
+  onGuestSend?: (message: string) => void
 }
 
-export default function ChatPanel({ roomCode, isHost, onCollapse, collapsed, connectedPlatforms }: ChatPanelProps) {
+export default function ChatPanel({ roomCode, isHost, displayName, onCollapse, collapsed, connectedPlatforms, onGuestSend }: ChatPanelProps) {
   const parentRef = useRef<HTMLDivElement>(null)
   const storeMessages = useChatStore((s) => s.messages)
   const filters = useChatStore((s) => s.filters)
@@ -119,7 +123,7 @@ export default function ChatPanel({ roomCode, isHost, onCollapse, collapsed, con
             <MessageSquare className="w-7 h-7 text-white/10" />
             <p className="text-gray-600 text-xs">No messages yet</p>
             <p className="text-gray-700 text-[10px] leading-relaxed">
-              Connect platforms to see chat here
+              {isHost ? "Connect platforms to see chat here" : "Be the first to say something"}
             </p>
           </div>
         ) : (
@@ -165,8 +169,60 @@ export default function ChatPanel({ roomCode, isHost, onCollapse, collapsed, con
         )}
       </div>
 
-      {/* Host chat input */}
-      {isHost && <ChatInput roomCode={roomCode} />}
+      {/* Chat input — host sends via API, guest sends via relay callback */}
+      {isHost
+        ? <ChatInput roomCode={roomCode} />
+        : <GuestChatInput displayName={displayName ?? "Guest"} onSend={onGuestSend} />
+      }
+    </div>
+  )
+}
+
+function GuestChatInput({ displayName, onSend }: { displayName: string; onSend?: (msg: string) => void }) {
+  const [text, setText] = useState("")
+  const addMessage = useChatStore((s) => s.addMessage)
+
+  const handleSend = () => {
+    const msg = text.trim()
+    if (!msg) return
+    // Optimistically add to local store so the sender sees their own message immediately
+    const guestMsg: ChatMessageType = {
+      id: crypto.randomUUID(),
+      platform: "guest",
+      author: { name: displayName },
+      message: msg,
+      timestamp: new Date().toISOString(),
+      eventType: "text",
+    }
+    addMessage(guestMsg)
+    onSend?.(msg)
+    setText("")
+  }
+
+  return (
+    <div className="flex-none border-t border-white/6 px-2 py-2">
+      <div className="flex items-center gap-1.5">
+        <input
+          type="text"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleSend()}
+          placeholder="Send to chat..."
+          maxLength={500}
+          className="flex-1 bg-white/4 text-white text-xs placeholder:text-gray-600 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-cyan-500/30 transition-colors"
+        />
+        <button
+          type="button"
+          onClick={handleSend}
+          disabled={!text.trim()}
+          className="p-2 rounded-lg text-gray-500 hover:text-cyan-400 hover:bg-cyan-500/10 disabled:opacity-30 transition-colors"
+        >
+          <Send className="w-3.5 h-3.5" />
+        </button>
+      </div>
+      <p className="text-[9px] text-gray-700 mt-1 px-1">
+        Visible to everyone in the room
+      </p>
     </div>
   )
 }

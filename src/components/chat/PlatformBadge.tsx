@@ -7,6 +7,7 @@ const PLATFORM_COLORS: Record<Platform, string> = {
   kick: "#22c55e",
   tiktok: "#94a3b8",
   host: "#7c3aed",
+  guest: "#06b6d4",
 }
 
 const PLATFORM_LABELS: Record<Platform, string> = {
@@ -15,6 +16,7 @@ const PLATFORM_LABELS: Record<Platform, string> = {
   kick: "Kick",
   tiktok: "TikTok",
   host: "You",
+  guest: "Guest",
 }
 
 interface PlatformBadgeProps {
@@ -25,7 +27,7 @@ interface PlatformBadgeProps {
 export default function PlatformBadge({ platform, variant = "dot" }: PlatformBadgeProps) {
   const color = PLATFORM_COLORS[platform]
 
-  // Host messages use a distinct violet pill — no platform icon
+  // Host/guest messages use a distinct pill — no platform icon
   if (platform === "host") {
     return (
       <span
@@ -34,6 +36,18 @@ export default function PlatformBadge({ platform, variant = "dot" }: PlatformBad
         title="Host message"
       >
         You
+      </span>
+    )
+  }
+
+  if (platform === "guest") {
+    return (
+      <span
+        className="inline-flex items-center justify-center rounded text-[9px] font-bold px-1.5 py-0.5 shrink-0"
+        style={{ backgroundColor: `${color}22`, color }}
+        title="Guest message"
+      >
+        Guest
       </span>
     )
   }

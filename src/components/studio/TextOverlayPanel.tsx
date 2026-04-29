@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 
-import { Eye, EyeOff, Trash2 } from "lucide-react"
+import { Clock, Eye, EyeOff, Trash2 } from "lucide-react"
 
 import { useStudioStore, type TextOverlay } from "@/store/studio"
 
@@ -95,12 +95,17 @@ export default function TextOverlayPanel() {
   const [fontSize, setFontSize] = useState<TextOverlay["fontSize"]>("md")
   const [color, setColor] = useState("#ffffff")
   const [bgColor, setBgColor] = useState("#000000cc")
+  // Duration: "" means permanent; number string means seconds
+  const [durationSecs, setDurationSecs] = useState("")
 
   const handleAdd = () => {
     const trimmed = text.trim()
     if (!trimmed) return
-    addTextOverlay({ text: trimmed, position, fontSize, color, bgColor, visible: true })
+    const durNum = parseInt(durationSecs, 10)
+    const expiresAt = !isNaN(durNum) && durNum > 0 ? Date.now() + durNum * 1000 : null
+    addTextOverlay({ text: trimmed, position, fontSize, color, bgColor, visible: true, expiresAt })
     setText("")
+    setDurationSecs("")
   }
 
   return (
@@ -178,6 +183,23 @@ export default function TextOverlayPanel() {
             <ColorSwatch colors={BG_COLORS} selected={bgColor} onSelect={setBgColor} />
           </div>
 
+          {/* Duration */}
+          <div>
+            <p className="text-[10px] text-gray-500 mb-1.5 uppercase tracking-wider">Duration</p>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={1}
+                value={durationSecs}
+                onChange={(e) => setDurationSecs(e.target.value)}
+                placeholder="Permanent"
+                className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-violet-500/60 transition-colors"
+              />
+              <span className="text-xs text-gray-500 whitespace-nowrap">sec</span>
+            </div>
+            <p className="text-[9px] text-gray-600 mt-1">Leave blank for permanent overlay</p>
+          </div>
+
           <button
             type="button"
             onClick={handleAdd}
@@ -215,6 +237,16 @@ export default function TextOverlayPanel() {
                   </span>
                   {/* Position badge */}
                   <span className="text-[9px] text-gray-600 flex-none">{overlay.position}</span>
+                  {/* Timer badge */}
+                  {overlay.expiresAt !== null && (
+                    <span
+                      className="flex items-center gap-0.5 text-[9px] text-amber-500 flex-none"
+                      title={`Expires at ${new Date(overlay.expiresAt).toLocaleTimeString()}`}
+                    >
+                      <Clock className="w-2.5 h-2.5" />
+                      {Math.max(0, Math.ceil((overlay.expiresAt - Date.now()) / 1000))}s
+                    </span>
+                  )}
                   {/* Toggle visibility */}
                   <button
                     type="button"

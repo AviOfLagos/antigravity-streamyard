@@ -1,5 +1,8 @@
 "use client"
 
+import { useEffect, useState } from "react"
+
+import { useStudioStore } from "@/store/studio"
 import type { TextOverlay } from "@/store/studio"
 
 interface TextOverlayRendererProps {
@@ -22,6 +25,23 @@ const FONT_SIZE_CLASSES: Record<TextOverlay["fontSize"], string> = {
 }
 
 export default function TextOverlayRenderer({ overlays }: TextOverlayRendererProps) {
+  const toggleTextOverlay = useStudioStore((s) => s.toggleTextOverlay)
+  // Tick every second to re-evaluate expiry
+  const [, setTick] = useState(0)
+
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  // Auto-hide expired overlays (runs on every render)
+  const now = Date.now()
+  for (const overlay of overlays) {
+    if (overlay.visible && overlay.expiresAt !== null && now > overlay.expiresAt) {
+      toggleTextOverlay(overlay.id)
+    }
+  }
+
   const visible = overlays.filter((o) => o.visible && o.text.trim().length > 0)
   if (visible.length === 0) return null
 

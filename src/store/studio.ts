@@ -6,6 +6,7 @@ interface PendingGuest {
 }
 
 export type StudioLayout = "grid" | "spotlight" | "screen-grid" | "screen-only" | "single"
+export type ChatOverlayPosition = "bottom-left" | "bottom-right" | "top-left" | "top-right"
 
 export interface TextOverlay {
   id: string
@@ -15,6 +16,7 @@ export interface TextOverlay {
   color: string       // hex color, default "#ffffff"
   bgColor: string     // hex color with opacity, default "#000000cc"
   visible: boolean
+  expiresAt: number | null  // ms epoch; null = permanent
 }
 
 interface StudioStore {
@@ -43,6 +45,10 @@ interface StudioStore {
   recordingEgressId: string | null
   recordingStartedAt: Date | null
 
+  // Chat overlay
+  chatOverlayEnabled: boolean
+  chatOverlayPosition: ChatOverlayPosition
+
   // Stage actions
   bringOnStage: (id: string) => void
   sendToBackstage: (id: string) => void
@@ -64,6 +70,9 @@ interface StudioStore {
   removeStreamPlatform: (platform: string) => void
   // Recording actions
   setRecordingState: (isRecording: boolean, egressId?: string | null, startedAt?: Date | null) => void
+  // Chat overlay actions
+  setChatOverlayEnabled: (enabled: boolean) => void
+  setChatOverlayPosition: (position: ChatOverlayPosition) => void
   // F-11: Hydrate from persisted state
   hydrateFromSaved: (state: {
     activeLayout?: StudioLayout
@@ -97,6 +106,10 @@ export const useStudioStore = create<StudioStore>((set) => ({
   isRecording: false,
   recordingEgressId: null,
   recordingStartedAt: null,
+
+  // Chat overlay
+  chatOverlayEnabled: false,
+  chatOverlayPosition: "bottom-left" as ChatOverlayPosition,
 
   bringOnStage: (id) =>
     set((state) => ({
@@ -184,6 +197,10 @@ export const useStudioStore = create<StudioStore>((set) => ({
       recordingEgressId: egressId ?? null,
       recordingStartedAt: startedAt ?? null,
     }),
+
+  // Chat overlay actions
+  setChatOverlayEnabled: (enabled) => set({ chatOverlayEnabled: enabled }),
+  setChatOverlayPosition: (position) => set({ chatOverlayPosition: position }),
 
   // F-11: Hydrate studio state from Redis-persisted snapshot
   hydrateFromSaved: (saved) =>

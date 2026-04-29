@@ -26,6 +26,8 @@ export const useChatStore = create<ChatStore>((set) => ({
     tiktok: true,
     // Host messages are always shown and not user-togglable
     host: true,
+    // Guest messages are always shown
+    guest: true,
   },
 
   addMessage: (msg) =>
