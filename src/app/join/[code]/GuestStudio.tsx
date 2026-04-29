@@ -10,11 +10,12 @@ import { RoomEvent, Track } from "livekit-client"
 import { LocalAudioLevel } from "@/components/studio/AudioLevelIndicator"
 import ChatPanel from "@/components/chat/ChatPanel"
 import DeviceSelector from "@/components/studio/DeviceSelector"
+import TextOverlayRenderer from "@/components/studio/TextOverlayRenderer"
 import VideoTile from "@/components/studio/VideoTile"
 import type { SSEEventData } from "@/lib/chat/types"
 import { SSEEventDataSchema } from "@/lib/schemas/sse"
 import { useChatStore } from "@/store/chat"
-import type { StudioLayout } from "@/store/studio"
+import type { StudioLayout, TextOverlay } from "@/store/studio"
 
 interface GuestStudioProps {
   roomCode: string
@@ -75,6 +76,8 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
   // Layout state mirrored from the host via LiveKit data messages
   const [activeLayout, setActiveLayout] = useState<StudioLayout>("grid")
   const [pinnedParticipantId, setPinnedParticipantId] = useState<string | null>(null)
+  const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([])
+  const [stageBackground, setStageBackground] = useState("#0d0d0d")
 
   // Keep a stable ref so the RoomEvent listener never captures a stale callback
   const onKickedRef = useRef(onKicked)
@@ -96,6 +99,12 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
             setActiveLayout(layout)
           }
           setPinnedParticipantId((msg.pinnedParticipantId as string | null) ?? null)
+          if (Array.isArray(msg.textOverlays)) {
+            setTextOverlays(msg.textOverlays as TextOverlay[])
+          }
+          if (typeof msg.stageBackground === "string") {
+            setStageBackground(msg.stageBackground)
+          }
         }
       } catch { /* ignore malformed data */ }
     }
@@ -303,8 +312,12 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
       {/* Main */}
       <div className="relative flex flex-1 overflow-hidden">
         {/* Video stage — mirrors host layout, never obscured by chat */}
-        <div className="flex-1 min-h-0 p-3 min-w-0">
+        <div
+          className="flex-1 min-h-0 p-3 min-w-0 relative"
+          style={{ backgroundColor: stageBackground }}
+        >
           {stageContent}
+          <TextOverlayRenderer overlays={textOverlays} />
         </div>
 
         {/* Chat panel — desktop: collapsible sidebar; mobile: absolute overlay */}

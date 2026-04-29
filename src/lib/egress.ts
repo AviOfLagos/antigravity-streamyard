@@ -1,6 +1,6 @@
 import { PlatformType } from "@prisma/client"
 import { EgressClient } from "livekit-server-sdk"
-import { EncodingOptionsPreset, StreamOutput, StreamProtocol } from "@livekit/protocol"
+import { EncodedFileOutput, EncodedFileType, EncodingOptionsPreset, StreamOutput, StreamProtocol } from "@livekit/protocol"
 import type { EgressInfo } from "@livekit/protocol"
 
 // ── LiveKit env vars (same as livekit.ts) ──────────────────────────────────
@@ -166,4 +166,50 @@ export async function removeDestination(
 export async function listActiveEgress(roomName: string): Promise<EgressInfo[]> {
   const client = getEgressClient()
   return client.listEgress({ roomName })
+}
+
+// ── Recording operations ────────────────────────────────────────────────────
+
+/**
+ * Start a room composite egress that writes an MP4 file.
+ * The file is saved to the path configured on the LiveKit server (S3 bucket
+ * for LiveKit Cloud, or a local path for self-hosted).
+ */
+export async function startRecording(
+  roomCode: string,
+): Promise<{ egressId: string }> {
+  const timestamp = Date.now()
+  const filepath = `recordings/${roomCode}-${timestamp}.mp4`
+
+  const output = new EncodedFileOutput({
+    fileType: EncodedFileType.MP4,
+    filepath,
+  })
+
+  const client = getEgressClient()
+  const info: EgressInfo = await client.startRoomCompositeEgress(roomCode, output, {
+    layout: "grid",
+    encodingOptions: EncodingOptionsPreset.H264_720P_30,
+  })
+
+  return { egressId: info.egressId }
+}
+
+/**
+ * Stop a recording egress by ID.
+ * Returns the file location if available in the egress info.
+ */
+export async function stopRecording(
+  egressId: string,
+): Promise<{ downloadUrl?: string }> {
+  const client = getEgressClient()
+  const info: EgressInfo = await client.stopEgress(egressId)
+
+  // If the egress info carries a file location, surface it
+  // FileInfo uses `.location` (a signed URL or file path set by the LiveKit server)
+  const fileResults = info.fileResults
+  const downloadUrl =
+    fileResults && fileResults.length > 0 ? fileResults[0].location : undefined
+
+  return { downloadUrl: downloadUrl || undefined }
 }

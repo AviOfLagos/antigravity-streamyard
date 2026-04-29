@@ -3,7 +3,7 @@ import { NextResponse } from "next/server"
 
 import { auth } from "@/auth"
 import { stopStream } from "@/lib/egress"
-import { closeLivekitRoom, getParticipantCount } from "@/lib/livekit"
+import { closeLivekitRoom, getParticipantCount, listParticipants, removeParticipant } from "@/lib/livekit"
 import { prisma } from "@/lib/prisma"
 import { getCachedRoom, invalidateRoomCache } from "@/lib/room-cache"
 import { deleteRoomKeys, publishEvent, redis } from "@/lib/redis"
@@ -18,6 +18,17 @@ export async function POST(
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { code } = await params
+
+  // Parse optional body — default both to true for backward compatibility
+  let stopStreams = true
+  let kickParticipants = true
+  try {
+    const body = await req.json()
+    if (typeof body?.stopStreams === "boolean") stopStreams = body.stopStreams
+    if (typeof body?.kickParticipants === "boolean") kickParticipants = body.kickParticipants
+  } catch {
+    // No body or invalid JSON — use defaults
+  }
 
   const room = await getCachedRoom(code)
   if (!room || room.hostId !== session.user.id) {
@@ -87,11 +98,11 @@ export async function POST(
   }
   await redis.set(`session:summary:${code}`, JSON.stringify(summary), { ex: SUMMARY_TTL })
 
-  // Stop any active egress before tearing down the room
+  // Stop any active egress (conditionally)
   const activeEgress = await prisma.streamSession.findFirst({
     where: { roomId: room.id, status: { in: [StreamStatus.STARTING, StreamStatus.LIVE] } },
   })
-  if (activeEgress?.egressId) {
+  if (activeEgress?.egressId && stopStreams) {
     await Promise.allSettled([
       stopStream(activeEgress.egressId),
       prisma.streamSession.update({
@@ -99,6 +110,23 @@ export async function POST(
         data: { status: StreamStatus.ENDED, endedAt: endedAt },
       }),
     ])
+  } else if (activeEgress?.egressId && !stopStreams) {
+    // Still mark DB record as ended even if stream was not explicitly stopped
+    // (the room closure below will tear down egress anyway)
+    await prisma.streamSession.update({
+      where: { id: activeEgress.id },
+      data: { status: StreamStatus.ENDED, endedAt: endedAt },
+    }).catch(() => undefined)
+  }
+
+  // Kick all non-host participants if requested
+  if (kickParticipants) {
+    const hostIdentity = `host-${session.user.id}`
+    const participants = await listParticipants(code).catch(() => [] as Awaited<ReturnType<typeof listParticipants>>)
+    const kickOps = participants
+      .filter((p) => p.identity !== hostIdentity)
+      .map((p) => removeParticipant(code, p.identity).catch(() => undefined))
+    await Promise.allSettled(kickOps)
   }
 
   // Notify all participants before cleanup

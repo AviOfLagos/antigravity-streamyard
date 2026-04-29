@@ -8,6 +8,7 @@ import { Track } from "livekit-client"
 import { useStudioStore } from "@/store/studio"
 
 import BackstagePanel from "./BackstagePanel"
+import TextOverlayRenderer from "./TextOverlayRenderer"
 import VideoTile from "./VideoTile"
 
 interface VideoGridProps {
@@ -34,6 +35,8 @@ export default function VideoGrid({ roomCode, isHost, hostToken }: VideoGridProp
   const onScreenParticipantIds = useStudioStore((s) => s.onScreenParticipantIds)
   const activeLayout = useStudioStore((s) => s.activeLayout)
   const pinnedParticipantId = useStudioStore((s) => s.pinnedParticipantId)
+  const textOverlays = useStudioStore((s) => s.textOverlays)
+  const stageBackground = useStudioStore((s) => s.stageBackground)
 
   // Memoize track filtering chains
   const { stageTracks, screenshareTracks, cameraTracks } = useMemo(() => {
@@ -154,9 +157,12 @@ export default function VideoGrid({ roomCode, isHost, hostToken }: VideoGridProp
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#0d0d0d]">
-      {/* Main stage */}
-      <div className="flex-1 min-h-0 p-3">{stageContent}</div>
+    <div className="flex flex-col h-full" style={{ backgroundColor: stageBackground }}>
+      {/* Main stage — relative so overlays can be positioned absolutely */}
+      <div className="flex-1 min-h-0 p-3 relative">
+        {stageContent}
+        <TextOverlayRenderer overlays={textOverlays} />
+      </div>
 
       {/* Backstage strip (host only) */}
       <BackstagePanel isHost={isHost} roomCode={roomCode} hostToken={hostToken} />

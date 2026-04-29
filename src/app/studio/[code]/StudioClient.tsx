@@ -101,6 +101,8 @@ function LayoutBroadcaster() {
   const { localParticipant } = useLocalParticipant()
   const activeLayout = useStudioStore((s) => s.activeLayout)
   const pinnedParticipantId = useStudioStore((s) => s.pinnedParticipantId)
+  const textOverlays = useStudioStore((s) => s.textOverlays)
+  const stageBackground = useStudioStore((s) => s.stageBackground)
   const hasBroadcastedRef = useRef(false)
 
   useEffect(() => {
@@ -110,13 +112,15 @@ function LayoutBroadcaster() {
       type: "LAYOUT_CHANGE",
       layout: activeLayout,
       pinnedParticipantId: pinnedParticipantId ?? null,
+      textOverlays,
+      stageBackground,
     }
     const encoder = new TextEncoder()
     localParticipant
       .publishData(encoder.encode(JSON.stringify(payload)), { reliable: true })
       .catch(() => {/* non-critical -- guest will fall back to default layout */})
     hasBroadcastedRef.current = true
-  }, [localParticipant, activeLayout, pinnedParticipantId])
+  }, [localParticipant, activeLayout, pinnedParticipantId, textOverlays, stageBackground])
 
   return null
 }

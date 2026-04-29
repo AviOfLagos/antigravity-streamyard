@@ -39,6 +39,8 @@ const categories: FeatureCategory[] = [
       { icon: <LayoutGrid className="w-4 h-4" />, name: "5 Layout Presets", detail: "Grid, Spotlight, Screen+Grid, Screen Only, Single — switch layouts live without interrupting your stream.", status: "live" },
       { icon: <Monitor className="w-4 h-4" />, name: "Screen Sharing", detail: "Share your screen, a window, or a tab. Guests can see your screen in real time.", status: "live" },
       { icon: <EyeOff className="w-4 h-4" />, name: "Backstage Mode", detail: "Guests join backstage first. The host reviews and brings them on stage when ready.", status: "live" },
+      { icon: <Zap className="w-4 h-4" />, name: "Text Overlays", detail: "Add text to the stage with 6 positions, 3 font sizes, custom text and background colors. Synced to all participants.", status: "live" },
+      { icon: <Zap className="w-4 h-4" />, name: "Stage Background", detail: "Change the canvas background color from a palette of dark-theme presets. Visible to all participants.", status: "live" },
       { icon: <Globe className="w-4 h-4" />, name: "100% Browser-Based", detail: "No downloads, no plugins. Works on Chrome, Edge, Firefox, Safari — any device, any OS.", status: "live" },
     ],
   },
@@ -80,7 +82,7 @@ const categories: FeatureCategory[] = [
       { icon: <Radio className="w-4 h-4" />, name: "Custom RTMP", detail: "Add up to 10 custom RTMP destinations — Facebook Live, LinkedIn, Restream, or your own server.", status: "live" },
       { icon: <Radio className="w-4 h-4" />, name: "YouTube Backup URL", detail: "Automatic backup ingest URL support prevents 'duplicate ingestion' warnings on unstable connections.", status: "live" },
       { icon: <Camera className="w-4 h-4" />, name: "Stream Thumbnail", detail: "Set a custom thumbnail URL when creating your studio — uploaded to YouTube via the Data API when OAuth is connected.", status: "live" },
-      { icon: <Video className="w-4 h-4" />, name: "Recording", detail: "Record your entire session — audio, video, and screen — for later editing and publishing.", status: "coming-soon" },
+      { icon: <Video className="w-4 h-4" />, name: "Recording", detail: "Record your entire session to MP4 — audio, video, and screen captured via LiveKit Egress with elapsed timer.", status: "live" },
     ],
   },
   {

@@ -32,6 +32,20 @@ const tagLabels: Record<Tag, string> = {
 const entries: ChangelogEntry[] = [
   {
     date: "Apr 29, 2026",
+    version: "v1.7.0",
+    title: "End Studio Dialog, Recording & Text Overlays",
+    changes: [
+      { tag: "feat", text: "Configurable end-studio dialog — checkboxes for stop streams, kick participants, with live platform warning" },
+      { tag: "feat", text: "Session recording — Record button captures audio + video via LiveKit Egress to MP4 with elapsed timer" },
+      { tag: "feat", text: "Text overlays — add text to the stage with 6 positions, 3 font sizes, custom colors and backgrounds" },
+      { tag: "feat", text: "Stage background color — change the canvas background from a palette of dark-theme presets" },
+      { tag: "feat", text: "Overlays and background sync to guests in real time via LiveKit data messages" },
+      { tag: "improvement", text: "End studio stops active streams and kicks participants conditionally based on host selection" },
+      { tag: "improvement", text: "Record button shows pulsing red dot with MM:SS elapsed timer while recording" },
+    ],
+  },
+  {
+    date: "Apr 29, 2026",
     version: "v1.6.0",
     title: "Layout Sync, Kick Notifications & YouTube Metadata",
     changes: [
