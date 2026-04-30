@@ -7,6 +7,7 @@ import { closeLivekitRoom, getParticipantCount, listParticipants, removeParticip
 import { prisma } from "@/lib/prisma"
 import { getCachedRoom, invalidateRoomCache } from "@/lib/room-cache"
 import { deleteRoomKeys, publishEvent, redis } from "@/lib/redis"
+import { stopConnectors } from "@/lib/chat/manager"
 
 const SUMMARY_TTL = 60 * 60 * 24 // 24 hours
 
@@ -132,11 +133,16 @@ export async function POST(
   // Notify all participants before cleanup
   await publishEvent(code, { type: "STUDIO_ENDED" })
 
+  // Stop chat connectors before closing the LiveKit room
+  await stopConnectors(code)
+
   // Clean up LiveKit room (DB already updated above)
   await Promise.allSettled([closeLivekitRoom(code)])
 
-  // Delay key deletion slightly so SSE clients can receive STUDIO_ENDED
-  setTimeout(() => deleteRoomKeys(code), 5000)
+  // Give SSE clients a moment to receive STUDIO_ENDED, then delete keys
+  // within the request lifecycle (setTimeout never fires on Vercel serverless)
+  await new Promise<void>((r) => setTimeout(r, 1000))
+  await deleteRoomKeys(code)
 
   return NextResponse.json({ ok: true })
 }

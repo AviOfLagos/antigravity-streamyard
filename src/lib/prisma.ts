@@ -50,8 +50,16 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 function createClient(): PrismaClient {
+  // Append connection_limit=1 for serverless environments (Vercel) where each
+  // function invocation should not open more than one connection to the database.
+  const dbUrl = process.env.DATABASE_URL ?? ""
+  const datasourceUrl = dbUrl && !dbUrl.includes("connection_limit")
+    ? `${dbUrl}&connection_limit=1`
+    : dbUrl || undefined
+
   const base = new PrismaClient({
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+    ...(datasourceUrl ? { datasourceUrl } : {}),
   })
   return withRetry(base)
 }

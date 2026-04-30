@@ -28,11 +28,13 @@ function getLimiter(type: string, tokens: number, window: string): Ratelimit {
 // ── Limiter configurations ──────────────────────────────────────────────────
 
 const LIMITER_CONFIGS: Record<string, { tokens: number; window: string }> = {
-  "rooms:create":       { tokens: 5, window: "1m" },
-  "rooms:request":      { tokens: 3, window: "1m" },
-  "rooms:chat-connect": { tokens: 2, window: "1m" },
-  "platforms:connect":  { tokens: 5, window: "1m" },
-  "rooms:stream":       { tokens: 3, window: "1m" },
+  "rooms:create":       { tokens: 5,  window: "1m" },
+  "rooms:request":      { tokens: 3,  window: "1m" },
+  "rooms:chat-connect": { tokens: 2,  window: "1m" },
+  "platforms:connect":  { tokens: 5,  window: "1m" },
+  "rooms:stream":       { tokens: 3,  window: "1m" },
+  "rooms:record":       { tokens: 5,  window: "60s" },
+  "guest:chat-send":    { tokens: 10, window: "30s" },
 }
 
 // ── Public API ──────────────────────────────────────────────────────────────

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 import { redis, publishChat } from "@/lib/redis"
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit"
 
 const GuestSendSchema = z.object({
   message: z.string().min(1).max(500),
@@ -18,6 +19,24 @@ export async function POST(
 
   if (!ROOM_CODE_RE.test(code)) {
     return NextResponse.json({ error: "Invalid room code" }, { status: 400 })
+  }
+
+  // Rate limit: 10 messages per 30 seconds per IP (guest, unauthenticated)
+  const ip = getClientIp(req)
+  const rl = await checkRateLimit(ip, "guest:chat-send")
+  if (!rl.success) {
+    const retryAfter = Math.ceil((rl.reset - Date.now()) / 1000)
+    return NextResponse.json(
+      { error: "Too many messages", retryAfter },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(retryAfter),
+          "X-RateLimit-Limit": String(rl.limit),
+          "X-RateLimit-Remaining": String(rl.remaining),
+        },
+      },
+    )
   }
 
   const body = await req.json().catch(() => ({}))

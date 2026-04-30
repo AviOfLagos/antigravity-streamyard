@@ -66,7 +66,74 @@ src/
     └── schema.prisma         # Database schema (User, Room, Participant, PlatformConnection, StreamSession, GuestLead, CustomRtmpDestination)
 ```
 
-## Getting Started
+## Run Locally (Free)
+
+Run the entire stack on your machine with no cloud accounts required. Docker Compose
+starts Postgres, Redis (via an Upstash-compatible REST proxy), and LiveKit server
+alongside the Next.js app.
+
+### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) and Docker Compose v2+
+
+### Steps
+
+1. **Clone the repo:**
+   ```bash
+   git clone https://github.com/AviOfLagos/antigravity-streamyard.git
+   cd antigravity-streamyard
+   ```
+
+2. **Copy the Docker env file:**
+   ```bash
+   cp .env.local.docker .env.local
+   ```
+
+3. **Start everything:**
+   ```bash
+   docker compose up --build
+   ```
+   First build takes ~2 minutes. Subsequent starts are fast (no `--build` needed).
+
+4. **Open the app:** [http://localhost:3000](http://localhost:3000)
+
+   Because `GOOGLE_CLIENT_ID` is not set, the login page shows a **"Continue as Test
+   User"** button. Click it to sign in instantly as a local dev user — no OAuth needed.
+
+### Google OAuth (optional)
+
+To enable real Google sign-in locally:
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com) → APIs & Services →
+   Credentials → Create OAuth 2.0 Client ID (Web application).
+2. Add `http://localhost:3000/api/auth/callback/google` as an Authorized redirect URI.
+3. Add `http://localhost:3000` as an Authorized JavaScript origin.
+4. Copy the Client ID and Secret into `.env.local`:
+   ```env
+   GOOGLE_CLIENT_ID=your-client-id
+   GOOGLE_CLIENT_SECRET=your-client-secret
+   ```
+5. Restart the app container: `docker compose restart app`
+
+### Service ports
+
+| Service | Port | Notes |
+|---------|------|-------|
+| Next.js app | 3000 | Main UI |
+| LiveKit server | 7880 | WebSocket (WebRTC signalling) |
+| LiveKit RTC | 7881 | TCP fallback for RTC |
+| Redis REST proxy | 8079 | Upstash-compatible REST API (SRH) |
+
+### Stopping
+
+```bash
+docker compose down          # stop containers, keep volumes
+docker compose down -v       # stop containers AND wipe all data
+```
+
+---
+
+## Getting Started (Manual / Cloud)
 
 ### Prerequisites
 
