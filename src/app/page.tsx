@@ -198,10 +198,10 @@ export default async function LandingPage() {
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
-              href="/login"
+              href="/features"
               className="inline-flex items-center gap-2 bg-white/6 hover:bg-white/10 text-white border border-white/8 font-medium px-6 py-3 rounded-xl transition-colors text-sm"
             >
-              View demo
+              See Features
             </Link>
           </div>
 

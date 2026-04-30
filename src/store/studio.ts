@@ -49,6 +49,20 @@ interface StudioStore {
   chatOverlayEnabled: boolean
   chatOverlayPosition: ChatOverlayPosition
 
+  // AI chat assistant
+  aiChatEnabled: boolean
+  aiChatContext: string
+  aiChatDelay: number
+  aiChatReadAloud: boolean
+  setAIChatEnabled: (enabled: boolean) => void
+  setAIChatContext: (context: string) => void
+  setAIChatDelay: (delay: number) => void
+  setAIChatReadAloud: (readAloud: boolean) => void
+
+  // Auto layout
+  autoLayoutEnabled: boolean
+  setAutoLayoutEnabled: (enabled: boolean) => void
+
   // Stage actions
   bringOnStage: (id: string) => void
   sendToBackstage: (id: string) => void
@@ -110,6 +124,20 @@ export const useStudioStore = create<StudioStore>((set) => ({
   // Chat overlay
   chatOverlayEnabled: false,
   chatOverlayPosition: "bottom-left" as ChatOverlayPosition,
+
+  // AI chat assistant
+  aiChatEnabled: false,
+  aiChatContext: "",
+  aiChatDelay: 10,
+  aiChatReadAloud: false,
+  setAIChatEnabled: (enabled) => set({ aiChatEnabled: enabled }),
+  setAIChatContext: (context) => set({ aiChatContext: context }),
+  setAIChatDelay: (delay) => set({ aiChatDelay: delay }),
+  setAIChatReadAloud: (readAloud) => set({ aiChatReadAloud: readAloud }),
+
+  // Auto layout
+  autoLayoutEnabled: false,
+  setAutoLayoutEnabled: (enabled) => set({ autoLayoutEnabled: enabled }),
 
   bringOnStage: (id) =>
     set((state) => ({

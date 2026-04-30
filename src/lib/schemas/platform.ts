@@ -2,7 +2,7 @@ import { z } from "zod"
 
 // ── Platform enum (lowercase — canonical form used by client & chat system) ──
 
-export const PlatformSchema = z.enum(["youtube", "twitch", "kick", "tiktok", "host", "guest"])
+export const PlatformSchema = z.enum(["youtube", "twitch", "kick", "tiktok", "host", "guest", "ai"])
 export type Platform = z.infer<typeof PlatformSchema>
 
 // Accepts both lowercase and uppercase (DB returns uppercase PlatformType enum)

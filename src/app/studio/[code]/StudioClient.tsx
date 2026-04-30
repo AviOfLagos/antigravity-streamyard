@@ -9,6 +9,8 @@ import { toast } from "sonner"
 
 import ChatPanel from "@/components/chat/ChatPanel"
 import { PLATFORM_COLORS } from "@/components/chat/PlatformBadge"
+import AIChatController from "@/components/studio/AIChatController"
+import AutoLayoutManager from "@/components/studio/AutoLayoutManager"
 import ConnectionStatus from "@/components/studio/ConnectionStatus"
 import ControlBar from "@/components/studio/ControlBar"
 import GuestRequestToast from "@/components/studio/GuestRequestToast"
@@ -533,8 +535,12 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
         <RoomAudioRenderer />
         {/* Broadcast layout changes to all guests via LiveKit data messages */}
         <LayoutBroadcaster />
+        {/* Auto Layout Manager — host-only, drives activeLayout based on activity */}
+        <AutoLayoutManager />
         {/* Relay Redis events + chat to all participants via LiveKit data channel */}
         <RoomEventRelay roomCode={roomCode} onEvent={handleRelayEvent} />
+        {/* AI Chat Controller — host-only, monitors viewer questions and auto-responds */}
+        <AIChatController roomCode={roomCode} />
         {/* Fix: Browser autoplay policy blocks audio until user gesture on this page.
             StartAudio shows a button only when audio is blocked, auto-hides otherwise. */}
         <StartAudio label="Click to enable audio" className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-violet-500 hover:bg-violet-600 text-white text-sm font-medium shadow-lg transition-all animate-pulse" />

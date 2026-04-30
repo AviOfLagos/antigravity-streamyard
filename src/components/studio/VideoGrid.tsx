@@ -152,7 +152,7 @@ export default function VideoGrid({ roomCode, isHost, hostToken }: VideoGridProp
       <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
         <div className="w-full max-w-[1280px] mx-auto px-3 py-3 h-full flex flex-col justify-center">
           {/* 16:9 stage container: width-constrained, aspect-ratio enforced */}
-          <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
+          <div className="relative w-full transition-all duration-500 ease-in-out" style={{ aspectRatio: "16/9" }}>
             <div className="absolute inset-0">
               {stageContent}
               <TextOverlayRenderer overlays={textOverlays} />

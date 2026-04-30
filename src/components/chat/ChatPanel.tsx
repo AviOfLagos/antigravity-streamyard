@@ -285,7 +285,7 @@ function ChatInput({ roomCode }: { roomCode: string }) {
         </button>
       </div>
       <p className="text-[9px] text-gray-700 mt-1 px-1">
-        Sends to YouTube and Twitch
+        Sends to connected platforms
       </p>
     </div>
   )

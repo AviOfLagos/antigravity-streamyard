@@ -28,6 +28,8 @@ export const useChatStore = create<ChatStore>((set) => ({
     host: true,
     // Guest messages are always shown
     guest: true,
+    // AI assistant messages are shown by default
+    ai: true,
   },
 
   addMessage: (msg) =>

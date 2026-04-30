@@ -284,7 +284,7 @@ export default function PlatformConnectForm({
   const showRefreshButton = connected && platform !== "kick" && platform !== "tiktok" && tokenHealth !== "no_token"
 
   return (
-    <Card className="bg-gray-900 border-gray-800">
+    <Card className="bg-[#111111] border-white/6">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-base">
@@ -349,7 +349,7 @@ export default function PlatformConnectForm({
                 className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-600 flex-1"
                 onKeyDown={(e) => e.key === "Enter" && handleConnect()}
               />
-              <Button onClick={handleConnect} disabled={loading || !channelName.trim()} className="bg-red-500 hover:bg-red-600">
+              <Button onClick={handleConnect} disabled={loading || !channelName.trim()} className="bg-violet-600 hover:bg-violet-500">
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Connect"}
               </Button>
             </div>

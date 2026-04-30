@@ -43,7 +43,7 @@ export default async function SessionSummaryPage({ params }: Props) {
   const room = await prisma.room.findUnique({ where: { code } })
   if (!room || room.hostId !== session.user.id) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
         <div className="text-center px-6">
           <p className="text-white font-semibold text-lg mb-2">Access denied</p>
           <p className="text-gray-400 text-sm mb-6">
@@ -82,7 +82,7 @@ export default async function SessionSummaryPage({ params }: Props) {
 
   if (!summary) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
         <div className="text-center">
           <p className="text-white text-xl font-semibold mb-2">Session not found</p>
           <p className="text-gray-400 text-sm mb-6">

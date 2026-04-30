@@ -8,6 +8,7 @@ const PLATFORM_COLORS: Record<Platform, string> = {
   tiktok: "#94a3b8",
   host: "#7c3aed",
   guest: "#06b6d4",
+  ai: "#6366f1",
 }
 
 const PLATFORM_LABELS: Record<Platform, string> = {
@@ -17,6 +18,7 @@ const PLATFORM_LABELS: Record<Platform, string> = {
   tiktok: "TikTok",
   host: "You",
   guest: "Guest",
+  ai: "AI",
 }
 
 interface PlatformBadgeProps {
@@ -48,6 +50,18 @@ export default function PlatformBadge({ platform, variant = "dot" }: PlatformBad
         title="Guest message"
       >
         Guest
+      </span>
+    )
+  }
+
+  if (platform === "ai") {
+    return (
+      <span
+        className="inline-flex items-center justify-center rounded text-[9px] font-bold px-1.5 py-0.5 shrink-0"
+        style={{ backgroundColor: `${color}22`, color }}
+        title="AI assistant message"
+      >
+        AI
       </span>
     )
   }
