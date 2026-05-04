@@ -1,0 +1,29 @@
+# Dependencies — reinstalled inside the image
+node_modules
+
+# Next.js build output — rebuilt inside the image
+.next
+
+# Local env files — never bake secrets into the image
+.env
+.env.local
+.env.*.local
+
+# Git metadata
+.git
+.gitignore
+
+# Editor / OS artefacts
+.DS_Store
+*.swp
+*.swo
+.vscode
+.idea
+
+# Test output
+coverage
+
+# Docker files themselves (no need to COPY back in)
+Dockerfile
+docker-compose.yml
+.dockerignore

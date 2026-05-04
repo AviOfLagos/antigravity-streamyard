@@ -1,0 +1,77 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: zerocast
+      POSTGRES_PASSWORD: zerocast
+      POSTGRES_DB: zerocast
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zerocast -d zerocast"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Upstash-compatible REST API wrapper around standard Redis.
+  # The Next.js app uses @upstash/redis which speaks REST, not raw Redis protocol.
+  # hiett/serverless-redis-http provides a drop-in REST API over the redis service above.
+  srh:
+    image: hiett/serverless-redis-http:latest
+    restart: unless-stopped
+    environment:
+      SRH_MODE: env
+      SRH_TOKEN: local
+      SRH_CONNECTION_STRING: redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "8079:80"
+
+  livekit:
+    image: livekit/livekit-server:latest
+    restart: unless-stopped
+    command: --config /etc/livekit/livekit.yaml
+    volumes:
+      - ./livekit.yaml:/etc/livekit/livekit.yaml:ro
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "50000-50010:50000-50010/udp"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.local.docker
+    # Override Redis URL to point at the SRH sidecar (internal Docker network)
+    environment:
+      UPSTASH_REDIS_REST_URL: http://srh:80
+    depends_on:
+      postgres:
+        condition: service_healthy
+      srh:
+        condition: service_started
+      livekit:
+        condition: service_started
+
+volumes:
+  postgres_data:
+  redis_data:

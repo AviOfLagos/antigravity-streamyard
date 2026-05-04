@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 
 import {
   AlertTriangle,
+  Bot,
   Loader2,
   LogOut,
   LayoutGrid,
@@ -12,6 +13,7 @@ import {
   MoreHorizontal,
   Radio,
   Settings,
+  Sparkles,
   Type,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -144,14 +146,20 @@ export default function TopToolbar({
 }: TopToolbarProps) {
   const router = useRouter()
 
-  const { isLive, streamPlatforms, textOverlays, chatOverlayEnabled, chatOverlayPosition,
-    setChatOverlayEnabled, setChatOverlayPosition } = useStudioStore()
+  const {
+    isLive, streamPlatforms, textOverlays, chatOverlayEnabled, chatOverlayPosition,
+    setChatOverlayEnabled, setChatOverlayPosition,
+    autoLayoutEnabled, setAutoLayoutEnabled,
+    aiChatEnabled, aiChatContext, aiChatDelay, aiChatReadAloud,
+    setAIChatEnabled, setAIChatContext, setAIChatDelay, setAIChatReadAloud,
+  } = useStudioStore()
 
   // Panel open states
   const [textOpen, setTextOpen] = useState(false)
   const [layoutOpen, setLayoutOpen] = useState(false)
   const [inviteOpen, setInviteOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [aiOpen, setAiOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [endOpen, setEndOpen] = useState(false)
   const [ending, setEnding] = useState(false)
@@ -162,6 +170,7 @@ export default function TopToolbar({
   const layoutPanelRef = useRef<HTMLDivElement>(null)
   const invitePanelRef = useRef<HTMLDivElement>(null)
   const settingsPanelRef = useRef<HTMLDivElement>(null)
+  const aiPanelRef = useRef<HTMLDivElement>(null)
   const mobileMenuRef = useRef<HTMLDivElement>(null)
 
   const visibleOverlayCount = textOverlays.filter((o) => o.visible).length
@@ -174,6 +183,7 @@ export default function TopToolbar({
       if (layoutPanelRef.current && !layoutPanelRef.current.contains(target)) setLayoutOpen(false)
       if (invitePanelRef.current && !invitePanelRef.current.contains(target)) setInviteOpen(false)
       if (settingsPanelRef.current && !settingsPanelRef.current.contains(target)) setSettingsOpen(false)
+      if (aiPanelRef.current && !aiPanelRef.current.contains(target)) setAiOpen(false)
       if (mobileMenuRef.current && !mobileMenuRef.current.contains(target)) setMobileMenuOpen(false)
     }
     document.addEventListener("mousedown", handleClick)
@@ -232,9 +242,39 @@ export default function TopToolbar({
           </ToolBtn>
         </Tip>
         {layoutOpen && (
-          <div ref={layoutPanelRef} className="absolute top-full mt-2 left-0 z-50 bg-[#111111] border border-white/10 rounded-xl shadow-2xl p-3">
+          <div ref={layoutPanelRef} className="absolute top-full mt-2 left-0 z-50 bg-[#111111] border border-white/10 rounded-xl shadow-2xl p-3 min-w-[200px]">
             <p className="text-[10px] text-gray-500 mb-2 uppercase tracking-wider">Layout</p>
             <LayoutSelector />
+            {/* Auto Layout toggle */}
+            <div className="mt-3 pt-2.5 border-t border-white/8">
+              <button
+                type="button"
+                onClick={() => setAutoLayoutEnabled(!autoLayoutEnabled)}
+                className={[
+                  "w-full flex items-center gap-2 px-2.5 py-2 rounded-lg transition-all text-xs font-medium select-none",
+                  autoLayoutEnabled
+                    ? "bg-violet-500/20 text-violet-300 ring-1 ring-violet-500/30"
+                    : "bg-white/4 text-gray-400 hover:bg-white/8 hover:text-white",
+                ].join(" ")}
+                title={autoLayoutEnabled ? "Auto Layout is ON — click to disable" : "Enable Auto Layout"}
+              >
+                <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                <span className="flex-1 text-left">Auto Layout</span>
+                <span className={[
+                  "text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full",
+                  autoLayoutEnabled
+                    ? "bg-violet-500/30 text-violet-300"
+                    : "bg-white/8 text-gray-600",
+                ].join(" ")}>
+                  {autoLayoutEnabled ? "ON" : "OFF"}
+                </span>
+              </button>
+              <p className="text-[9px] text-gray-600 mt-1.5 px-1 leading-snug">
+                {autoLayoutEnabled
+                  ? "Switching layouts automatically. Click any layout to override."
+                  : "Automatically switch layout based on who is speaking or sharing."}
+              </p>
+            </div>
           </div>
         )}
       </div>
@@ -260,6 +300,112 @@ export default function TopToolbar({
           <MessageSquare className="w-4 h-4" />
         </ToolBtn>
       </Tip>
+
+      {/* AI Chat Assistant */}
+      <div className="relative" ref={aiOpen ? aiPanelRef : undefined}>
+        <Tip label={aiChatEnabled ? "AI Chat: On" : "AI Chat Assistant"}>
+          <ToolBtn
+            active={aiOpen || aiChatEnabled}
+            onClick={() => { setAiOpen((o) => !o); setTextOpen(false); setLayoutOpen(false); setInviteOpen(false); setSettingsOpen(false) }}
+            className={aiChatEnabled ? "bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-500/40" : ""}
+          >
+            <span className="relative">
+              <Bot className="w-4 h-4" />
+              {aiChatEnabled && (
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-indigo-400 rounded-full border border-[#080808]" />
+              )}
+            </span>
+          </ToolBtn>
+        </Tip>
+        {aiOpen && (
+          <div ref={aiPanelRef} className="absolute top-full mt-2 left-0 z-50 bg-[#111111] border border-white/10 rounded-xl shadow-2xl p-4 w-72 space-y-4">
+            {/* Header */}
+            <div className="flex items-center gap-2">
+              <Bot className="w-4 h-4 text-indigo-400 shrink-0" />
+              <span className="text-sm font-semibold text-white">AI Chat Assistant</span>
+              <span className={[
+                "ml-auto text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full",
+                aiChatEnabled ? "bg-indigo-500/30 text-indigo-300" : "bg-white/8 text-gray-600",
+              ].join(" ")}>
+                {aiChatEnabled ? "ON" : "OFF"}
+              </span>
+            </div>
+
+            {/* Enabled toggle */}
+            <label className="flex items-center gap-3 cursor-pointer select-none">
+              <div
+                role="switch"
+                aria-checked={aiChatEnabled}
+                onClick={() => setAIChatEnabled(!aiChatEnabled)}
+                className={[
+                  "relative w-9 h-5 rounded-full transition-colors cursor-pointer",
+                  aiChatEnabled ? "bg-indigo-500" : "bg-white/15",
+                ].join(" ")}
+              >
+                <span className={[
+                  "absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform",
+                  aiChatEnabled ? "translate-x-4" : "translate-x-0",
+                ].join(" ")} />
+              </div>
+              <span className="text-sm text-gray-300">
+                {aiChatEnabled ? "Enabled" : "Disabled"}
+              </span>
+            </label>
+
+            {/* Context textarea */}
+            <div>
+              <label className="text-[10px] text-gray-500 uppercase tracking-wider block mb-1.5">
+                Context for the AI
+              </label>
+              <textarea
+                rows={3}
+                value={aiChatContext}
+                onChange={(e) => setAIChatContext(e.target.value)}
+                placeholder='e.g. "This is a Minecraft survival tutorial stream"'
+                maxLength={500}
+                className="w-full bg-white/5 border border-white/10 rounded-lg text-xs text-gray-200 placeholder-gray-600 px-2.5 py-2 resize-none focus:outline-none focus:border-indigo-500/50 transition-colors"
+              />
+            </div>
+
+            {/* Response delay */}
+            <div>
+              <label className="text-[10px] text-gray-500 uppercase tracking-wider block mb-1.5">
+                Response delay: <span className="text-gray-300 font-semibold">{aiChatDelay}s</span>
+              </label>
+              <input
+                type="range"
+                min={5}
+                max={60}
+                step={5}
+                value={aiChatDelay}
+                onChange={(e) => setAIChatDelay(Number(e.target.value))}
+                className="w-full accent-indigo-500"
+              />
+              <div className="flex justify-between text-[9px] text-gray-600 mt-0.5">
+                <span>5s</span>
+                <span>60s</span>
+              </div>
+            </div>
+
+            {/* Read aloud toggle */}
+            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={aiChatReadAloud}
+                onChange={(e) => setAIChatReadAloud(e.target.checked)}
+                className="h-3.5 w-3.5 rounded border border-white/20 bg-white/6 accent-indigo-500"
+              />
+              <span className="text-xs text-gray-400">Read AI responses aloud</span>
+            </label>
+
+            {/* Info footer */}
+            <p className="text-[10px] text-gray-600 leading-snug border-t border-white/6 pt-3">
+              AI answers viewer questions when you haven&apos;t responded within {aiChatDelay}s.
+              Powered by Gemini Flash — free tier (15 req/min).
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* Go Live */}
       <GoLivePanel

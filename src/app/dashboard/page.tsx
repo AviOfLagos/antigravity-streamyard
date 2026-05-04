@@ -60,7 +60,7 @@ export default async function DashboardPage({ searchParams }: Props) {
   const { rooms, platforms, dbError } = await fetchDashboardData(session.user.id)
 
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div className="min-h-screen bg-[#080808]">
       <Navbar />
       <div className="max-w-5xl mx-auto px-6 py-10">
 
@@ -100,7 +100,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         <Suspense fallback={
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-24 bg-gray-900 border border-gray-800 rounded-xl animate-pulse" />
+              <div key={i} className="h-24 bg-[#111111] border border-white/6 rounded-xl animate-pulse" />
             ))}
           </div>
         }>
@@ -112,10 +112,10 @@ export default async function DashboardPage({ searchParams }: Props) {
         {/* F-04: Suspense boundary — rooms list */}
         <Suspense fallback={
           <div>
-            <div className="h-5 w-32 bg-gray-800 rounded animate-pulse mb-4" />
+            <div className="h-5 w-32 bg-[#111111] rounded animate-pulse mb-4" />
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-20 bg-gray-900 border border-gray-800 rounded-xl animate-pulse" />
+                <div key={i} className="h-20 bg-[#111111] border border-white/6 rounded-xl animate-pulse" />
               ))}
             </div>
           </div>
@@ -123,7 +123,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         {/* Rooms */}
         <h2 className="text-lg font-semibold text-white mb-4">Recent Studios</h2>
         {rooms.length === 0 && !dbError ? (
-          <Card className="bg-gray-900 border-gray-800">
+          <Card className="bg-[#111111] border-white/6">
             <CardContent className="py-16 text-center">
               <Video className="w-12 h-12 text-gray-600 mx-auto mb-4" />
               <p className="text-gray-400 mb-4">No studios yet. Create your first one!</p>

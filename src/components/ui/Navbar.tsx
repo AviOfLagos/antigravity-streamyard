@@ -1,18 +1,18 @@
 import Link from "next/link"
 import { auth, signOut } from "@/auth"
 import { Button } from "@/components/ui/button"
-import { Video } from "lucide-react"
+import { Zap } from "lucide-react"
 
 export default async function Navbar() {
   const session = await auth()
 
   return (
-    <nav className="border-b border-gray-800 px-6 py-4 flex justify-between items-center bg-gray-900">
+    <nav className="border-b border-white/6 px-6 py-4 flex justify-between items-center bg-[#080808]">
       <Link href="/dashboard" className="flex items-center gap-2">
-        <div className="w-7 h-7 bg-red-500 rounded-lg flex items-center justify-center">
-          <Video className="w-3.5 h-3.5 text-white" />
+        <div className="w-7 h-7 bg-violet-600 rounded-lg flex items-center justify-center">
+          <Zap className="w-3.5 h-3.5 text-white" />
         </div>
-        <span className="font-bold text-white">Zerocast Clone</span>
+        <span className="font-bold text-white">Zerocast</span>
       </Link>
       <div className="flex items-center gap-4">
         <Link href="/dashboard" className="text-gray-400 hover:text-white text-sm transition-colors">Dashboard</Link>

@@ -25,8 +25,9 @@ function TrackButton({ source, onIcon, offIcon, onLabel, offLabel }: TrackButton
     <button
       {...buttonProps}
       type="button"
+      title={enabled ? onLabel : offLabel}
       className={[
-        "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all text-[11px] font-medium min-w-[52px] select-none",
+        "flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-all text-[11px] font-medium min-w-[52px] select-none",
         enabled
           ? "bg-white/6 text-gray-300 hover:bg-white/10 hover:text-white"
           : "bg-red-500/10 text-red-400 hover:bg-red-500/20",
@@ -128,7 +129,7 @@ export default function ControlBar({ roomCode }: ControlBarProps) {
         onClick={handleToggleRecord}
         disabled={recordBusy}
         className={[
-          "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all text-[11px] font-medium min-w-[52px] select-none disabled:opacity-50",
+          "flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-all text-[11px] font-medium min-w-[52px] select-none disabled:opacity-50",
           isRecording
             ? "bg-red-500/15 text-red-400 hover:bg-red-500/25"
             : "bg-white/6 text-gray-300 hover:bg-white/10 hover:text-white",

@@ -38,7 +38,6 @@ import ChatOverlay from "@/components/studio/ChatOverlay"
 import DeviceSelector from "@/components/studio/DeviceSelector"
 import TextOverlayRenderer from "@/components/studio/TextOverlayRenderer"
 import VideoTile from "@/components/studio/VideoTile"
-import type { SSEEventData } from "@/lib/chat/types"
 import { SSEEventDataSchema } from "@/lib/schemas/sse"
 import { useChatStore } from "@/store/chat"
 import type { ChatOverlayPosition, StudioLayout, TextOverlay } from "@/store/studio"
@@ -451,17 +450,57 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
     }
   }, [roomCode, displayName])
 
-  // Listen for LiveKit data messages: KICKED + LAYOUT_CHANGE
+  const participants = useParticipants()
+  const tracks = useTracks(
+    [
+      { source: Track.Source.Camera, withPlaceholder: true },
+      { source: Track.Source.ScreenShare, withPlaceholder: false },
+    ],
+    { onlySubscribed: false }
+  )
+  const addMessage = useChatStore((s) => s.addMessage)
+
+  // Ref to read chatCollapsed inside data channel handler without stale closure
+  const chatCollapsedRef = useRef(chatCollapsed)
+  useEffect(() => { chatCollapsedRef.current = chatCollapsed }, [chatCollapsed])
+
+  // Listen for LiveKit data messages: KICKED + LAYOUT_CHANGE + ROOM_EVENT (relay from host)
   useEffect(() => {
     if (!room) return
     const decoder = new TextDecoder()
+
+    const handleRoomEvent = (inner: Record<string, unknown>) => {
+      // STUDIO_ENDED — redirect immediately
+      if (inner.type === "STUDIO_ENDED") {
+        window.location.href = "/studio-ended"
+        return
+      }
+      // CHAT_MESSAGE — add to chat store
+      if (inner.type === "CHAT_MESSAGE") {
+        const parsed = SSEEventDataSchema.safeParse(inner)
+        if (parsed.success && parsed.data.type === "CHAT_MESSAGE") {
+          addMessage(parsed.data.data)
+          if (chatCollapsedRef.current) {
+            setUnreadCount((n) => n + 1)
+          }
+        }
+        return
+      }
+      // All other event types (STREAM_STARTED, GUEST_LEFT, etc.) are host-only
+      // actions; guests don't need to act on them, so we silently ignore them.
+    }
+
     const handler = (payload: Uint8Array) => {
       try {
         const msg = JSON.parse(decoder.decode(payload)) as Record<string, unknown>
+
         if (msg.type === "KICKED") {
           wasKickedInternalRef.current = true
           onKickedRef.current?.()
-        } else if (msg.type === "LAYOUT_CHANGE") {
+          return
+        }
+
+        if (msg.type === "LAYOUT_CHANGE") {
           const validLayouts: StudioLayout[] = ["grid", "spotlight", "screen-grid", "screen-only", "single"]
           const layout = msg.layout as StudioLayout
           if (validLayouts.includes(layout)) {
@@ -481,12 +520,19 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
           if (typeof msg.chatOverlayPosition === "string" && validPositions.includes(msg.chatOverlayPosition as ChatOverlayPosition)) {
             setChatOverlayPosition(msg.chatOverlayPosition as ChatOverlayPosition)
           }
+          return
+        }
+
+        // ROOM_EVENT — relayed from host's RoomEventRelay component
+        if (msg.type === "ROOM_EVENT" && msg.event && typeof msg.event === "object") {
+          handleRoomEvent(msg.event as Record<string, unknown>)
         }
       } catch { /* ignore malformed data */ }
     }
+
     room.on(RoomEvent.DataReceived, handler)
     return () => { room.off(RoomEvent.DataReceived, handler) }
-  }, [room])
+  }, [room, addMessage])
 
   const handleLeave = async () => {
     try {
@@ -498,48 +544,6 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
     } catch { /* best-effort */ }
     window.location.href = "/studio-ended"
   }
-
-  const participants = useParticipants()
-  const tracks = useTracks(
-    [
-      { source: Track.Source.Camera, withPlaceholder: true },
-      { source: Track.Source.ScreenShare, withPlaceholder: false },
-    ],
-    { onlySubscribed: false }
-  )
-  const addMessage = useChatStore((s) => s.addMessage)
-  const sseRef = useRef<EventSource | null>(null)
-
-  // Ref to read chatCollapsed inside SSE handler without stale closure
-  const chatCollapsedRef = useRef(chatCollapsed)
-  useEffect(() => { chatCollapsedRef.current = chatCollapsed }, [chatCollapsed])
-
-  const handleSSEEvent = useCallback(
-    (event: SSEEventData) => {
-      if (event.type === "CHAT_MESSAGE") {
-        addMessage(event.data)
-        if (chatCollapsedRef.current) {
-          setUnreadCount((n) => n + 1)
-        }
-      }
-      if (event.type === "STUDIO_ENDED") window.location.href = "/studio-ended"
-    },
-    [addMessage]
-  )
-
-  useEffect(() => {
-    const since = Date.now() - 1000
-    const es = new EventSource(`/api/rooms/${roomCode}/stream?since=${since}`)
-    sseRef.current = es
-    es.onmessage = (e) => {
-      try {
-        const raw = JSON.parse(e.data)
-        const parsed = SSEEventDataSchema.safeParse(raw)
-        if (parsed.success) handleSSEEvent(parsed.data)
-      } catch {}
-    }
-    return () => es.close()
-  }, [roomCode, handleSSEEvent])
 
   // ── Track sets ─────────────────────────────────────────────────────────────
   const { stageTracks, screenshareTracks, cameraTracks } = useMemo(() => {

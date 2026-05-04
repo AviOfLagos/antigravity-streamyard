@@ -23,9 +23,18 @@ export const redis = new Proxy({} as Redis, {
 
 const TTL = 60 * 60 * 24 // 24 hours
 
+// ── Internal helper: register a key in the room's key-tracking Set ──────────
+async function trackRoomKey(code: string, key: string): Promise<void> {
+  const trackingKey = `room:${code}:_keys`
+  await redis.sadd(trackingKey, key)
+  await redis.expire(trackingKey, TTL)
+}
+
 // Room info
 export async function setRoomInfo(code: string, data: object) {
-  await redis.set(`room:${code}:info`, JSON.stringify(data), { ex: TTL })
+  const key = `room:${code}:info`
+  await redis.set(key, JSON.stringify(data), { ex: TTL })
+  await trackRoomKey(code, key)
 }
 
 export async function getRoomInfo(code: string) {
@@ -35,7 +44,9 @@ export async function getRoomInfo(code: string) {
 
 // Pending guests
 export async function setPendingGuest(code: string, guestId: string, data: object) {
-  await redis.set(`room:${code}:pending:${guestId}`, JSON.stringify(data), { ex: TTL })
+  const key = `room:${code}:pending:${guestId}`
+  await redis.set(key, JSON.stringify(data), { ex: TTL })
+  await trackRoomKey(code, key)
 }
 
 export async function deletePendingGuest(code: string, guestId: string) {
@@ -44,13 +55,25 @@ export async function deletePendingGuest(code: string, guestId: string) {
 
 // Approved guests
 export async function setApprovedGuest(code: string, guestId: string, token: string) {
-  await redis.set(`room:${code}:approved:${guestId}`, token, { ex: TTL })
+  const key = `room:${code}:approved:${guestId}`
+  await redis.set(key, token, { ex: TTL })
+  await trackRoomKey(code, key)
 }
 
 // Cleanup room
 export async function deleteRoomKeys(code: string) {
-  const keys = await redis.keys(`room:${code}:*`)
-  if (keys.length > 0) await redis.del(...keys)
+  const trackingKey = `room:${code}:_keys`
+  const keys = await redis.smembers(trackingKey)
+  // Always include dynamically-created keys that may not be individually tracked
+  const extraKeys = [
+    `room:${code}:events`,
+    `room:${code}:chat`,
+    `room:${code}:chat:seen`,
+    `room:${code}:hostState`,
+    trackingKey,
+  ]
+  const allKeys = Array.from(new Set([...keys, ...extraKeys]))
+  if (allKeys.length > 0) await redis.del(...allKeys)
 }
 
 // Publish events
@@ -66,9 +89,11 @@ export async function publishEvent(roomCode: string, event: RoomEvent): Promise<
 export async function publishEvent(roomCode: string, event: Record<string, unknown>): Promise<void>
 export async function publishEvent(roomCode: string, event: RoomEvent | Record<string, unknown>): Promise<void> {
   const payload = { ...event, _ts: Date.now() }
-  await redis.lpush(`room:${roomCode}:events`, JSON.stringify(payload))
-  await redis.ltrim(`room:${roomCode}:events`, 0, 199)
-  await redis.expire(`room:${roomCode}:events`, TTL)
+  const key = `room:${roomCode}:events`
+  await redis.lpush(key, JSON.stringify(payload))
+  await redis.ltrim(key, 0, 199)
+  await redis.expire(key, TTL)
+  await trackRoomKey(roomCode, key)
 }
 
 const DEDUP_TTL = 60 * 60 // 1 hour TTL for dedup keys
@@ -106,12 +131,15 @@ export async function publishChat(roomCode: string, msg: ChatMessage | object): 
   // Mark as seen
   await redis.sadd(dedupKey, dedupId)
   await redis.expire(dedupKey, DEDUP_TTL)
+  await trackRoomKey(roomCode, dedupKey)
 
   const payload = { ...msg, _ts: Date.now() }
+  const chatKey = `room:${roomCode}:chat`
   // LPUSH so newest items are at head; keep last 500 messages
-  await redis.lpush(`room:${roomCode}:chat`, JSON.stringify(payload))
-  await redis.ltrim(`room:${roomCode}:chat`, 0, 499)
-  await redis.expire(`room:${roomCode}:chat`, TTL)
+  await redis.lpush(chatKey, JSON.stringify(payload))
+  await redis.ltrim(chatKey, 0, 499)
+  await redis.expire(chatKey, TTL)
+  await trackRoomKey(roomCode, chatKey)
 }
 
 // Poll for new events since a given timestamp
@@ -123,10 +151,51 @@ export async function pollEvents(code: string, since: number): Promise<RoomEvent
     .reverse()
 }
 
+/**
+ * Cursor-based event polling for RoomEventRelay.
+ * Only fetches items newer than `fromTs` so we never re-scan old entries.
+ * Returns events sorted oldest-first (ascending _ts), ready to relay in order.
+ */
+export async function pollEventsSince(
+  code: string,
+  fromTs: number
+): Promise<Array<RoomEvent & { _ts: number }>> {
+  // LRANGE 0 -1 is unavoidable with a Redis list, but only ONE client (the host)
+  // ever calls this — guests receive events via LiveKit data channels instead.
+  const raw = await redis.lrange(`room:${code}:events`, 0, -1)
+  return (raw
+    .map((item) => (typeof item === "string" ? JSON.parse(item) : item))
+    .filter((e: { _ts: number }) => e._ts > fromTs)
+    .reverse() as Array<RoomEvent & { _ts: number }>)
+}
+
+/**
+ * Cursor-based chat polling for RoomEventRelay.
+ * Returns messages newer than `fromTs` sorted oldest-first.
+ */
+export async function pollChatSince(
+  code: string,
+  fromTs: number,
+  lastId?: string
+): Promise<Array<{ _ts: number; id?: string; [key: string]: unknown }>> {
+  const raw = await redis.lrange(`room:${code}:chat`, 0, -1)
+  const all = raw
+    .map((item) => (typeof item === "string" ? JSON.parse(item) : item))
+    .reverse() // oldest first
+
+  if (lastId) {
+    const idx = all.findIndex((m: { id?: string }) => m.id === lastId)
+    if (idx >= 0) return all.slice(idx + 1)
+  }
+  return all.filter((e: { _ts: number }) => e._ts > fromTs)
+}
+
 // Studio host state persistence (F-11)
 export async function saveStudioState(code: string, state: object): Promise<void> {
   try {
-    await redis.set(`room:${code}:hostState`, JSON.stringify(state), { ex: TTL })
+    const key = `room:${code}:hostState`
+    await redis.set(key, JSON.stringify(state), { ex: TTL })
+    await trackRoomKey(code, key)
   } catch (err) {
     console.warn("[saveStudioState] Redis write failed, state not persisted:", err)
   }

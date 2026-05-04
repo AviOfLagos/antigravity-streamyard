@@ -82,7 +82,7 @@ export default function SessionSummaryClient({ summary, limitedStats }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] py-16 px-4">
+    <div className="min-h-screen bg-[#080808] py-16 px-4">
       <div className="max-w-2xl mx-auto space-y-6">
 
         {/* Header */}

@@ -1,3 +1,28 @@
+/**
+ * GET /api/rooms/[code]/stream  (SSE — WAITING ROOM ONLY)
+ *
+ * After the LiveKit data-channel migration this endpoint is intentionally kept
+ * narrow. It only serves guests who are NOT yet inside the LiveKit room
+ * (i.e. the "waiting for admission" screen in JoinClient.tsx).
+ *
+ * Events served here:
+ *   GUEST_ADMITTED  — guest was let in; carries the LiveKit token
+ *   GUEST_DENIED    — host denied the request
+ *   STUDIO_ENDED    — host ended the session while guest was waiting
+ *   PING            — keepalive heartbeat
+ *   CONNECTION_ERROR — too many consecutive Redis failures
+ *
+ * Events NOT served here (handled via LiveKit data channels once in-room):
+ *   GUEST_REQUEST, GUEST_LEFT, CHAT_MESSAGE, CHAT_CONNECTOR_STATUS,
+ *   STREAM_STARTED, STREAM_STOPPED, STREAM_DESTINATION_CHANGED, STREAM_ERROR,
+ *   PLATFORM_TOKEN_EXPIRED
+ *
+ * Redis efficiency:
+ *   - Polls every 3 s (was 1 s) — waiting guests can tolerate a small delay.
+ *   - Only scans the events list, no chat list at all.
+ *   - Filters server-side to only the three relevant event types.
+ */
+
 export const runtime = "edge"
 
 import { Ratelimit } from "@upstash/ratelimit"
@@ -25,8 +50,10 @@ function getStreamLimiter(): Ratelimit {
 }
 
 const ROOM_CODE_RE = /^[a-zA-Z0-9]{6,8}$/
-
 const MAX_CONSECUTIVE_ERRORS = 10
+const POLL_INTERVAL_MS = 3000
+// Only these event types are relevant for a waiting-room guest
+const WAITING_ROOM_TYPES = new Set(["GUEST_ADMITTED", "GUEST_DENIED", "STUDIO_ENDED"])
 
 export async function GET(
   req: NextRequest,
@@ -62,25 +89,41 @@ export async function GET(
     // Fail open — allow the request if rate limiter is broken
   }
 
-  // G01 — Reject immediately if the room does not exist in Redis.
+  // Reject immediately if the room does not exist in Redis
   const redisForCheck = getRedis()
   const roomExists = await redisForCheck.exists(`room:${code}:info`)
   if (!roomExists) {
     return NextResponse.json({ error: "Room not found" }, { status: 404 })
   }
 
-  // Events and chat use SEPARATE since-pointers to prevent a critical bug:
-  // if only `since` is shared, a chat message with a higher _ts would cause
-  // all older GUEST_REQUEST events to be permanently filtered out on every
-  // subsequent poll. Events use sinceEvents=0 (replay all up to the list cap
-  // of 200) so a guest request submitted before the host opened SSE is never
-  // missed. Chat uses cursor-based approach for dedup, with timestamp fallback.
+  // Auth check: caller must be an authenticated host (session cookie) OR a
+  // guest with a known pending/approved record in Redis.
+  // Edge runtime cannot use next-auth's full `auth()` helper, so we check for
+  // the session cookie presence as a lightweight host indicator, and fall back
+  // to the guestId Redis check for unauthenticated guests.
+  const guestId = req.nextUrl.searchParams.get("guestId") ?? ""
+  const sessionCookie =
+    req.cookies.get("authjs.session-token") ??
+    req.cookies.get("__Secure-authjs.session-token")
+
+  if (!sessionCookie) {
+    // Not a host session — require a valid guestId that exists in Redis
+    if (!guestId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+    const [isPending, isApproved] = await Promise.all([
+      redisForCheck.exists(`room:${code}:pending:${guestId}`),
+      redisForCheck.exists(`room:${code}:approved:${guestId}`),
+    ])
+    if (!isPending && !isApproved) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+  }
+
+  // Events always replay from 0 so we never miss a GUEST_ADMITTED that was
+  // published before the SSE connection was established.
   const sinceParam = req.nextUrl.searchParams.get("since")
-  // Events always replay from 0 so we never miss a GUEST_REQUEST that arrived
-  // before the SSE connection was established. Dedup on the client side via _ts.
-  let sinceEvents = 0
-  let sinceChat = sinceParam ? parseInt(sinceParam, 10) : Date.now() - 5000
-  let lastChatMessageId: string | undefined
+  let sinceEvents = sinceParam ? parseInt(sinceParam, 10) : 0
 
   const encoder = new TextEncoder()
 
@@ -106,12 +149,15 @@ export async function GET(
         const redis = getRedis()
 
         try {
-          // ── Events (all undelivered since sinceEvents) ─────────────────────
+          // Only fetch the events list — no chat scanning needed for waiting guests
           const rawEvents = await redis.lrange(`room:${code}:events`, 0, -1)
           const events = rawEvents
             .map((e) => (typeof e === "string" ? JSON.parse(e) : e))
-            .filter((e: { _ts: number }) => e._ts > sinceEvents)
-            .reverse()
+            .filter(
+              (e: { _ts: number; type: string }) =>
+                e._ts > sinceEvents && WAITING_ROOM_TYPES.has(e.type)
+            )
+            .reverse() // oldest first
 
           for (const event of events) {
             const { _ts, ...payload } = event as { _ts: number; [key: string]: unknown }
@@ -119,33 +165,9 @@ export async function GET(
             send(payload)
           }
 
-          // ── Chat (cursor-based dedup with timestamp fallback) ──────────────
-          const rawChats = await redis.lrange(`room:${code}:chat`, 0, -1)
-          const allChats = rawChats
-            .map((e) => (typeof e === "string" ? JSON.parse(e) : e))
-            .reverse() // oldest first
-
-          let chats: Array<{ _ts: number; id?: string; platform?: string; [key: string]: unknown }>
-          if (lastChatMessageId) {
-            // Cursor-based: find last seen and return newer
-            const idx = allChats.findIndex(
-              (m: { id?: string }) => m.id === lastChatMessageId
-            )
-            chats = idx >= 0 ? allChats.slice(idx + 1) : allChats.filter((e: { _ts: number }) => e._ts > sinceChat)
-          } else {
-            chats = allChats.filter((e: { _ts: number }) => e._ts > sinceChat)
-          }
-
-          for (const chat of chats) {
-            const { _ts, ...payload } = chat as { _ts: number; id?: string; [key: string]: unknown }
-            sinceChat = Math.max(sinceChat, _ts)
-            if (chat.id) lastChatMessageId = chat.id
-            send({ type: "CHAT_MESSAGE", data: payload })
-          }
-
           consecutiveErrors = 0
         } catch (err) {
-          console.error("[SSE] Poll error:", err)
+          console.error("[SSE/waiting-room] Poll error:", err)
           consecutiveErrors += 1
 
           if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
@@ -160,7 +182,7 @@ export async function GET(
           setTimeout(async () => {
             send({ type: "PING" })
             await poll()
-          }, 1000)
+          }, POLL_INTERVAL_MS)
         }
       }
 

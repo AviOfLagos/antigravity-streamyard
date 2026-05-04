@@ -293,8 +293,8 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
     // G20: studio has ended — show a dedicated message instead of the form
     if (studioEnded) {
       return (
-        <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
-          <Card className="w-full max-w-md bg-gray-900 border-gray-800 text-center">
+        <div className="min-h-screen bg-[#080808] flex items-center justify-center px-4">
+          <Card className="w-full max-w-md bg-[#111111] border-white/6 text-center">
             <CardContent className="py-10 space-y-3">
               <p className="text-white font-semibold">This studio has ended.</p>
               <Link href="/" className="text-sm text-gray-400 hover:text-white underline underline-offset-2 transition-colors">
@@ -307,11 +307,11 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
     }
 
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
-        <Card className="w-full max-w-md bg-gray-900 border-gray-800">
+      <div className="min-h-screen bg-[#080808] flex items-center justify-center px-4">
+        <Card className="w-full max-w-md bg-[#111111] border-white/6">
           <CardHeader className="text-center">
-            <div className="w-12 h-12 bg-red-500/10 rounded-xl flex items-center justify-center mx-auto mb-3">
-              <Video className="w-6 h-6 text-red-400" />
+            <div className="w-12 h-12 bg-violet-500/10 rounded-xl flex items-center justify-center mx-auto mb-3">
+              <Video className="w-6 h-6 text-violet-400" />
             </div>
             <CardTitle className="text-white text-xl">Join Studio</CardTitle>
             <CardDescription className="text-gray-400">
@@ -352,7 +352,7 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
             <Button
               onClick={handleContinueToPreview}
               disabled={!displayName.trim()}
-              className="w-full bg-red-500 hover:bg-red-600"
+              className="w-full bg-violet-600 hover:bg-violet-500"
             >
               Continue
             </Button>
@@ -368,8 +368,8 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
   // F-13: Device preview step — camera/mic preview before requesting to join
   if (status === "preview") {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
-        <Card className="w-full max-w-lg bg-gray-900 border-gray-800">
+      <div className="min-h-screen bg-[#080808] flex items-center justify-center px-4">
+        <Card className="w-full max-w-lg bg-[#111111] border-white/6">
           <CardHeader className="text-center pb-2">
             <CardTitle className="text-white text-xl">Preview your devices</CardTitle>
             <CardDescription className="text-gray-400">
@@ -434,7 +434,7 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
               </Button>
               <Button
                 onClick={handleRequestJoin}
-                className="flex-1 bg-red-500 hover:bg-red-600"
+                className="flex-1 bg-violet-600 hover:bg-violet-500"
               >
                 Request to Join
               </Button>
@@ -452,8 +452,8 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
   // Waiting state — F-13: improved animated waiting room
   if (status === "waiting") {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <Card className="w-full max-w-sm bg-gray-900 border-gray-800 text-center">
+      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
+        <Card className="w-full max-w-sm bg-[#111111] border-white/6 text-center">
           <CardContent className="py-10">
             {/* Animated waiting indicator */}
             <div className="flex items-center justify-center gap-1.5 mb-5">
@@ -484,7 +484,7 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
   // Timeout state (G19)
   if (status === "timeout") {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center px-6">
+      <div className="min-h-screen bg-[#080808] flex items-center justify-center px-6">
         <div className="flex flex-col items-center gap-4 py-20 px-6 text-center">
           <p className="text-white font-semibold">Host hasn&apos;t responded</p>
           <p className="text-gray-400 text-sm">The request timed out after 3 minutes.</p>
@@ -512,8 +512,8 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
   // F-13: Room full state
   if (status === "room-full") {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <Card className="w-full max-w-sm bg-gray-900 border-gray-800 text-center">
+      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
+        <Card className="w-full max-w-sm bg-[#111111] border-white/6 text-center">
           <CardContent className="py-10">
             <AlertCircle className="w-10 h-10 text-yellow-400 mx-auto mb-4" />
             <h2 className="text-white font-semibold mb-1">Room is full</h2>
@@ -536,8 +536,8 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
   // F-13: Denied state with 30-second cooldown before re-requesting
   if (status === "denied") {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <Card className="w-full max-w-sm bg-gray-900 border-gray-800 text-center">
+      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
+        <Card className="w-full max-w-sm bg-[#111111] border-white/6 text-center">
           <CardContent className="py-10">
             <UserX className="w-10 h-10 text-red-400 mx-auto mb-4" />
             <h2 className="text-white font-semibold mb-1">Not admitted</h2>
@@ -561,8 +561,8 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
   // Kicked state — shown when the host removes the guest from the studio
   if (status === "kicked") {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
-        <Card className="w-full max-w-md bg-gray-900 border-gray-800 text-center">
+      <div className="min-h-screen bg-[#080808] flex items-center justify-center px-4">
+        <Card className="w-full max-w-md bg-[#111111] border-white/6 text-center">
           <CardContent className="py-10 space-y-4">
             <div className="w-14 h-14 bg-red-500/10 rounded-full flex items-center justify-center mx-auto">
               <UserX className="w-7 h-7 text-red-400" />
@@ -582,7 +582,7 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
                   setError(null)
                   setStatus("preview")
                 }}
-                className="w-full bg-red-500 hover:bg-red-600"
+                className="w-full bg-violet-600 hover:bg-violet-500"
               >
                 Request to Rejoin
               </Button>
