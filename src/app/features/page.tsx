@@ -93,6 +93,16 @@ const categories: FeatureCategory[] = [
       { icon: <BarChart2 className="w-4 h-4" />, name: "Social Sharing", detail: "Share your session stats to X and LinkedIn with pre-filled text. Copy stats to clipboard.", status: "live" },
     ],
   },
+  {
+    title: "Security & Reliability",
+    description: "Production-grade hardening for every endpoint.",
+    features: [
+      { icon: <Shield className="w-4 h-4" />, name: "Rate Limiting", detail: "All 22 mutation and polling endpoints protected by Upstash sliding window rate limits. Generous defaults — 429 responses with Retry-After headers.", status: "live" },
+      { icon: <Shield className="w-4 h-4" />, name: "Input Sanitization", detail: "HTML stripped from all user-provided strings (names, messages, channels) via Zod transforms — XSS prevention at the schema layer.", status: "live" },
+      { icon: <Shield className="w-4 h-4" />, name: "CSP Headers", detail: "Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, and strict Referrer-Policy on all responses.", status: "live" },
+      { icon: <Shield className="w-4 h-4" />, name: "AI Chat Responder", detail: "Gemini-powered auto-replies to viewer questions — host-triggered, with sanitized input to prevent prompt injection.", status: "live" },
+    ],
+  },
 ]
 
 export default function FeaturesPage() {

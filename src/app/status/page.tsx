@@ -263,7 +263,6 @@ export default async function StatusPage() {
               { name: "Guest Lead Capture", status: "Live", color: "emerald" },
               { name: "Session Summary", status: "Live", color: "emerald" },
               { name: "Feedback System", status: "Live", color: "emerald" },
-              { name: "Unit Test Suite (114 tests)", status: "Live", color: "emerald" },
               { name: "Guest Layout Sync with Host", status: "Live", color: "emerald" },
               { name: "Kick Notification + Rejoin", status: "Live", color: "emerald" },
               { name: "YouTube Broadcast Metadata (Title/Description/Thumbnail)", status: "Live", color: "emerald" },
@@ -279,6 +278,13 @@ export default async function StatusPage() {
               { name: "Network Quality Indicator", status: "Live", color: "emerald" },
               { name: "TopToolbar (Decluttered Controls)", status: "Live", color: "emerald" },
               { name: "Adaptive Reconnection (5-attempt backoff)", status: "Live", color: "emerald" },
+              { name: "SSE → LiveKit Data Channels (host relay)", status: "Live", color: "emerald" },
+              { name: "Auto-Layout Switching", status: "Live", color: "emerald" },
+              { name: "AI Chat Responder (Gemini)", status: "Live", color: "emerald" },
+              { name: "Docker Compose Local Dev", status: "Live", color: "emerald" },
+              { name: "Rate Limiting (22 endpoints, Upstash)", status: "Live", color: "emerald" },
+              { name: "Input Sanitization (stripHtml on all user strings)", status: "Live", color: "emerald" },
+              { name: "Unit Test Suite (184 tests)", status: "Live", color: "emerald" },
               { name: "Chat Reply to Kick & TikTok", status: "Planned", color: "gray" },
             ].map((feature) => (
               <div
@@ -308,7 +314,7 @@ export default async function StatusPage() {
 
         {/* Version */}
         <div className="text-center text-gray-600 text-xs">
-          Zerocast v1.8.0 · <Link href="/changelog" className="text-gray-500 hover:text-gray-300 transition-colors">View changelog</Link>
+          Zerocast v2.0.0 · <Link href="/changelog" className="text-gray-500 hover:text-gray-300 transition-colors">View changelog</Link>
         </div>
       </main>
 

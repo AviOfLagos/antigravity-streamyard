@@ -14,8 +14,10 @@ A browser-based live streaming studio inspired by StreamYard. Create rooms, invi
 | **Moderation** | Mute/unmute guest mic and camera, kick participants, backstage management |
 | **Chat** | Multi-platform aggregation (YouTube, Twitch, Kick, TikTok), send messages to YouTube/Twitch, Super Chats, Bits/Cheers, gifts, subs, raids, follows |
 | **Streaming** | Multi-platform RTMP streaming via LiveKit Egress, custom RTMP destinations, broadcast title + description |
+| **AI** | Gemini-powered AI chat responder (host-triggered), sanitized prompt context |
 | **Auth** | Google OAuth via NextAuth.js, session-based + LiveKit JWT dual auth |
 | **Data** | Guest lead capture (email + name), session summaries with stats, platform activity charts |
+| **Security** | Rate limiting on 22 endpoints (Upstash), HTML sanitization on all user input, CSP headers, fail-open design |
 
 ## Architecture
 
@@ -60,7 +62,10 @@ src/
 │   ├── prisma.ts             # Prisma client with Neon retry wrapper
 │   ├── redis.ts              # Upstash Redis client
 │   ├── chat/                 # Platform chat connectors (YouTube, Twitch, Kick, TikTok)
-│   └── schemas/              # Zod validation schemas
+│   ├── schemas/              # Zod validation schemas with sanitization transforms
+│   ├── rate-limit.ts         # Upstash rate limiting (22 endpoints, fail-open)
+│   ├── sanitize.ts           # HTML stripping (XSS prevention)
+│   └── gemini.ts             # AI chat response generation
 ├── store/                    # Zustand stores (studio state, chat state)
 └── prisma/
     └── schema.prisma         # Database schema (User, Room, Participant, PlatformConnection, StreamSession, GuestLead, CustomRtmpDestination)
@@ -224,7 +229,7 @@ Ensure all environment variables are set in your Vercel project settings.
 ## Testing
 
 ```bash
-npm test              # Run all tests (114 tests)
+npm test              # Run all tests (184 tests)
 npm run test:watch    # Watch mode
 npm run test:coverage # Coverage report
 ```
@@ -247,7 +252,9 @@ npm run test:coverage # Coverage report
 
 See [/changelog](https://zerocast.vercel.app/changelog) or `src/app/changelog/page.tsx`.
 
-Current version: **v1.4.0** (Apr 28, 2026)
+Highlights: v2.0 (Phase 4 hardening), v1.9 (SSE→LiveKit data channels, AI chat), v1.8 (guest overhaul, reconnection).
+
+Current version: **v2.0.0** (May 4, 2026)
 
 ## License
 
