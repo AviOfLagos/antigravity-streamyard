@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
+import { rateLimitGuard, getClientIp } from "@/lib/rate-limit"
 import { getCachedRoom } from "@/lib/room-cache"
 import { saveStudioState, loadStudioState } from "@/lib/redis"
 
@@ -34,6 +35,10 @@ export async function PUT(
   { params }: { params: Promise<{ code: string }> }
 ) {
   const { code } = await params
+
+  const blocked = await rateLimitGuard(getClientIp(req), "rooms:state")
+  if (blocked) return blocked
+
   const session = await auth()
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })

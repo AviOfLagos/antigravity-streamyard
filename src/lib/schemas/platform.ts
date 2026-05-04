@@ -1,5 +1,7 @@
 import { z } from "zod"
 
+import { stripHtml } from "@/lib/sanitize"
+
 // ── Platform enum (lowercase — canonical form used by client & chat system) ──
 
 export const PlatformSchema = z.enum(["youtube", "twitch", "kick", "tiktok", "host", "guest", "ai"])
@@ -27,7 +29,11 @@ export type PlatformConnection = z.infer<typeof PlatformConnectionSchema>
 
 export const PlatformConnectRequestSchema = z.object({
   platform: ExternalPlatformSchema,
-  channelName: z.string().min(1),
+  channelName: z
+    .string()
+    .min(1)
+    .max(100)
+    .transform((val) => stripHtml(val).trim()),
   channelId: z.string().optional(),
 })
 export type PlatformConnectRequest = z.infer<typeof PlatformConnectRequestSchema>

@@ -31,6 +31,34 @@ const tagLabels: Record<Tag, string> = {
 
 const entries: ChangelogEntry[] = [
   {
+    date: "May 4, 2026",
+    version: "v2.0.0",
+    title: "Phase 4 Hardening — Rate Limiting & Input Sanitization",
+    changes: [
+      { tag: "security", text: "Rate limiting on all 22 mutation/polling API endpoints via Upstash sliding window — generous limits (30/min host actions, 60/min polling, 5/min unauthenticated)" },
+      { tag: "security", text: "HTML sanitization (stripHtml) on all user-provided strings — guest names, chat messages, channel names, RTMP destination names, feedback fields" },
+      { tag: "security", text: "Zod .transform() sanitization — XSS prevention happens at schema validation time, before data reaches any handler" },
+      { tag: "feat", text: "rateLimitGuard() helper — single-line rate limit check returning 429 with Retry-After header, fail-open on Redis errors" },
+      { tag: "feat", text: "Feedback endpoint rewritten with Zod schema validation replacing manual parsing" },
+      { tag: "improvement", text: "All rate-limited endpoints return standard headers: X-RateLimit-Limit, X-RateLimit-Remaining, Retry-After" },
+      { tag: "improvement", text: "CSP headers (Content-Security-Policy, X-Frame-Options, X-Content-Type-Options) already in place from v1.9" },
+    ],
+  },
+  {
+    date: "May 4, 2026",
+    version: "v1.9.0",
+    title: "Architecture Migration — SSE to LiveKit Data Channels",
+    changes: [
+      { tag: "feat", text: "SSE replaced with LiveKit data channels for host-to-guest event relay — lower latency, fewer open connections" },
+      { tag: "feat", text: "Auto-layout switching — layout adapts automatically based on participant count and screen shares" },
+      { tag: "feat", text: "AI chat responder — Gemini-powered auto-reply to viewer questions in chat (host-triggered)" },
+      { tag: "feat", text: "Docker Compose local development — full stack (Postgres, Redis, LiveKit) with one command" },
+      { tag: "feat", text: "RoomEventRelay component — host polls events-since endpoint and relays to guests via data channels" },
+      { tag: "improvement", text: "70 new tests covering extended features (184 total)" },
+      { tag: "security", text: "Security audit fixes from v1.8.0 review" },
+    ],
+  },
+  {
     date: "Apr 29, 2026",
     version: "v1.8.0",
     title: "Guest Overhaul, UI Declutter, Chat Overlay & Reconnection",

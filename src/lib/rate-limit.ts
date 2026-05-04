@@ -35,6 +35,21 @@ const LIMITER_CONFIGS: Record<string, { tokens: number; window: string }> = {
   "rooms:stream":       { tokens: 3,  window: "1m" },
   "rooms:record":       { tokens: 5,  window: "60s" },
   "guest:chat-send":    { tokens: 10, window: "30s" },
+  // Phase 4 — generous limits for host-only endpoints
+  "rooms:admit":        { tokens: 30, window: "1m" },
+  "rooms:deny":         { tokens: 30, window: "1m" },
+  "rooms:end":          { tokens: 10, window: "1m" },
+  "rooms:kick":         { tokens: 30, window: "1m" },
+  "rooms:mute":         { tokens: 30, window: "1m" },
+  "rooms:leave":        { tokens: 30, window: "1m" },
+  "rooms:chat-send":    { tokens: 30, window: "1m" },
+  "rooms:ai-respond":   { tokens: 20, window: "1m" },
+  "rooms:events-since": { tokens: 60, window: "1m" },
+  "rooms:state":        { tokens: 60, window: "1m" },
+  "platforms:disconnect":{ tokens: 20, window: "1m" },
+  "platforms:refresh":  { tokens: 20, window: "1m" },
+  "platforms:custom-rtmp":{ tokens: 10, window: "1m" },
+  "feedback:submit":    { tokens: 5,  window: "1m" },
 }
 
 // ── Public API ──────────────────────────────────────────────────────────────
@@ -87,4 +102,31 @@ export function getClientIp(req: Request): string {
     return forwarded.split(",")[0].trim()
   }
   return "unknown"
+}
+
+/**
+ * Rate-limit guard — returns a 429 NextResponse if over limit, or null if allowed.
+ * Attaches standard rate-limit headers on the 429 response.
+ */
+export async function rateLimitGuard(
+  identifier: string,
+  limiterType: string,
+): Promise<Response | null> {
+  const rl = await checkRateLimit(identifier, limiterType)
+  if (!rl.success) {
+    const { NextResponse } = await import("next/server")
+    const retryAfter = Math.ceil((rl.reset - Date.now()) / 1000)
+    return NextResponse.json(
+      { error: "Too many requests", retryAfter },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(retryAfter),
+          "X-RateLimit-Limit": String(rl.limit),
+          "X-RateLimit-Remaining": String(rl.remaining),
+        },
+      },
+    )
+  }
+  return null
 }

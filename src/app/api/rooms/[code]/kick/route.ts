@@ -9,9 +9,15 @@ import { publishEvent } from "@/lib/redis"
 
 import { z } from "zod"
 
+import { rateLimitGuard, getClientIp } from "@/lib/rate-limit"
+import { stripHtml } from "@/lib/sanitize"
+
 const KickSchema = z.object({
   identity: z.string().min(1),
-  name: z.string().optional(),
+  name: z
+    .string()
+    .transform((val) => stripHtml(val).trim().slice(0, 50))
+    .optional(),
 })
 
 export async function POST(
@@ -19,6 +25,10 @@ export async function POST(
   { params }: { params: Promise<{ code: string }> }
 ) {
   const { code } = await params
+
+  const blocked = await rateLimitGuard(getClientIp(req), "rooms:kick")
+  if (blocked) return blocked
+
   const body = await req.json().catch(() => ({}))
   const parsed = KickSchema.safeParse(body)
   if (!parsed.success) {

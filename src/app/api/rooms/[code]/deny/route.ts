@@ -4,6 +4,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { getCachedRoom } from "@/lib/room-cache"
 import { deletePendingGuest, publishEvent, redis } from "@/lib/redis"
+import { rateLimitGuard, getClientIp } from "@/lib/rate-limit"
 import { DenyGuestRequestSchema } from "@/lib/schemas"
 import { validateRequestBody } from "@/lib/schemas/api"
 
@@ -12,6 +13,10 @@ export async function POST(
   { params }: { params: Promise<{ code: string }> }
 ) {
   const { code } = await params
+
+  const blocked = await rateLimitGuard(getClientIp(req), "rooms:deny")
+  if (blocked) return blocked
+
   const body = await req.json().catch(() => ({}))
   const validation = validateRequestBody(DenyGuestRequestSchema, body)
   if (!validation.success) return validation.response

@@ -2,15 +2,33 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 import { auth } from "@/auth"
+import { rateLimitGuard, getClientIp } from "@/lib/rate-limit"
 import { getCachedRoom } from "@/lib/room-cache"
+import { stripHtml } from "@/lib/sanitize"
 import { publishChat, pollChat } from "@/lib/redis"
 import { generateResponse } from "@/lib/gemini"
 
 const RequestSchema = z.object({
-  message: z.string().min(1).max(500),
-  author: z.string().min(1).max(100),
-  platform: z.string().min(1).max(20),
-  context: z.string().max(500).optional(),
+  message: z
+    .string()
+    .min(1)
+    .max(500)
+    .transform((val) => stripHtml(val).trim()),
+  author: z
+    .string()
+    .min(1)
+    .max(100)
+    .transform((val) => stripHtml(val).trim()),
+  platform: z
+    .string()
+    .min(1)
+    .max(20)
+    .transform((val) => stripHtml(val).trim()),
+  context: z
+    .string()
+    .max(500)
+    .transform((val) => stripHtml(val).trim())
+    .optional(),
 })
 
 export async function POST(
@@ -24,6 +42,9 @@ export async function POST(
   }
 
   const { code } = await params
+
+  const blocked = await rateLimitGuard(getClientIp(req), "rooms:ai-respond")
+  if (blocked) return blocked
 
   const room = await getCachedRoom(code)
   if (!room || room.hostId !== session.user.id) {

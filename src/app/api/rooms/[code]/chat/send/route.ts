@@ -2,13 +2,19 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 import { auth } from "@/auth"
+import { rateLimitGuard, getClientIp } from "@/lib/rate-limit"
 import { getCachedRoom } from "@/lib/room-cache"
+import { stripHtml } from "@/lib/sanitize"
 import { sendYouTubeMessage } from "@/lib/chat/youtube"
 import { sendTwitchMessage } from "@/lib/chat/twitch"
 import { publishChat } from "@/lib/redis"
 
 const SendMessageSchema = z.object({
-  message: z.string().min(1).max(500),
+  message: z
+    .string()
+    .min(1)
+    .max(500)
+    .transform((val) => stripHtml(val).trim()),
   platforms: z.array(z.enum(["youtube", "twitch", "kick", "tiktok"])).optional(),
 })
 
@@ -20,6 +26,10 @@ export async function POST(
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { code } = await params
+
+  const blocked = await rateLimitGuard(getClientIp(req), "rooms:chat-send")
+  if (blocked) return blocked
+
   const body = await req.json().catch(() => ({}))
   const parsed = SendMessageSchema.safeParse(body)
   if (!parsed.success) {
