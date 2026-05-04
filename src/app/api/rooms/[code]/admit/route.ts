@@ -7,6 +7,7 @@ import { generateParticipantToken, getParticipantCount } from "@/lib/livekit"
 import { prisma } from "@/lib/prisma"
 import { getCachedRoom } from "@/lib/room-cache"
 import { deletePendingGuest, publishEvent, redis, setApprovedGuest } from "@/lib/redis"
+import { rateLimitGuard, getClientIp } from "@/lib/rate-limit"
 import { AdmitGuestRequestSchema } from "@/lib/schemas"
 import { validateRequestBody } from "@/lib/schemas/api"
 
@@ -15,6 +16,10 @@ export async function POST(
   { params }: { params: Promise<{ code: string }> }
 ) {
   const { code } = await params
+
+  const blocked = await rateLimitGuard(getClientIp(req), "rooms:admit")
+  if (blocked) return blocked
+
   const body = await req.json().catch(() => ({}))
   const validation = validateRequestBody(AdmitGuestRequestSchema, body)
   if (!validation.success) return validation.response

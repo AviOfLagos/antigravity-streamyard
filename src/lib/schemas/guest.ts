@@ -30,7 +30,10 @@ export type GuestRequestResponse = z.infer<typeof GuestRequestResponseSchema>
 
 export const AdmitGuestRequestSchema = z.object({
   guestId: z.string().min(1, "guestId is required"),
-  name: z.string().optional(),
+  name: z
+    .string()
+    .transform((val) => stripHtml(val).trim().slice(0, 50))
+    .optional(),
 })
 export type AdmitGuestRequest = z.infer<typeof AdmitGuestRequestSchema>
 
@@ -44,7 +47,10 @@ export type DenyGuestRequest = z.infer<typeof DenyGuestRequestSchema>
 // ── Leave request (POST /api/rooms/[code]/leave) ─────────────────────────────
 
 export const LeaveRequestSchema = z.object({
-  displayName: z.string().optional(),
+  displayName: z
+    .string()
+    .transform((val) => stripHtml(val).trim().slice(0, 50))
+    .optional(),
   identity: z.string().optional(),
 })
 export type LeaveRequest = z.infer<typeof LeaveRequestSchema>

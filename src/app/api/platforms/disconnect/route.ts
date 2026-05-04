@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
+import { rateLimitGuard, getClientIp } from "@/lib/rate-limit"
 import { PlatformDisconnectRequestSchema } from "@/lib/schemas"
 import { validateRequestBody } from "@/lib/schemas/api"
 
@@ -13,6 +14,9 @@ const toPrismaPlat = (p: string): PlatformType =>
 export async function DELETE(req: Request) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  const blocked = await rateLimitGuard(getClientIp(req), "platforms:disconnect")
+  if (blocked) return blocked
 
   const body = await req.json().catch(() => ({}))
   const validation = validateRequestBody(PlatformDisconnectRequestSchema, body)

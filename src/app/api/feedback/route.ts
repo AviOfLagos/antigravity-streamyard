@@ -1,40 +1,62 @@
 import { NextRequest, NextResponse } from "next/server"
+import { z } from "zod"
+
 import { redis } from "@/lib/redis"
+import { rateLimitGuard, getClientIp } from "@/lib/rate-limit"
+import { stripHtml } from "@/lib/sanitize"
 
 const FEEDBACK_TTL = 60 * 60 * 24 * 90 // 90 days
 
+const FeedbackSchema = z.object({
+  type: z.enum(["bug", "feature", "other"]),
+  title: z
+    .string()
+    .min(1, "Title is required")
+    .max(200)
+    .transform((val) => stripHtml(val).trim()),
+  description: z
+    .string()
+    .min(1, "Description is required")
+    .max(5000)
+    .transform((val) => stripHtml(val).trim()),
+  email: z
+    .string()
+    .email()
+    .max(200)
+    .transform((val) => val.trim().toLowerCase())
+    .optional()
+    .or(z.literal("")),
+})
+
 export async function POST(req: NextRequest) {
+  const blocked = await rateLimitGuard(getClientIp(req), "feedback:submit")
+  if (blocked) return blocked
+
+  const body = await req.json().catch(() => ({}))
+  const parsed = FeedbackSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Validation failed", details: parsed.error.flatten().fieldErrors },
+      { status: 400 },
+    )
+  }
+
+  const { type, title, description, email } = parsed.data
+
+  const feedbackId = `fb_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+  const feedback = {
+    id: feedbackId,
+    type,
+    title,
+    description,
+    email: email || null,
+    createdAt: new Date().toISOString(),
+    ip: getClientIp(req),
+  }
+
   try {
-    const body = await req.json()
-    const { type, title, description, email } = body as {
-      type?: string
-      title?: string
-      description?: string
-      email?: string
-    }
-
-    if (!type || !title?.trim() || !description?.trim()) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
-    }
-
-    if (!["bug", "feature", "other"].includes(type)) {
-      return NextResponse.json({ error: "Invalid feedback type" }, { status: 400 })
-    }
-
-    const feedbackId = `fb_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
-    const feedback = {
-      id: feedbackId,
-      type,
-      title: title.trim().slice(0, 200),
-      description: description.trim().slice(0, 5000),
-      email: email?.trim().slice(0, 200) || null,
-      createdAt: new Date().toISOString(),
-      ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown",
-    }
-
-    // Store in Redis list
     await redis.lpush("zerocast:feedback", JSON.stringify(feedback))
-    await redis.ltrim("zerocast:feedback", 0, 999) // Keep last 1000
+    await redis.ltrim("zerocast:feedback", 0, 999)
     await redis.expire("zerocast:feedback", FEEDBACK_TTL)
 
     return NextResponse.json({ ok: true, id: feedbackId })

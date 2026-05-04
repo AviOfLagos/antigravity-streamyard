@@ -20,6 +20,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 
 import { auth } from "@/auth"
+import { rateLimitGuard, getClientIp } from "@/lib/rate-limit"
 import { pollEventsSince, pollChatSince } from "@/lib/redis"
 import { getCachedRoom } from "@/lib/room-cache"
 import { RoomCodeSchema } from "@/lib/schemas"
@@ -36,6 +37,9 @@ export async function GET(
   }
 
   const { code } = await params
+
+  const blocked = await rateLimitGuard(getClientIp(req), "rooms:events-since")
+  if (blocked) return blocked
 
   if (!ROOM_CODE_RE.test(code)) {
     return NextResponse.json({ error: "Invalid room code" }, { status: 400 })

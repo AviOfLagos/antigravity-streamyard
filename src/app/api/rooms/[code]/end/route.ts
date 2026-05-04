@@ -2,6 +2,7 @@ import { RoomStatus, StreamStatus } from "@prisma/client"
 import { NextResponse } from "next/server"
 
 import { auth } from "@/auth"
+import { rateLimitGuard, getClientIp } from "@/lib/rate-limit"
 import { stopStream } from "@/lib/egress"
 import { closeLivekitRoom, getParticipantCount, listParticipants, removeParticipant } from "@/lib/livekit"
 import { prisma } from "@/lib/prisma"
@@ -19,6 +20,9 @@ export async function POST(
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { code } = await params
+
+  const blocked = await rateLimitGuard(getClientIp(req), "rooms:end")
+  if (blocked) return blocked
 
   // Parse optional body — default both to true for backward compatibility
   let stopStreams = true

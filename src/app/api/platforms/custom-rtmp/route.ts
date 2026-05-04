@@ -3,9 +3,15 @@ import { z } from "zod"
 
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
+import { rateLimitGuard, getClientIp } from "@/lib/rate-limit"
+import { stripHtml } from "@/lib/sanitize"
 
 const CreateCustomRtmpSchema = z.object({
-  name: z.string().min(1).max(50),
+  name: z
+    .string()
+    .min(1)
+    .max(50)
+    .transform((val) => stripHtml(val).trim()),
   ingestUrl: z.string().min(1).max(500),
   streamKey: z.string().min(1).max(500),
 })
@@ -32,6 +38,9 @@ export async function GET() {
 export async function POST(req: Request) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  const blocked = await rateLimitGuard(getClientIp(req), "platforms:custom-rtmp")
+  if (blocked) return blocked
 
   const body = await req.json().catch(() => ({}))
   const parsed = CreateCustomRtmpSchema.safeParse(body)
@@ -64,6 +73,9 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  const blockedDel = await rateLimitGuard(getClientIp(req), "platforms:custom-rtmp")
+  if (blockedDel) return blockedDel
 
   const body = await req.json().catch(() => ({}))
   const parsed = DeleteCustomRtmpSchema.safeParse(body)

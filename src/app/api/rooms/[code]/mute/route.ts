@@ -7,6 +7,8 @@ import { getCachedRoom } from "@/lib/room-cache"
 
 import { z } from "zod"
 
+import { rateLimitGuard, getClientIp } from "@/lib/rate-limit"
+
 const MuteSchema = z.object({
   identity: z.string().min(1),
   trackType: z.enum(["audio", "video"]),
@@ -18,6 +20,10 @@ export async function POST(
   { params }: { params: Promise<{ code: string }> }
 ) {
   const { code } = await params
+
+  const blocked = await rateLimitGuard(getClientIp(req), "rooms:mute")
+  if (blocked) return blocked
+
   const body = await req.json().catch(() => ({}))
   const parsed = MuteSchema.safeParse(body)
   if (!parsed.success) {

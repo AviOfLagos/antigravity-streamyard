@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
+import { rateLimitGuard, getClientIp } from "@/lib/rate-limit"
 import { refreshIfNeeded, getTokenHealth, type PlatformConnectionRow } from "@/lib/auth/token-refresh"
 import { PlatformSchema } from "@/lib/schemas/platform"
 
@@ -11,6 +12,9 @@ export async function POST(req: Request) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
+
+  const blocked = await rateLimitGuard(getClientIp(req), "platforms:refresh")
+  if (blocked) return blocked
 
   const body = await req.json().catch(() => ({}))
   const parsed = PlatformSchema.safeParse(body?.platform)

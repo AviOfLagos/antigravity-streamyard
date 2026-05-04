@@ -3,10 +3,19 @@ import { z } from "zod"
 
 import { redis, publishChat } from "@/lib/redis"
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit"
+import { stripHtml } from "@/lib/sanitize"
 
 const GuestSendSchema = z.object({
-  message: z.string().min(1).max(500),
-  displayName: z.string().min(1).max(64),
+  message: z
+    .string()
+    .min(1)
+    .max(500)
+    .transform((val) => stripHtml(val).trim()),
+  displayName: z
+    .string()
+    .min(1)
+    .max(64)
+    .transform((val) => stripHtml(val).trim().slice(0, 50)),
 })
 
 const ROOM_CODE_RE = /^[a-zA-Z0-9]{6,8}$/

@@ -2,6 +2,7 @@ import { RoomStatus } from "@prisma/client"
 import { NextResponse } from "next/server"
 
 import { prisma } from "@/lib/prisma"
+import { rateLimitGuard, getClientIp } from "@/lib/rate-limit"
 import { getCachedRoom } from "@/lib/room-cache"
 import { publishEvent } from "@/lib/redis"
 import { LeaveRequestSchema } from "@/lib/schemas"
@@ -12,6 +13,10 @@ export async function POST(
   { params }: { params: Promise<{ code: string }> }
 ) {
   const { code } = await params
+
+  const blocked = await rateLimitGuard(getClientIp(req), "rooms:leave")
+  if (blocked) return blocked
+
   const body = await req.json().catch(() => ({}))
   const validation = validateRequestBody(LeaveRequestSchema, body)
   if (!validation.success) return validation.response
