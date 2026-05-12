@@ -28,11 +28,15 @@ export default function PlatformFilter({ connectedPlatforms = [] }: PlatformFilt
   }, [toggleFilter])
 
   return (
-    <div className="flex items-center gap-1 px-3 py-2 border-b border-white/6 min-h-[34px]">
-      <span className="text-[10px] text-gray-600 mr-1 shrink-0">Filter</span>
+    <div
+      className="flex items-center gap-1 px-3 py-2 border-b border-white/6 min-h-[34px]"
+      role="group"
+      aria-label="Filter chat by platform"
+    >
+      <span className="text-[10px] text-gray-500 mr-1 shrink-0">Filter</span>
 
       {connected.length === 0 ? (
-        <span className="text-[10px] text-gray-700 italic">No platforms connected</span>
+        <span className="text-[10px] text-gray-500 italic">No platforms connected</span>
       ) : (
         <>
           {connected.map((platform) => {
@@ -43,15 +47,17 @@ export default function PlatformFilter({ connectedPlatforms = [] }: PlatformFilt
                 key={platform}
                 type="button"
                 onClick={() => handleToggle(platform)}
+                aria-pressed={active}
+                aria-label={`${active ? "Hide" : "Show"} ${PLATFORM_LABELS[platform]} messages`}
                 title={active ? `Hide ${PLATFORM_LABELS[platform]}` : `Show ${PLATFORM_LABELS[platform]}`}
                 className={[
-                  "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold transition-all",
+                  "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400",
                   active ? "ring-2 ring-emerald-400/50" : "",
                 ].join(" ")}
                 style={
                   active
                     ? { backgroundColor: `${color}22`, color, outline: `1px solid ${color}44` }
-                    : { backgroundColor: "transparent", color: "#4b5563" }
+                    : { backgroundColor: "transparent", color: "#9ca3af" }
                 }
               >
                 <PlatformIcon platform={platform} size={14} />
@@ -59,7 +65,7 @@ export default function PlatformFilter({ connectedPlatforms = [] }: PlatformFilt
               </button>
             )
           })}
-          <span className="ml-auto text-[9px] text-gray-700">
+          <span className="ml-auto text-[9px] text-gray-500" aria-live="polite">
             {activeCount}/{connected.length}
           </span>
         </>

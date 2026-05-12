@@ -65,12 +65,22 @@ export function AudioLevelBar({ mediaStreamTrack, barCount = 5, className }: Aud
   }, [mediaStreamTrack])
 
   const activeBars = Math.round(level * barCount)
+  const pct = Math.round(level * 100)
 
   return (
-    <div className={`flex items-end gap-[3px] h-4 ${className ?? ""}`} aria-label="Microphone level">
+    <div
+      className={`flex items-end gap-[3px] h-4 ${className ?? ""}`}
+      role="meter"
+      aria-label="Microphone level"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={pct}
+      aria-valuetext={`${pct}%`}
+    >
       {Array.from({ length: barCount }).map((_, i) => (
         <div
           key={i}
+          aria-hidden="true"
           className={[
             "w-[3px] rounded-full transition-all duration-75",
             i < activeBars
