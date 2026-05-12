@@ -1,0 +1,95 @@
+import Link from "next/link";
+import { Mail, Palette, ArrowRight } from "lucide-react";
+
+import { prisma } from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
+
+export default async function AdminHome() {
+  const [betaCount, recentBeta] = await Promise.all([
+    prisma.betaRequest.count(),
+    prisma.betaRequest.findFirst({
+      orderBy: { createdAt: "desc" },
+      select: { createdAt: true },
+    }),
+  ]);
+
+  const tools = [
+    {
+      href: "/admin/beta-requests",
+      icon: Mail,
+      title: "Beta Requests",
+      blurb: "Inbound applications from the Private Beta form.",
+      stat: `${betaCount} ${betaCount === 1 ? "request" : "requests"}`,
+      sub: recentBeta
+        ? `Latest ${recentBeta.createdAt.toISOString().slice(0, 10)}`
+        : "No requests yet",
+    },
+    {
+      href: "/admin/marketing-kit",
+      icon: Palette,
+      title: "Marketing Kit",
+      blurb:
+        "Generate social cards, OG images, and brand assets from the design system.",
+      stat: "6 scenes · 5 sizes",
+      sub: "Signal Static design system",
+    },
+  ];
+
+  return (
+    <div className="max-w-7xl mx-auto px-6 py-16">
+      <p className="text-xs font-bold uppercase tracking-widest text-brand-soft mb-6">
+        adminOS
+      </p>
+      <h1
+        className="font-black text-white tracking-tight leading-[1.05] mb-4"
+        style={{ fontSize: "clamp(36px, 5vw, 64px)" }}
+      >
+        Operations console
+      </h1>
+      <p className="text-ink-muted max-w-2xl mb-16 leading-relaxed">
+        Internal tools for the Zerocast team. Everything here is gated by the
+        admin allow-list — extend in <code className="text-brand-soft font-mono text-sm">src/lib/admin.ts</code>.
+      </p>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        {tools.map((t) => {
+          const Icon = t.icon;
+          return (
+            <Link
+              key={t.href}
+              href={t.href}
+              className="group rounded-2xl border border-white/8 bg-surface-1/40 p-6 hover:border-brand/40 hover:bg-surface-1 transition-colors flex flex-col gap-5"
+            >
+              <div className="flex items-center justify-between">
+                <div className="w-10 h-10 rounded-xl bg-brand/10 border border-brand/20 flex items-center justify-center text-brand-soft">
+                  <Icon size={18} />
+                </div>
+                <ArrowRight
+                  size={16}
+                  className="text-ink-faint group-hover:text-brand-soft group-hover:translate-x-1 transition-all"
+                />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-white mb-1.5">
+                  {t.title}
+                </h2>
+                <p className="text-sm text-ink-muted leading-relaxed">
+                  {t.blurb}
+                </p>
+              </div>
+              <div className="pt-4 border-t border-white/5 flex items-baseline justify-between">
+                <span className="text-sm font-mono font-semibold text-brand-soft">
+                  {t.stat}
+                </span>
+                <span className="text-[10px] uppercase tracking-widest text-ink-faint">
+                  {t.sub}
+                </span>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

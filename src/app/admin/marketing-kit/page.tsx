@@ -6,10 +6,9 @@ import {
 } from "@/components/marketing/illustrations";
 
 export const metadata: Metadata = {
-  title: "Marketing Kit — Zerocast",
+  title: "Marketing Kit — Zerocast Admin",
   description:
-    "Download social cards, OG images, and embeddable brand assets for Zerocast. Generated from the Signal Static design system.",
-  alternates: { canonical: "/marketing-kit" },
+    "Generate social cards, OG images, and embeddable brand assets from the Signal Static design system.",
   robots: { index: false, follow: false },
 };
 
@@ -103,28 +102,18 @@ export default function MarketingKitPage() {
           the design system. Pick a scene, pick a size, hit download. Every
           asset is rendered fresh on request — edit the route to remix on the fly.
         </p>
-        <div className="mt-10 flex flex-wrap items-center gap-4 text-sm">
-          <a
-            href="/docs/styleguide.md"
-            className="inline-flex items-center gap-2 text-brand-soft hover:text-white transition-colors"
-          >
-            Style guide →
-          </a>
-          <span className="text-ink-fainter">/</span>
-          <a
-            href="/docs/design/philosophy.md"
-            className="inline-flex items-center gap-2 text-brand-soft hover:text-white transition-colors"
-          >
-            Design philosophy →
-          </a>
-          <span className="text-ink-fainter">/</span>
+        <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-mono text-ink-faint">
+          <span>docs/styleguide.md</span>
+          <span className="text-ink-fainter">·</span>
+          <span>docs/design/philosophy.md</span>
+          <span className="text-ink-fainter">·</span>
           <a
             href="/og/marketing?variant=og&scene=hero"
-            className="inline-flex items-center gap-2 text-brand-soft hover:text-white transition-colors"
+            className="text-brand-soft hover:text-white transition-colors"
             target="_blank"
             rel="noreferrer"
           >
-            OG route →
+            /og/marketing →
           </a>
         </div>
       </section>
