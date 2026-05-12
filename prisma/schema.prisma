@@ -170,3 +170,13 @@ model StreamSession {
 
   @@index([roomId])
 }
+
+model BetaRequest {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  platform  String
+  painPoint String?
+  createdAt DateTime @default(now())
+}
+

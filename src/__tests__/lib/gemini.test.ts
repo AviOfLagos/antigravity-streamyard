@@ -72,7 +72,7 @@ describe("generateResponse", () => {
   })
 
   it("includes system prompt and chat history in request", async () => {
-    let capturedBody: any = null
+    let capturedBody: unknown = null
     vi.spyOn(globalThis, "fetch").mockImplementationOnce(async (_url, init) => {
       capturedBody = JSON.parse(init?.body as string)
       return {
@@ -114,7 +114,7 @@ describe("generateResponse", () => {
   })
 
   it("sets maxOutputTokens to 150", async () => {
-    let capturedBody: any = null
+    let capturedBody: unknown = null
     vi.spyOn(globalThis, "fetch").mockImplementationOnce(async (_url, init) => {
       capturedBody = JSON.parse(init?.body as string)
       return {
@@ -128,7 +128,7 @@ describe("generateResponse", () => {
   })
 
   it("includes safety settings", async () => {
-    let capturedBody: any = null
+    let capturedBody: unknown = null
     vi.spyOn(globalThis, "fetch").mockImplementationOnce(async (_url, init) => {
       capturedBody = JSON.parse(init?.body as string)
       return {

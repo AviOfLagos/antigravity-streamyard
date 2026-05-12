@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 import {
   ArrowRight,
@@ -18,6 +19,13 @@ import {
   Video,
   Zap,
 } from "lucide-react"
+
+export const metadata: Metadata = {
+  title: "Features — Browser Streaming Studio, AI Co-Host, Multistream",
+  description:
+    "Every Zerocast feature: browser studio with 5 layout presets, AI Co-Host with Tone Matching, multistreaming to YouTube/Twitch/Kick/TikTok, cloud recording, custom RTMP, and more.",
+  alternates: { canonical: "/features" },
+}
 
 interface FeatureCategory {
   title: string
@@ -110,26 +118,7 @@ export default function FeaturesPage() {
   const comingSoonCount = categories.reduce((acc, cat) => acc + cat.features.filter((f) => f.status === "coming-soon").length, 0)
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white">
-      {/* Nav */}
-      <nav className="sticky top-0 z-50 bg-[#080808]/80 backdrop-blur-md border-b border-white/6">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-7 h-7 bg-violet-600 rounded-lg flex items-center justify-center group-hover:bg-violet-500 transition-colors">
-              <Zap className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-bold text-white text-base tracking-tight">Zerocast</span>
-          </Link>
-          <div className="flex items-center gap-1">
-            <Link href="/changelog" className="hidden sm:block text-sm text-gray-400 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-white/5">Changelog</Link>
-            <Link href="/status" className="hidden sm:block text-sm text-gray-400 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-white/5">Status</Link>
-            <div className="w-px h-4 bg-white/10 mx-2 hidden sm:block" />
-            <Link href="/login" className="inline-flex items-center gap-1.5 text-sm font-medium bg-violet-600 hover:bg-violet-500 text-white px-4 py-1.5 rounded-full transition-colors">
-              Get Started <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        </div>
-      </nav>
+    <div className="text-white">
 
       {/* Header */}
       <header className="pt-20 pb-12 px-6">
@@ -194,34 +183,14 @@ export default function FeaturesPage() {
       </main>
 
       {/* CTA */}
-      <section className="py-16 px-6 border-t border-white/6">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">Ready to try it?</h2>
-          <p className="text-gray-400 mb-8">Create your first studio in seconds — no credit card, no setup.</p>
-          <Link href="/login" className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white font-medium px-8 py-3 rounded-xl transition-colors">
-            Create Studio Free <ArrowRight className="w-4 h-4" />
+      <section className="py-16 px-6 border-t border-white/5">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
+          <h2 className="font-black text-white text-4xl tracking-tight">Ready to try it?</h2>
+          <Link href="?beta=true" scroll={false} className="inline-flex items-center gap-2 bg-white text-neutral-950 font-bold px-8 py-4 rounded-full text-sm hover:bg-indigo-100 transition-all">
+            Join the Beta <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="border-t border-white/6 bg-[#080808]">
-        <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-violet-600 rounded-md flex items-center justify-center">
-              <Zap className="w-3.5 h-3.5 text-white" />
-            </div>
-            <span className="font-bold text-white text-sm">Zerocast</span>
-            <span className="text-gray-600 text-sm ml-2">&copy; 2026</span>
-          </div>
-          <div className="flex items-center gap-5">
-            <Link href="/features" className="text-sm text-violet-400 transition-colors">Features</Link>
-            <Link href="/changelog" className="text-sm text-gray-500 hover:text-gray-300 transition-colors">Changelog</Link>
-            <Link href="/status" className="text-sm text-gray-500 hover:text-gray-300 transition-colors">Status</Link>
-            <Link href="/feedback" className="text-sm text-gray-500 hover:text-gray-300 transition-colors">Feedback</Link>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

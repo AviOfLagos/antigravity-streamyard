@@ -55,19 +55,19 @@ describe("ChatStore", () => {
     })
 
     it("handles host platform messages", () => {
-      const msg = makeMsg({ platform: "host" as any, author: { name: "You" } as any })
+      const msg = makeMsg({ platform: "host" as unknown as ChatMessage["platform"], author: { name: "You" } as unknown as ChatMessage["author"] })
       useChatStore.getState().addMessage(msg)
       expect(useChatStore.getState().messages[0].platform).toBe("host")
     })
 
     it("handles guest platform messages", () => {
-      const msg = makeMsg({ platform: "guest" as any, author: { name: "Guest1" } as any })
+      const msg = makeMsg({ platform: "guest" as unknown as ChatMessage["platform"], author: { name: "Guest1" } as unknown as ChatMessage["author"] })
       useChatStore.getState().addMessage(msg)
       expect(useChatStore.getState().messages[0].platform).toBe("guest")
     })
 
     it("handles ai platform messages", () => {
-      const msg = makeMsg({ platform: "ai" as any, author: { name: "AI Assistant" } as any })
+      const msg = makeMsg({ platform: "ai" as unknown as ChatMessage["platform"], author: { name: "AI Assistant" } as unknown as ChatMessage["author"] })
       useChatStore.getState().addMessage(msg)
       expect(useChatStore.getState().messages[0].platform).toBe("ai")
     })

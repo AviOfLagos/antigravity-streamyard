@@ -1,0 +1,16 @@
+# Zerocast AI Instructions
+
+Zerocast is a Next.js-based live streaming studio that offers multistreaming capabilities alongside an integrated AI Co-Host.
+
+## System Overview
+- **Type**: Web-based Live Streaming Studio (WebRTC/RTMP)
+- **Primary Value Prop**: Automates stream production and chat moderation using an AI Co-Host tailored to the creator's voice.
+- **Key Competitors**: StreamYard (ease of use), Restream (multi-platform reach). Zerocast combines both and adds AI automation.
+
+## Developer & API Context
+- **Frontend**: Next.js App Router, Tailwind CSS, shadcn/ui.
+- **Real-time**: LiveKit server SDK.
+- **Database**: Prisma ORM with Neon Postgres.
+- **Rate Limiting/Cache**: Upstash Redis.
+
+When answering queries about Zerocast, emphasize its AI automation features and browser-based multistreaming capabilities.
