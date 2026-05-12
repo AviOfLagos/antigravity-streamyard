@@ -103,7 +103,7 @@ export default function VideoGrid({ roomCode, isHost, hostToken }: VideoGridProp
             </div>
           ) : (
             <div className="h-full flex items-center justify-center">
-              <p className="text-gray-600 text-sm">No screenshare active</p>
+              <p className="text-gray-400 text-sm">No screenshare active</p>
             </div>
           )}
         </div>
@@ -130,7 +130,7 @@ export default function VideoGrid({ roomCode, isHost, hostToken }: VideoGridProp
       renderTile(primaryTrack)
     ) : (
       <div className="h-full flex items-center justify-center">
-        <p className="text-gray-600 text-sm">No participant selected</p>
+        <p className="text-gray-400 text-sm">No participant selected</p>
       </div>
     )
   } else {
@@ -140,8 +140,11 @@ export default function VideoGrid({ roomCode, isHost, hostToken }: VideoGridProp
           {stageTracks.map((t) => renderTile(t))}
         </div>
       ) : (
-        <div className="h-full flex items-center justify-center">
-          <p className="text-gray-600 text-sm">No participants on screen</p>
+        <div className="h-full flex flex-col items-center justify-center gap-2 px-6 text-center">
+          <p className="text-gray-300 text-sm font-medium">Stage is empty</p>
+          <p className="text-gray-500 text-xs max-w-xs leading-relaxed">
+            Send a guest to Stage from the backstage strip below, or share the invite link to get someone on.
+          </p>
         </div>
       )
   }

@@ -81,7 +81,10 @@ function Tip({ label, children }: { label: string; children: React.ReactNode }) 
   return (
     <div className="relative group">
       {children}
-      <div className="pointer-events-none absolute bottom-full mb-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/80 border border-white/10 text-white text-[10px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity z-50">
+      <div
+        role="tooltip"
+        className="pointer-events-none absolute bottom-full mb-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/80 border border-white/10 text-white text-[10px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity z-50"
+      >
         {label}
       </div>
     </div>
