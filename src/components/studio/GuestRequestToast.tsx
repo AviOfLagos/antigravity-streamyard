@@ -75,37 +75,43 @@ export default function GuestRequestToast({ roomCode, hostToken }: GuestRequestT
   if (pendingGuests.length === 0) return null
 
   return (
-    <div className="fixed top-16 right-4 z-50 flex flex-col gap-2 pointer-events-none">
+    <div
+      role="region"
+      aria-label="Guest join requests"
+      aria-live="polite"
+      className="fixed top-16 right-4 left-4 sm:left-auto z-50 flex flex-col gap-2 pointer-events-none max-w-[min(20rem,calc(100vw-2rem))] sm:max-w-sm ml-auto"
+    >
       {pendingGuests.map((guest) => (
         <div
           key={guest.guestId}
-          className="pointer-events-auto flex items-center gap-3 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl px-4 py-3 min-w-64 animate-in slide-in-from-right-4 duration-200"
+          className="pointer-events-auto flex items-center gap-3 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl px-4 py-3 motion-safe:animate-in motion-safe:slide-in-from-right-4 motion-safe:duration-200"
         >
           <div className="w-8 h-8 rounded-full bg-violet-500/20 flex items-center justify-center shrink-0">
-            <UserPlus className="w-4 h-4 text-violet-400" />
+            <UserPlus className="w-4 h-4 text-violet-400" aria-hidden="true" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-white text-sm font-medium leading-tight truncate">{guest.name}</p>
-            <p className="text-gray-500 text-xs">wants to join</p>
+            <p className="text-gray-400 text-xs">wants to join</p>
           </div>
           <div className="flex items-center gap-1 shrink-0">
             <button
               type="button"
               onClick={() => handleAdmit(guest.guestId, guest.name)}
               disabled={processing === guest.guestId}
-              className="flex items-center gap-1 h-7 px-2.5 rounded-lg bg-green-500/15 text-green-400 hover:bg-green-500/25 text-xs font-medium transition-colors disabled:opacity-40"
+              aria-label={`Admit ${guest.name}`}
+              className="flex items-center gap-1 h-7 px-2.5 rounded-lg bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 text-xs font-medium transition-colors disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1a1a1a]"
             >
-              <Check className="w-3.5 h-3.5" />
+              <Check className="w-3.5 h-3.5" aria-hidden="true" />
               Admit
             </button>
             <button
               type="button"
               onClick={() => handleDeny(guest.guestId)}
               disabled={processing === guest.guestId}
-              className="h-7 w-7 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-white/8 transition-colors disabled:opacity-40"
-              aria-label="Deny"
+              className="h-7 w-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/8 transition-colors disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1a1a1a]"
+              aria-label={`Deny ${guest.name}`}
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-3.5 h-3.5" aria-hidden="true" />
             </button>
           </div>
         </div>

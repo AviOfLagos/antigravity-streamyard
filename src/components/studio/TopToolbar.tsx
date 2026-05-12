@@ -92,19 +92,26 @@ function Tip({ label, children }: { label: string; children: React.ReactNode }) 
 
 function ToolBtn({
   active,
+  pressed,
   onClick,
   children,
   className = "",
+  ariaLabel,
 }: {
   active?: boolean
+  /** When set, the button represents a toggle and exposes aria-pressed. */
+  pressed?: boolean
   onClick?: () => void
   children: React.ReactNode
   className?: string
+  ariaLabel?: string
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={pressed}
+      aria-label={ariaLabel}
       className={[
         "flex items-center justify-center w-8 h-8 rounded-lg transition-all text-sm select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080808]",
         active
@@ -216,7 +223,7 @@ export default function TopToolbar({
       {/* Text Overlays */}
       <div className="relative" ref={textOpen ? textPanelRef : undefined}>
         <Tip label="Text Overlays">
-          <ToolBtn active={textOpen} onClick={() => { setTextOpen((o) => !o); setLayoutOpen(false); setInviteOpen(false); setSettingsOpen(false) }}>
+          <ToolBtn active={textOpen} ariaLabel="Text overlays" onClick={() => { setTextOpen((o) => !o); setLayoutOpen(false); setInviteOpen(false); setSettingsOpen(false) }}>
             <span className="relative">
               <Type className="w-4 h-4" />
               {visibleOverlayCount > 0 && (
@@ -237,7 +244,7 @@ export default function TopToolbar({
       {/* Layout */}
       <div className="relative" ref={layoutOpen ? layoutPanelRef : undefined}>
         <Tip label="Layout">
-          <ToolBtn active={layoutOpen} onClick={() => { setLayoutOpen((o) => !o); setTextOpen(false); setInviteOpen(false); setSettingsOpen(false) }}>
+          <ToolBtn active={layoutOpen} ariaLabel="Layout" onClick={() => { setLayoutOpen((o) => !o); setTextOpen(false); setInviteOpen(false); setSettingsOpen(false) }}>
             <LayoutGrid className="w-4 h-4" />
           </ToolBtn>
         </Tip>
@@ -282,7 +289,7 @@ export default function TopToolbar({
       {/* Copy Link / Invite */}
       <div className="relative" ref={inviteOpen ? invitePanelRef : undefined}>
         <Tip label="Invite Link">
-          <ToolBtn active={inviteOpen} onClick={() => { setInviteOpen((o) => !o); setTextOpen(false); setLayoutOpen(false); setSettingsOpen(false) }}>
+          <ToolBtn active={inviteOpen} ariaLabel="Invite link" onClick={() => { setInviteOpen((o) => !o); setTextOpen(false); setLayoutOpen(false); setSettingsOpen(false) }}>
             <Link className="w-4 h-4" />
           </ToolBtn>
         </Tip>
@@ -296,7 +303,12 @@ export default function TopToolbar({
 
       {/* Chat Overlay toggle */}
       <Tip label={chatOverlayEnabled ? "Chat overlay on" : "Chat overlay off"}>
-        <ToolBtn active={chatOverlayEnabled} onClick={() => setChatOverlayEnabled(!chatOverlayEnabled)}>
+        <ToolBtn
+          active={chatOverlayEnabled}
+          pressed={chatOverlayEnabled}
+          ariaLabel="Toggle chat overlay"
+          onClick={() => setChatOverlayEnabled(!chatOverlayEnabled)}
+        >
           <MessageSquare className="w-4 h-4" />
         </ToolBtn>
       </Tip>
@@ -306,6 +318,7 @@ export default function TopToolbar({
         <Tip label={aiChatEnabled ? "AI Chat: On" : "AI Chat Assistant"}>
           <ToolBtn
             active={aiOpen || aiChatEnabled}
+            ariaLabel={`AI chat assistant${aiChatEnabled ? " (on)" : ""}`}
             onClick={() => { setAiOpen((o) => !o); setTextOpen(false); setLayoutOpen(false); setInviteOpen(false); setSettingsOpen(false) }}
             className={aiChatEnabled ? "bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-500/40" : ""}
           >
@@ -420,7 +433,7 @@ export default function TopToolbar({
       {/* Settings (device selector + chat position) */}
       <div className="relative" ref={settingsOpen ? settingsPanelRef : undefined}>
         <Tip label="Settings">
-          <ToolBtn active={settingsOpen} onClick={() => { setSettingsOpen((o) => !o); setTextOpen(false); setLayoutOpen(false); setInviteOpen(false) }}>
+          <ToolBtn active={settingsOpen} ariaLabel="Studio settings" onClick={() => { setSettingsOpen((o) => !o); setTextOpen(false); setLayoutOpen(false); setInviteOpen(false) }}>
             <Settings className="w-4 h-4" />
           </ToolBtn>
         </Tip>
@@ -461,7 +474,7 @@ export default function TopToolbar({
         <DialogTrigger
           render={
             <Tip label="End Session">
-              <ToolBtn className="bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300">
+              <ToolBtn ariaLabel="End session" className="bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300">
                 <LogOut className="w-4 h-4" />
               </ToolBtn>
             </Tip>
@@ -559,7 +572,7 @@ export default function TopToolbar({
 
       {/* Mobile: collapse to a "..." button */}
       <div className="sm:hidden relative" ref={mobileMenuRef}>
-        <ToolBtn onClick={() => setMobileMenuOpen((o) => !o)} active={mobileMenuOpen}>
+        <ToolBtn ariaLabel={mobileMenuOpen ? "Close toolbar menu" : "Open toolbar menu"} onClick={() => setMobileMenuOpen((o) => !o)} active={mobileMenuOpen}>
           <MoreHorizontal className="w-4 h-4" />
         </ToolBtn>
         {mobileMenuOpen && (
