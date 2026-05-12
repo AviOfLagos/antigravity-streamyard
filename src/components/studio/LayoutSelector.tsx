@@ -33,7 +33,7 @@ export default function LayoutSelector() {
   }, [setLayout, autoLayoutEnabled, setAutoLayoutEnabled])
 
   return (
-    <div className="hidden sm:flex items-center gap-1" role="radiogroup" aria-label="Stage layout">
+    <div className="flex flex-wrap items-center gap-1" role="radiogroup" aria-label="Stage layout">
       {PRESETS.map((preset) => {
         const isActive = activeLayout === preset.id
         return (
