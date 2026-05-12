@@ -116,7 +116,7 @@ function ToolBtn({
       aria-pressed={pressed}
       aria-label={ariaLabel}
       className={[
-        "flex items-center justify-center w-8 h-8 rounded-lg transition-all text-sm select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080808]",
+        "flex items-center justify-center w-8 h-8 rounded-lg transition-all text-sm select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-studio-bg-deep",
         active
           ? "bg-violet-500/20 text-violet-300 ring-1 ring-violet-500/40"
           : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white",
@@ -252,7 +252,7 @@ export default function TopToolbar({
           </ToolBtn>
         </Tip>
         {layoutOpen && (
-          <div ref={layoutPanelRef} className="absolute top-full mt-2 left-0 z-50 bg-[#111111] border border-white/10 rounded-xl shadow-2xl p-3 min-w-[200px]">
+          <div ref={layoutPanelRef} className="absolute top-full mt-2 left-0 z-50 bg-studio-panel border border-white/10 rounded-xl shadow-2xl p-3 min-w-[200px]">
             <p className="text-[10px] text-gray-500 mb-2 uppercase tracking-wider">Layout</p>
             <LayoutSelector />
             {/* Auto Layout toggle */}
@@ -264,7 +264,7 @@ export default function TopToolbar({
                 aria-checked={autoLayoutEnabled}
                 aria-label="Auto layout"
                 className={[
-                  "w-full flex items-center gap-2 px-2.5 py-2 rounded-lg transition-all text-xs font-medium select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111]",
+                  "w-full flex items-center gap-2 px-2.5 py-2 rounded-lg transition-all text-xs font-medium select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-studio-panel",
                   autoLayoutEnabled
                     ? "bg-violet-500/20 text-violet-300 ring-1 ring-violet-500/30"
                     : "bg-white/4 text-gray-400 hover:bg-white/8 hover:text-white",
@@ -300,7 +300,7 @@ export default function TopToolbar({
           </ToolBtn>
         </Tip>
         {inviteOpen && (
-          <div ref={invitePanelRef} className="absolute top-full mt-2 left-0 z-50 bg-[#111111] border border-white/10 rounded-xl shadow-2xl p-3">
+          <div ref={invitePanelRef} className="absolute top-full mt-2 left-0 z-50 bg-studio-panel border border-white/10 rounded-xl shadow-2xl p-3">
             <p className="text-[10px] text-gray-500 mb-2 uppercase tracking-wider">Invite</p>
             <InviteLink roomCode={roomCode} />
           </div>
@@ -331,13 +331,13 @@ export default function TopToolbar({
             <span className="relative">
               <Bot className="w-4 h-4" />
               {aiChatEnabled && (
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-indigo-400 rounded-full border border-[#080808]" />
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-indigo-400 rounded-full border border-studio-bg-deep" />
               )}
             </span>
           </ToolBtn>
         </Tip>
         {aiOpen && (
-          <div ref={aiPanelRef} className="absolute top-full mt-2 left-0 z-50 bg-[#111111] border border-white/10 rounded-xl shadow-2xl p-4 w-72 space-y-4">
+          <div ref={aiPanelRef} className="absolute top-full mt-2 left-0 z-50 bg-studio-panel border border-white/10 rounded-xl shadow-2xl p-4 w-72 space-y-4">
             {/* Header */}
             <div className="flex items-center gap-2">
               <Bot className="w-4 h-4 text-indigo-400 shrink-0" />
@@ -359,7 +359,7 @@ export default function TopToolbar({
                 aria-label="AI chat assistant"
                 onClick={() => setAIChatEnabled(!aiChatEnabled)}
                 className={[
-                  "relative w-9 h-5 rounded-full transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111]",
+                  "relative w-9 h-5 rounded-full transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-studio-panel",
                   aiChatEnabled ? "bg-indigo-500" : "bg-white/15",
                 ].join(" ")}
               >
@@ -444,7 +444,7 @@ export default function TopToolbar({
           </ToolBtn>
         </Tip>
         {settingsOpen && (
-          <div ref={settingsPanelRef} className="absolute top-full mt-2 right-0 z-50 bg-[#111111] border border-white/10 rounded-xl shadow-2xl p-4 w-64 space-y-4">
+          <div ref={settingsPanelRef} className="absolute top-full mt-2 right-0 z-50 bg-studio-panel border border-white/10 rounded-xl shadow-2xl p-4 w-64 space-y-4">
             <div>
               <p className="text-[10px] text-gray-500 mb-2 uppercase tracking-wider">Devices</p>
               <DeviceSelector />
@@ -489,7 +489,7 @@ export default function TopToolbar({
 
         <DialogContent
           showCloseButton={!ending}
-          className="bg-[#0d0d0d] border border-white/6 text-white sm:max-w-md"
+          className="bg-studio-bg border border-white/6 text-white sm:max-w-md"
         >
           <DialogHeader>
             <DialogTitle className="text-base font-semibold text-white">
@@ -570,7 +570,7 @@ export default function TopToolbar({
   )
 
   return (
-    <div className="flex-none flex items-center justify-between px-3 py-1.5 bg-[#080808] border-b border-white/6 gap-2 z-20">
+    <div className="flex-none flex items-center justify-between px-3 py-1.5 bg-studio-bg-deep border-b border-white/6 gap-2 z-20">
       {/* Desktop: show all buttons in a row */}
       <div className="hidden sm:flex items-center gap-1.5 flex-wrap">
         {toolbarItems}
@@ -584,7 +584,7 @@ export default function TopToolbar({
         {mobileMenuOpen && (
           <div
             ref={mobileMenuRef}
-            className="absolute top-full mt-2 left-0 z-50 bg-[#111111] border border-white/10 rounded-xl shadow-2xl p-3 flex flex-col gap-2 min-w-[180px]"
+            className="absolute top-full mt-2 left-0 z-50 bg-studio-panel border border-white/10 rounded-xl shadow-2xl p-3 flex flex-col gap-2 min-w-[180px]"
           >
             {toolbarItems}
           </div>

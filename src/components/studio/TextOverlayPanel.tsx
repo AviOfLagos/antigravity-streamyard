@@ -73,7 +73,7 @@ function ColorSwatch({
             aria-label={`${groupLabel ? groupLabel + ": " : ""}${c.label}`}
             onClick={() => onSelect(c.value)}
             className={[
-              "w-6 h-6 rounded-full border-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111]",
+              "w-6 h-6 rounded-full border-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-studio-panel",
               isSelected ? "border-violet-400 scale-110" : "border-white/20 hover:border-white/50",
               c.value === "transparent" ? "bg-transparent" : "",
             ].join(" ")}
@@ -117,7 +117,7 @@ export default function TextOverlayPanel() {
   }
 
   return (
-    <div className="w-72 bg-[#111111] border border-white/10 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+    <div className="w-72 bg-studio-panel border border-white/10 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
       {/* Header */}
       <div className="px-4 py-3 border-b border-white/8 flex-none">
         <p className="text-xs font-semibold text-white uppercase tracking-wider">Text Overlays</p>
@@ -298,7 +298,7 @@ export default function TextOverlayPanel() {
                   aria-label={`Stage background: ${c.label}`}
                   onClick={() => setStageBackground(c.value)}
                   className={[
-                    "w-6 h-6 rounded-full border-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111]",
+                    "w-6 h-6 rounded-full border-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-studio-panel",
                     isSelected
                       ? "border-violet-400 scale-110"
                       : "border-white/20 hover:border-white/50",

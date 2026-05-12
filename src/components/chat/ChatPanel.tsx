@@ -86,7 +86,7 @@ export default function ChatPanel({ roomCode, isHost, displayName, onCollapse, c
   }, [virtualizer, messages.length])
 
   return (
-    <div className="flex flex-col h-full bg-[#0d0d0d]">
+    <div className="flex flex-col h-full bg-studio-bg">
       {/* Header */}
       <div className="flex-none flex items-center gap-2 px-3 py-2.5 border-b border-white/10">
         <MessageSquare className="w-3.5 h-3.5 text-violet-400" />

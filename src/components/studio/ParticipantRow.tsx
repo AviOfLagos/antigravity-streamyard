@@ -123,7 +123,7 @@ const ParticipantRow = React.memo(function ParticipantRow({
         {/* Mic dot */}
         <span
           className={[
-            "absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-[#080808]",
+            "absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-studio-bg-deep",
             micOn ? "bg-emerald-400" : "bg-gray-600",
           ].join(" ")}
           title={micOn ? "Mic on" : "Mic off"}
@@ -145,7 +145,7 @@ const ParticipantRow = React.memo(function ParticipantRow({
             disabled={acting}
             aria-label={micOn ? `Mute ${displayName}'s mic` : `Unmute ${displayName}'s mic`}
             className={[
-              "p-1 rounded transition-colors disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-1 focus-visible:ring-offset-[#080808]",
+              "p-1 rounded transition-colors disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-1 focus-visible:ring-offset-studio-bg-deep",
               micOn
                 ? "text-emerald-400 hover:bg-emerald-500/15"
                 : "text-gray-600 hover:bg-white/6",
@@ -160,7 +160,7 @@ const ParticipantRow = React.memo(function ParticipantRow({
             disabled={acting}
             aria-label={camOn ? `Turn off ${displayName}'s camera` : `Turn on ${displayName}'s camera`}
             className={[
-              "p-1 rounded transition-colors disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-1 focus-visible:ring-offset-[#080808]",
+              "p-1 rounded transition-colors disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-1 focus-visible:ring-offset-studio-bg-deep",
               camOn
                 ? "text-emerald-400 hover:bg-emerald-500/15"
                 : "text-gray-600 hover:bg-white/6",
@@ -174,7 +174,7 @@ const ParticipantRow = React.memo(function ParticipantRow({
             onClick={handleKick}
             disabled={acting}
             aria-label={`Remove ${displayName} from studio`}
-            className="p-1 rounded text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-1 focus-visible:ring-offset-[#080808]"
+            className="p-1 rounded text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-1 focus-visible:ring-offset-studio-bg-deep"
             title="Remove from studio"
           >
             <UserX className="w-3 h-3" />
@@ -188,7 +188,7 @@ const ParticipantRow = React.memo(function ParticipantRow({
           type="button"
           onClick={handleStageToggle}
           aria-label={`Send ${displayName} to backstage`}
-          className="bg-white/6 text-gray-400 hover:bg-white/10 hover:text-white px-2.5 py-0.5 rounded text-[10px] min-w-[60px] text-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-1 focus-visible:ring-offset-[#080808]"
+          className="bg-white/6 text-gray-400 hover:bg-white/10 hover:text-white px-2.5 py-0.5 rounded text-[10px] min-w-[60px] text-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-1 focus-visible:ring-offset-studio-bg-deep"
         >
           Backstage
         </button>
@@ -197,7 +197,7 @@ const ParticipantRow = React.memo(function ParticipantRow({
           type="button"
           onClick={handleStageToggle}
           aria-label={`Bring ${displayName} on stage`}
-          className="bg-violet-500/15 text-violet-400 hover:bg-violet-500/25 px-2.5 py-0.5 rounded text-[10px] min-w-[60px] text-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-1 focus-visible:ring-offset-[#080808]"
+          className="bg-violet-500/15 text-violet-400 hover:bg-violet-500/25 px-2.5 py-0.5 rounded text-[10px] min-w-[60px] text-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-1 focus-visible:ring-offset-studio-bg-deep"
         >
           Stage
         </button>

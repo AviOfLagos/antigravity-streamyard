@@ -225,7 +225,7 @@ export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle,
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={triggerButton} />
-      <DialogContent className="bg-[#111111] border border-white/10 text-white sm:max-w-md">
+      <DialogContent className="bg-studio-panel border border-white/10 text-white sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-white flex items-center gap-2">
             {isLive ? (

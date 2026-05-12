@@ -448,7 +448,7 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
   // G17 -- guard against undefined livekitUrl (after all hooks)
   if (!livekitUrl) {
     return (
-      <div className="flex items-center justify-center h-dvh bg-[#0d0d0d]">
+      <div className="flex items-center justify-center h-dvh bg-studio-bg">
         <div className="text-center px-6">
           <p className="text-white font-semibold mb-2">Configuration error</p>
           <p className="text-gray-400 text-sm">LiveKit URL is not configured. Contact support.</p>
@@ -458,12 +458,12 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
   }
 
   return (
-    <div className="flex flex-col h-dvh bg-[#0d0d0d] overflow-hidden">
+    <div className="flex flex-col h-dvh bg-studio-bg overflow-hidden">
       {/* Fixed overlay toasts -- pass hostToken for demo/direct-access auth */}
       <GuestRequestToast roomCode={roomCode} hostToken={hostToken} />
 
       {/* Header */}
-      <header className="flex-none h-12 flex items-center justify-between px-4 bg-[#080808] border-b border-white/6 z-10 pt-[env(safe-area-inset-top)]">
+      <header className="flex-none h-12 flex items-center justify-between px-4 bg-studio-bg-deep border-b border-white/6 z-10 pt-[env(safe-area-inset-top)]">
         <div className="flex items-center gap-2.5">
           <div className="flex items-center gap-1.5 text-white font-bold text-sm">
             <Zap className="w-4 h-4 text-violet-400" />
@@ -496,7 +496,7 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
         {/* Mobile chat toggle (< lg) */}
         <button
           type="button"
-          className="lg:hidden relative p-2 rounded-lg text-gray-500 hover:text-white hover:bg-white/6 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080808]"
+          className="lg:hidden relative p-2 rounded-lg text-gray-500 hover:text-white hover:bg-white/6 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-studio-bg-deep"
           onClick={() => {
             setChatOpen((o) => {
               if (!o) setUnreadCount(0)
@@ -592,7 +592,7 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
         {/* Chat panel — desktop: collapsible sidebar; mobile: absolute overlay */}
         <div
           className={[
-            "flex-col border-l border-white/6 bg-[#0d0d0d] transition-all duration-200",
+            "flex-col border-l border-white/6 bg-studio-bg transition-all duration-200",
             // Desktop lg+: visible by default, hidden when collapsed
             chatCollapsed ? "lg:hidden" : "lg:flex lg:w-72 xl:w-80",
             // Mobile: absolute overlay driven by chatOpen
@@ -621,7 +621,7 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
               setChatCollapsed(false)
               setUnreadCount(0)
             }}
-            className="hidden lg:flex absolute top-3 right-3 z-40 items-center justify-center w-10 h-10 bg-violet-500 hover:bg-violet-400 text-white rounded-full shadow-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d0d0d]"
+            className="hidden lg:flex absolute top-3 right-3 z-40 items-center justify-center w-10 h-10 bg-violet-500 hover:bg-violet-400 text-white rounded-full shadow-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 focus-visible:ring-offset-2 focus-visible:ring-offset-studio-bg"
             aria-label={`Open chat${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
             title="Open chat"
           >

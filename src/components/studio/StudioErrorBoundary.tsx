@@ -40,7 +40,7 @@ export default class StudioErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex items-center justify-center h-dvh bg-[#0d0d0d]">
+        <div className="flex items-center justify-center h-dvh bg-studio-bg">
           <div className="text-center px-6 max-w-md">
             <div className="w-12 h-12 rounded-full bg-red-500/15 flex items-center justify-center mx-auto mb-4">
               <svg

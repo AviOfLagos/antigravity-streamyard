@@ -33,7 +33,7 @@ export default function BackstagePanel({ isHost, roomCode, hostToken }: Backstag
   const hasOverflow = participants.length > 4
 
   return (
-    <div className="relative min-h-[5.5rem] bg-[#080808] border-t border-white/6">
+    <div className="relative min-h-[5.5rem] bg-studio-bg-deep border-t border-white/6">
       <div
         className="flex items-center gap-2 px-3 py-2 overflow-x-auto min-h-[5.5rem] scroll-smooth"
         role="group"
@@ -71,7 +71,7 @@ export default function BackstagePanel({ isHost, roomCode, hostToken }: Backstag
       {hasOverflow && (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute top-0 right-0 bottom-0 w-8 bg-gradient-to-l from-[#080808] to-transparent"
+          className="pointer-events-none absolute top-0 right-0 bottom-0 w-8 bg-gradient-to-l from-studio-bg-deep to-transparent"
         />
       )}
     </div>

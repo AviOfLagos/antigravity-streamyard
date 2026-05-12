@@ -58,7 +58,7 @@ function DevicePicker({ kind }: DeviceSelectorProps) {
         }}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/4 hover:bg-white/8 text-gray-400 hover:text-white text-[10px] transition-colors max-w-36 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111]"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/4 hover:bg-white/8 text-gray-400 hover:text-white text-[10px] transition-colors max-w-36 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-studio-panel"
         title={`Select ${LABELS[kind]}`}
       >
         {ICONS[kind]}
@@ -70,7 +70,7 @@ function DevicePicker({ kind }: DeviceSelectorProps) {
         <div
           role="listbox"
           aria-label={LABELS[kind]}
-          className="absolute bottom-full mb-1 left-0 z-50 w-64 max-h-[60vh] bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl flex flex-col overflow-hidden"
+          className="absolute bottom-full mb-1 left-0 z-50 w-64 max-h-[60vh] bg-studio-elevated border border-white/10 rounded-xl shadow-2xl flex flex-col overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           <p className="text-[10px] text-gray-500 uppercase tracking-wider px-3 py-1.5 font-semibold flex-none border-b border-white/6">

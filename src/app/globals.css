@@ -46,6 +46,16 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* ─── Studio surface tokens ──────────────────────────────────────────
+     Used by src/app/studio/** and src/components/studio/**. Studio runs
+     a darker chrome than marketing surfaces by design. Pixel-for-pixel
+     matches the previous hardcoded hex values.
+     ─────────────────────────────────────────────────────────────────── */
+  --color-studio-bg: #0d0d0d;
+  --color-studio-bg-deep: #080808;
+  --color-studio-panel: #111111;
+  --color-studio-elevated: #1a1a1a;
 }
 
 :root {

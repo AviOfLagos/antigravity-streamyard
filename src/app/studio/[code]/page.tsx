@@ -15,9 +15,9 @@ import StudioClientLoader from "./StudioClientLoader"
 /** Skeleton loader matching the studio layout dimensions to avoid CLS */
 function StudioSkeleton() {
   return (
-    <div className="flex flex-col h-dvh bg-[#0d0d0d] overflow-hidden">
+    <div className="flex flex-col h-dvh bg-studio-bg overflow-hidden">
       {/* Header skeleton */}
-      <header className="flex-none h-12 flex items-center px-4 bg-[#080808] border-b border-white/6">
+      <header className="flex-none h-12 flex items-center px-4 bg-studio-bg-deep border-b border-white/6">
         <div className="flex items-center gap-2.5">
           <div className="w-20 h-4 bg-white/6 rounded animate-pulse" />
           <div className="h-4 w-px bg-white/10" />
@@ -33,13 +33,13 @@ function StudioSkeleton() {
               {[1, 2, 3, 4].map((i) => (
                 <div
                   key={i}
-                  className="bg-[#1a1a1a] rounded-xl aspect-video animate-pulse"
+                  className="bg-studio-elevated rounded-xl aspect-video animate-pulse"
                 />
               ))}
             </div>
           </div>
           {/* Control bar skeleton */}
-          <div className="h-16 bg-[#080808] border-t border-white/6 flex items-center justify-center gap-3 px-4">
+          <div className="h-16 bg-studio-bg-deep border-t border-white/6 flex items-center justify-center gap-3 px-4">
             {[1, 2, 3].map((i) => (
               <div key={i} className="w-12 h-10 bg-white/4 rounded-xl animate-pulse" />
             ))}
@@ -47,7 +47,7 @@ function StudioSkeleton() {
         </div>
 
         {/* Chat panel skeleton */}
-        <div className="hidden lg:flex flex-col w-72 xl:w-80 border-l border-white/6 bg-[#0d0d0d]">
+        <div className="hidden lg:flex flex-col w-72 xl:w-80 border-l border-white/6 bg-studio-bg">
           <div className="flex items-center gap-2 px-3 py-2.5 border-b border-white/6">
             <div className="w-16 h-3 bg-white/6 rounded animate-pulse" />
           </div>
@@ -74,7 +74,7 @@ export default async function StudioPage({ params }: Props) {
   // G16 — guard LiveKit env vars before generating token
   if (!process.env.LIVEKIT_API_KEY || !process.env.LIVEKIT_API_SECRET || !process.env.NEXT_PUBLIC_LIVEKIT_URL) {
     return (
-      <div className="flex items-center justify-center h-dvh bg-[#0d0d0d]">
+      <div className="flex items-center justify-center h-dvh bg-studio-bg">
         <p className="text-red-400 text-sm">LiveKit environment variables are not configured.</p>
       </div>
     )

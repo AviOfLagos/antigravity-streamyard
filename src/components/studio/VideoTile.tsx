@@ -47,7 +47,7 @@ function VideoTileInner({ trackRef, isVisible, isLocal, isHost }: VideoTileProps
     <TrackRefContext.Provider value={ensuredRef}>
       <div
         className={[
-          "group relative bg-[#1a1a1a] rounded-xl overflow-hidden aspect-video flex items-center justify-center ring-2 transition-[box-shadow] duration-150",
+          "group relative bg-studio-elevated rounded-xl overflow-hidden aspect-video flex items-center justify-center ring-2 transition-[box-shadow] duration-150",
           isSpeaking ? "ring-violet-500/70" : "ring-white/5",
         ].join(" ")}
       >
@@ -108,7 +108,7 @@ function OffScreenTileInner({ trackRef, isHost }: { trackRef: TrackReferenceOrPl
   if (!isHost) return null
 
   return (
-    <div className="relative bg-[#111] rounded-xl overflow-hidden aspect-video flex items-center justify-center ring-1 ring-white/4 opacity-40">
+    <div className="relative bg-studio-panel rounded-xl overflow-hidden aspect-video flex items-center justify-center ring-1 ring-white/4 opacity-40">
       <div className="flex flex-col items-center gap-2">
         <EyeOff className="w-6 h-6 text-gray-600" />
         <span className="text-gray-600 text-xs">{displayName}</span>
