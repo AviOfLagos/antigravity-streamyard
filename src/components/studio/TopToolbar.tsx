@@ -260,8 +260,11 @@ export default function TopToolbar({
               <button
                 type="button"
                 onClick={() => setAutoLayoutEnabled(!autoLayoutEnabled)}
+                role="switch"
+                aria-checked={autoLayoutEnabled}
+                aria-label="Auto layout"
                 className={[
-                  "w-full flex items-center gap-2 px-2.5 py-2 rounded-lg transition-all text-xs font-medium select-none",
+                  "w-full flex items-center gap-2 px-2.5 py-2 rounded-lg transition-all text-xs font-medium select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111]",
                   autoLayoutEnabled
                     ? "bg-violet-500/20 text-violet-300 ring-1 ring-violet-500/30"
                     : "bg-white/4 text-gray-400 hover:bg-white/8 hover:text-white",

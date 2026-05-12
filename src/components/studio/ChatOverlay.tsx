@@ -83,7 +83,7 @@ export default function ChatOverlay({ position = "bottom-left" }: ChatOverlayPro
         return (
           <div
             key={msg.id}
-            className="flex items-start gap-1.5 bg-black/60 backdrop-blur-sm rounded-lg px-2.5 py-1.5 text-white"
+            className="flex items-start gap-1.5 bg-black/75 backdrop-blur-sm rounded-lg px-2.5 py-1.5 text-white shadow-lg shadow-black/30 motion-reduce:transition-none"
             style={{ opacity, transition: "opacity 0.5s ease" }}
           >
             {/* Platform color dot */}
@@ -92,10 +92,10 @@ export default function ChatOverlay({ position = "bottom-left" }: ChatOverlayPro
               style={{ backgroundColor: platformColor(msg.platform) }}
             />
             <div className="min-w-0">
-              <span className="text-[10px] font-semibold text-gray-300 mr-1">
+              <span className="text-[10px] font-semibold text-white mr-1">
                 {msg.author.name}
               </span>
-              <span className="text-[10px] text-gray-200 break-words">
+              <span className="text-[10px] text-gray-100 break-words">
                 {msg.message}
               </span>
             </div>

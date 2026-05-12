@@ -47,8 +47,8 @@ function VideoTileInner({ trackRef, isVisible, isLocal, isHost }: VideoTileProps
     <TrackRefContext.Provider value={ensuredRef}>
       <div
         className={[
-          "group relative bg-[#1a1a1a] rounded-xl overflow-hidden aspect-video flex items-center justify-center",
-          isSpeaking ? "ring-2 ring-violet-500/70" : "ring-1 ring-white/4",
+          "group relative bg-[#1a1a1a] rounded-xl overflow-hidden aspect-video flex items-center justify-center ring-2 transition-[box-shadow] duration-150",
+          isSpeaking ? "ring-violet-500/70" : "ring-white/5",
         ].join(" ")}
       >
         {hasVideo ? (
