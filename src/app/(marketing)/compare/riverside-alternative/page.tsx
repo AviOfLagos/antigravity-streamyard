@@ -32,15 +32,15 @@ const rows: ComparisonRow[] = [
 
 export default function RiversideAlternativePage() {
   return (
-    <div className="text-white selection:bg-indigo-500/30">
+    <div className="text-white selection:bg-brand/30">
       <section className="px-6 pt-24 pb-12 max-w-7xl mx-auto">
-        <p className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-6">Riverside Alternative</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-brand-soft mb-6">Riverside Alternative</p>
         <h1 className="font-black text-white tracking-tight leading-[0.95] mb-8"
           style={{ fontSize: "clamp(48px, 8vw, 104px)" }}>
           Riverside records podcasts.<br />
-          <span className="text-neutral-600">Zerocast goes live.</span>
+          <span className="text-ink-faint">Zerocast goes live.</span>
         </h1>
-        <p className="text-neutral-400 text-xl max-w-2xl leading-relaxed">
+        <p className="text-ink-muted text-xl max-w-2xl leading-relaxed">
           Riverside built its reputation on local 4K recording for podcasters. If you stream live to YouTube, Twitch, Kick, or TikTok — and want an AI handling chat while you focus on the conversation — Zerocast is built for that job.
         </p>
       </section>
@@ -62,7 +62,7 @@ export default function RiversideAlternativePage() {
         ].map((card) => (
           <div key={card.title} className="p-6 rounded-2xl border border-white/5 bg-white/[0.02]">
             <p className="font-bold text-white mb-3">{card.title}</p>
-            <p className="text-neutral-400 text-sm leading-relaxed">{card.body}</p>
+            <p className="text-ink-muted text-sm leading-relaxed">{card.body}</p>
           </div>
         ))}
       </section>
@@ -70,7 +70,7 @@ export default function RiversideAlternativePage() {
       <ComparisonTable competitorName="Riverside" rows={rows} />
 
       <section className="border-t border-white/5 px-6 py-24 max-w-4xl mx-auto">
-        <p className="text-xs font-bold uppercase tracking-widest text-neutral-600 mb-12">Riverside Alternative FAQ</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-ink-faint mb-12">Riverside Alternative FAQ</p>
         <div className="space-y-10">
           {[
             ["Should I use Zerocast or Riverside?", "Use Riverside if your output is an edited podcast or video and recording quality is everything. Use Zerocast if your output is a live broadcast where chat engagement matters as much as production value."],
@@ -80,7 +80,7 @@ export default function RiversideAlternativePage() {
           ].map(([q, a]) => (
             <div key={q} className="border-b border-white/5 pb-8 last:border-0">
               <h3 className="font-bold text-white text-lg mb-3">{q}</h3>
-              <p className="text-neutral-400 text-sm leading-relaxed">{a}</p>
+              <p className="text-ink-muted text-sm leading-relaxed">{a}</p>
             </div>
           ))}
         </div>
@@ -88,7 +88,7 @@ export default function RiversideAlternativePage() {
 
       <section className="px-6 py-20 max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 border-t border-white/5">
         <h2 className="font-black text-white text-4xl tracking-tight">Built for the live moment.</h2>
-        <Link href="?beta=true" scroll={false} className="shrink-0 inline-flex items-center gap-2 bg-white text-neutral-950 font-bold px-8 py-4 rounded-full text-sm hover:bg-indigo-100 transition-all">
+        <Link href="?beta=true" scroll={false} className="shrink-0 inline-flex items-center gap-2 bg-white text-ink-inverse font-bold px-8 py-4 rounded-full text-sm hover:bg-brand-on-light transition-all">
           Join the Beta <ArrowRight size={16} />
         </Link>
       </section>

@@ -34,27 +34,27 @@ export default function PrivacyPage() {
   ];
 
   return (
-    <div className="text-white selection:bg-indigo-500/30">
+    <div className="text-white selection:bg-brand/30">
 
       <section className="px-6 pt-24 pb-16 max-w-7xl mx-auto border-b border-white/5">
-        <p className="text-xs font-bold uppercase tracking-widest text-neutral-600 mb-8">Legal</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-ink-faint mb-8">Legal</p>
         <h1 className="font-black text-white tracking-tight leading-[0.95] mb-4"
           style={{ fontSize: "clamp(48px, 7vw, 96px)" }}>
           Privacy Policy
         </h1>
-        <p className="text-neutral-500 text-sm">Last updated: May 2026</p>
+        <p className="text-ink-subtle text-sm">Last updated: May 2026</p>
       </section>
 
       <section className="px-6 py-24 max-w-7xl mx-auto">
         <div className="max-w-3xl space-y-0">
           {sections.map((s, i) => (
             <div key={s.title} className="flex gap-8 py-10 border-t border-white/5">
-              <span className="text-xs font-black text-neutral-700 tabular-nums mt-1 shrink-0 w-6">
+              <span className="text-xs font-black text-ink-fainter tabular-nums mt-1 shrink-0 w-6">
                 {String(i + 1).padStart(2, "0")}
               </span>
               <div>
                 <p className="font-bold text-white text-lg mb-3">{s.title}</p>
-                <p className="text-neutral-500 text-sm leading-relaxed">{s.body}</p>
+                <p className="text-ink-subtle text-sm leading-relaxed">{s.body}</p>
               </div>
             </div>
           ))}

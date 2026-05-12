@@ -73,7 +73,7 @@ export function FaqSection() {
         strategy="afterInteractive"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <p className="text-xs font-bold uppercase tracking-widest text-neutral-600 mb-4">
+      <p className="text-xs font-bold uppercase tracking-widest text-ink-faint mb-4">
         Frequently Asked Questions
       </p>
       <h2
@@ -89,14 +89,14 @@ export function FaqSection() {
             className="group border-b border-white/5 last:border-0 pb-6"
           >
             <summary className="flex items-start justify-between gap-6 cursor-pointer list-none">
-              <h3 className="font-bold text-white text-lg leading-snug group-open:text-indigo-300 transition-colors">
+              <h3 className="font-bold text-white text-lg leading-snug group-open:text-brand-softer transition-colors">
                 {q}
               </h3>
-              <span className="shrink-0 mt-1 text-neutral-500 group-open:rotate-45 transition-transform text-xl leading-none">
+              <span className="shrink-0 mt-1 text-ink-subtle group-open:rotate-45 transition-transform text-xl leading-none">
                 +
               </span>
             </summary>
-            <p className="text-neutral-400 text-sm leading-relaxed max-w-3xl mt-4">
+            <p className="text-ink-muted text-sm leading-relaxed max-w-3xl mt-4">
               {a}
             </p>
           </details>

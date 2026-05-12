@@ -53,13 +53,13 @@ export function AnimatedChatWidget() {
   }, []);
 
   return (
-    <div className="w-full max-w-md mx-auto h-[460px] bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden flex flex-col shadow-2xl relative">
-      <div className="shrink-0 bg-[#111] border-b border-white/5 px-4 py-3 flex items-center justify-between">
+    <div className="w-full max-w-md mx-auto h-[460px] bg-surface-1 border border-white/10 rounded-2xl overflow-hidden flex flex-col shadow-2xl relative">
+      <div className="shrink-0 bg-surface-2 border-b border-white/5 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2 min-w-0">
-          <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse shrink-0" />
+          <div className="w-2 h-2 rounded-full bg-danger animate-pulse shrink-0" />
           <span className="text-xs font-bold text-white uppercase tracking-wider truncate">Live Chat</span>
         </div>
-        <span className="text-xs text-neutral-500 font-mono shrink-0">1.2k watching</span>
+        <span className="text-xs text-ink-subtle font-mono shrink-0">1.2k watching</span>
       </div>
 
       <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
@@ -68,25 +68,25 @@ export function AnimatedChatWidget() {
             <div
               key={msg.id}
               className={`text-sm animate-in fade-in slide-in-from-bottom-2 duration-300 ${
-                msg.type === "system" ? "text-center text-indigo-400 font-medium my-1" : "flex items-start gap-2 min-w-0"
+                msg.type === "system" ? "text-center text-brand-soft font-medium my-1" : "flex items-start gap-2 min-w-0"
               }`}
             >
               {msg.type !== "system" && (
-                <div className={`mt-0.5 shrink-0 w-6 h-6 rounded-md flex items-center justify-center ${msg.type === "ai" ? "bg-indigo-500/20 text-indigo-400" : "bg-white/5 text-neutral-400"}`}>
+                <div className={`mt-0.5 shrink-0 w-6 h-6 rounded-md flex items-center justify-center ${msg.type === "ai" ? "bg-brand/20 text-brand-soft" : "bg-white/5 text-ink-muted"}`}>
                   {msg.type === "ai" ? <Zap size={12} /> : <User size={12} />}
                 </div>
               )}
 
               {msg.type !== "system" ? (
                 <div className="min-w-0 flex-1 break-words">
-                  <span className={`font-bold mr-2 ${msg.type === "ai" ? "text-indigo-400" : "text-neutral-300"}`}>
+                  <span className={`font-bold mr-2 ${msg.type === "ai" ? "text-brand-soft" : "text-ink-emphasis"}`}>
                     {msg.author}
-                    {msg.type === "ai" && <span className="ml-1.5 text-[9px] uppercase tracking-widest bg-indigo-500/20 px-1 py-0.5 rounded text-indigo-300 border border-indigo-500/20">BOT</span>}
+                    {msg.type === "ai" && <span className="ml-1.5 text-[9px] uppercase tracking-widest bg-brand/20 px-1 py-0.5 rounded text-brand-softer border border-brand/20">BOT</span>}
                   </span>
-                  <span className={msg.type === "ai" ? "text-white" : "text-neutral-400"}>{msg.text}</span>
+                  <span className={msg.type === "ai" ? "text-white" : "text-ink-muted"}>{msg.text}</span>
                 </div>
               ) : (
-                <span className="w-full bg-indigo-500/10 py-1 rounded border border-indigo-500/20 block text-xs break-words">{msg.text}</span>
+                <span className="w-full bg-brand/10 py-1 rounded border border-brand/20 block text-xs break-words">{msg.text}</span>
               )}
             </div>
           ))}
@@ -94,8 +94,8 @@ export function AnimatedChatWidget() {
       </div>
 
       {/* Input placeholder */}
-      <div className="shrink-0 p-3 border-t border-white/5 bg-[#111]">
-        <div className="bg-white/5 border border-white/5 rounded-full px-4 py-2 text-xs text-neutral-600">
+      <div className="shrink-0 p-3 border-t border-white/5 bg-surface-2">
+        <div className="bg-white/5 border border-white/5 rounded-full px-4 py-2 text-xs text-ink-faint">
           Say something...
         </div>
       </div>

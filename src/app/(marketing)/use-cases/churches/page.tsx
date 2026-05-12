@@ -12,7 +12,7 @@ export default function ChurchesPage() {
   return (
     <UseCaseTemplate
       kicker="For Churches"
-      headline={<>Sunday service.<br /><span className="text-neutral-600">On every screen.</span></>}
+      headline={<>Sunday service.<br /><span className="text-ink-faint">On every screen.</span></>}
       intro="Stream worship to YouTube Live, Facebook Live, and your church website at the same time — without an AV booth or a degree in OBS. Zerocast handles the production. Your volunteers handle the message."
       painPoints={[
         { title: "AV volunteers are scarce", body: "Most churches rely on one or two volunteers who learned OBS the hard way. When they're out, the stream is at risk." },

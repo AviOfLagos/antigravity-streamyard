@@ -36,10 +36,10 @@ const posts = [
 
 export default function BlogPage() {
   return (
-    <div className="text-white selection:bg-indigo-500/30">
+    <div className="text-white selection:bg-brand/30">
 
       <section className="px-6 pt-24 pb-16 max-w-7xl mx-auto border-b border-white/5">
-        <p className="text-xs font-bold uppercase tracking-widest text-neutral-600 mb-8">Blog</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-ink-faint mb-8">Blog</p>
         <h1 className="font-black text-white tracking-tight leading-[0.95]"
           style={{ fontSize: "clamp(48px, 7vw, 96px)" }}>
           Insights &<br />updates.
@@ -55,19 +55,19 @@ export default function BlogPage() {
             className="group flex flex-col md:flex-row items-start md:items-center justify-between gap-6 py-10 border-b border-white/5 hover:border-white/10 transition-colors"
           >
             <div className="flex items-start gap-8">
-              <span className="text-xs font-black text-neutral-700 tabular-nums mt-1 shrink-0 w-6">
+              <span className="text-xs font-black text-ink-fainter tabular-nums mt-1 shrink-0 w-6">
                 {String(i + 1).padStart(2, "0")}
               </span>
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-indigo-400">{post.category}</span>
-                  <span className="text-xs text-neutral-600">{post.date} · {post.readTime} read</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-brand-soft">{post.category}</span>
+                  <span className="text-xs text-ink-faint">{post.date} · {post.readTime} read</span>
                 </div>
-                <p className="font-bold text-white text-xl group-hover:text-indigo-300 transition-colors mb-2">{post.title}</p>
-                <p className="text-neutral-500 text-sm leading-relaxed max-w-xl">{post.excerpt}</p>
+                <p className="font-bold text-white text-xl group-hover:text-brand-softer transition-colors mb-2">{post.title}</p>
+                <p className="text-ink-subtle text-sm leading-relaxed max-w-xl">{post.excerpt}</p>
               </div>
             </div>
-            <ArrowRight size={20} className="text-neutral-700 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all shrink-0" />
+            <ArrowRight size={20} className="text-ink-fainter group-hover:text-brand-soft group-hover:translate-x-1 transition-all shrink-0" />
           </Link>
         ))}
       </section>

@@ -12,7 +12,7 @@ export default function GamersPage() {
   return (
     <UseCaseTemplate
       kicker="For Gamers"
-      headline={<>Game.<br /><span className="text-neutral-600">Let the AI run chat.</span></>}
+      headline={<>Game.<br /><span className="text-ink-faint">Let the AI run chat.</span></>}
       intro="You're locked into the game. Chat is rolling. Subs are coming in. Without help, you miss 80% of it. Zerocast's AI Co-Host reads every message across Twitch, YouTube, Kick, and TikTok — and replies in your voice while you focus on not dying."
       painPoints={[
         { title: "Chat moves faster than you can read", body: "Fast scrolls drown out your top supporters. Sub events vanish. You forget to thank people." },

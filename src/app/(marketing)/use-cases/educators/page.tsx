@@ -12,7 +12,7 @@ export default function EducatorsPage() {
   return (
     <UseCaseTemplate
       kicker="For Educators"
-      headline={<>Teach live.<br /><span className="text-neutral-600">Without a producer.</span></>}
+      headline={<>Teach live.<br /><span className="text-ink-faint">Without a producer.</span></>}
       intro="Whether you're running a Friday Q&A, a paid cohort workshop, or a free YouTube tutorial — Zerocast lets you screen-share, host up to 5 students on stage, and broadcast everywhere at once. The AI Co-Host moderates chat so you can focus on teaching."
       painPoints={[
         { title: "Zoom is a black box", body: "Zoom does interviews, not broadcasts. You can't multistream to YouTube and Twitch without a clunky workaround." },

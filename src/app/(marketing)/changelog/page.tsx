@@ -22,10 +22,10 @@ interface ChangelogEntry {
 }
 
 const tagStyles: Record<Tag, string> = {
-  feat: "text-indigo-400 border-indigo-500/20 bg-indigo-500/5",
-  fix: "text-amber-400 border-amber-500/20 bg-amber-500/5",
-  improvement: "text-blue-400 border-blue-500/20 bg-blue-500/5",
-  security: "text-red-400 border-red-500/20 bg-red-500/5",
+  feat: "text-brand-soft border-brand/20 bg-brand/5",
+  fix: "text-warn-text border-warn/20 bg-warn/5",
+  improvement: "text-accent-blue border-accent-blue/20 bg-accent-blue/5",
+  security: "text-danger-text border-danger/20 bg-danger/5",
 };
 
 const entries: ChangelogEntry[] = [
@@ -148,16 +148,16 @@ const entries: ChangelogEntry[] = [
 
 export default function ChangelogPage() {
   return (
-    <div className="text-white selection:bg-indigo-500/30">
+    <div className="text-white selection:bg-brand/30">
 
       {/* Header */}
       <section className="px-6 pt-24 pb-16 max-w-7xl mx-auto border-b border-white/5">
-        <p className="text-xs font-bold uppercase tracking-widest text-neutral-600 mb-8">Changelog</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-ink-faint mb-8">Changelog</p>
         <h1 className="font-black text-white tracking-tight leading-[0.95] mb-4"
           style={{ fontSize: "clamp(48px, 7vw, 96px)" }}>
           What&apos;s new.
         </h1>
-        <p className="text-neutral-500 text-lg">Features, fixes, and improvements.</p>
+        <p className="text-ink-subtle text-lg">Features, fixes, and improvements.</p>
       </section>
 
       {/* Entries */}
@@ -168,9 +168,9 @@ export default function ChangelogPage() {
               
               <div className="flex flex-col md:flex-row gap-8 md:gap-16">
                 {/* Meta column */}
-                <div className="md:w-48 shrink-0 border-l-2 border-indigo-500/30 pl-4 py-1">
+                <div className="md:w-48 shrink-0 border-l-2 border-brand/30 pl-4 py-1">
                   <span className="block text-sm font-bold text-white mb-1">{entry.version}</span>
-                  <span className="block text-xs font-bold uppercase tracking-wider text-neutral-500">{entry.date}</span>
+                  <span className="block text-xs font-bold uppercase tracking-wider text-ink-subtle">{entry.date}</span>
                 </div>
 
                 {/* Content column */}
@@ -182,7 +182,7 @@ export default function ChangelogPage() {
                         <span className={`shrink-0 mt-0.5 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm border ${tagStyles[change.tag]}`}>
                           {change.tag}
                         </span>
-                        <p className="text-neutral-400 text-sm leading-relaxed">{change.text}</p>
+                        <p className="text-ink-muted text-sm leading-relaxed">{change.text}</p>
                       </div>
                     ))}
                   </div>
@@ -195,10 +195,10 @@ export default function ChangelogPage() {
       </section>
 
       {/* CTA */}
-      <section className="border-t border-white/5 px-6 py-20 bg-neutral-950/40">
+      <section className="border-t border-white/5 px-6 py-20 bg-surface-1/40">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
           <h2 className="font-black text-white text-3xl tracking-tight">Got a feature request?</h2>
-          <Link href="/contact" className="shrink-0 inline-flex items-center gap-2 text-neutral-400 hover:text-white transition-colors text-sm font-bold">
+          <Link href="/contact" className="shrink-0 inline-flex items-center gap-2 text-ink-muted hover:text-white transition-colors text-sm font-bold">
             Let us know <ArrowRight size={16} />
           </Link>
         </div>

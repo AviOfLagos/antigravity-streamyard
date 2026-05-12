@@ -53,7 +53,7 @@ const columns = [
 
 export default function Footer() {
   return (
-    <footer className="bg-[#080808] border-t border-white/5 pt-20 pb-10 px-6 overflow-hidden relative z-10">
+    <footer className="bg-surface border-t border-white/5 pt-20 pb-10 px-6 overflow-hidden relative z-10">
       <div className="max-w-7xl mx-auto">
 
         {/* Marquee wordmark — infinite right→left scroll */}
@@ -72,7 +72,7 @@ export default function Footer() {
                   >
                     {word}
                     <span
-                      className="text-indigo-500/30"
+                      className="text-brand/30"
                       style={{ fontSize: "clamp(48px, 8vw, 120px)" }}
                     >
                       •
@@ -88,14 +88,14 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row items-start justify-between gap-10 mb-16 border-t border-white/5 pt-10">
           <div className="max-w-sm">
             <p className="text-white font-semibold text-lg mb-2">The AI-powered streaming studio.</p>
-            <p className="text-neutral-500 text-sm leading-relaxed">
+            <p className="text-ink-subtle text-sm leading-relaxed">
               Stream to every platform, while your AI Co-Host manages chat, production, and engagement in your voice.
             </p>
           </div>
           <Link
             href="?beta=true"
             scroll={false}
-            className="shrink-0 inline-flex items-center gap-2 bg-white text-neutral-950 font-bold px-6 py-3 rounded-full text-sm hover:bg-indigo-100 transition-colors"
+            className="shrink-0 inline-flex items-center gap-2 bg-white text-ink-inverse font-bold px-6 py-3 rounded-full text-sm hover:bg-brand-on-light transition-colors"
           >
             Request Beta Access →
           </Link>
@@ -105,11 +105,11 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-10 mb-16 border-t border-white/5 pt-10">
           {columns.map((col) => (
             <div key={col.heading}>
-              <p className="text-xs font-bold uppercase tracking-widest text-neutral-600 mb-5">{col.heading}</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-ink-faint mb-5">{col.heading}</p>
               <ul className="space-y-3">
                 {col.links.map((link) => (
                   <li key={link.href}>
-                    <Link href={link.href} className="text-sm text-neutral-500 hover:text-white transition-colors">
+                    <Link href={link.href} className="text-sm text-ink-subtle hover:text-white transition-colors">
                       {link.label}
                     </Link>
                   </li>
@@ -120,7 +120,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-white/5 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-600">
+        <div className="border-t border-white/5 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-ink-faint">
           <div className="flex items-center gap-2">
             <span>© 2026 Zerocast.</span>
             <span>A product by <a href="https://nexprove.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors underline underline-offset-2">NexProve</a>.</span>

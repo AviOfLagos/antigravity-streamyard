@@ -21,9 +21,9 @@ const rows = [
 
 function Cell({ val, highlight }: { val: boolean; highlight?: boolean }) {
   return (
-    <td className={`px-4 py-5 text-center border-l border-white/5 ${highlight ? "bg-indigo-500/5" : ""}`}>
+    <td className={`px-4 py-5 text-center border-l border-white/5 ${highlight ? "bg-brand/5" : ""}`}>
       {val
-        ? <Check size={18} className={highlight ? "text-indigo-400 mx-auto" : "text-neutral-500 mx-auto"} />
+        ? <Check size={18} className={highlight ? "text-brand-soft mx-auto" : "text-ink-subtle mx-auto"} />
         : <Minus size={18} className="text-white/10 mx-auto" />}
     </td>
   );
@@ -31,16 +31,16 @@ function Cell({ val, highlight }: { val: boolean; highlight?: boolean }) {
 
 export default function ComparePage() {
   return (
-    <div className="text-white selection:bg-indigo-500/30">
+    <div className="text-white selection:bg-brand/30">
 
       {/* Hero */}
       <section className="px-6 pt-24 pb-20 max-w-7xl mx-auto">
-        <p className="text-xs font-bold uppercase tracking-widest text-neutral-600 mb-8">Compare</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-ink-faint mb-8">Compare</p>
         <h1 className="font-black text-white tracking-tight leading-[0.9] mb-10"
           style={{ fontSize: "clamp(48px, 8vw, 104px)" }}>
           The smart<br />alternative.
         </h1>
-        <p className="text-neutral-400 text-xl max-w-xl leading-relaxed">
+        <p className="text-ink-muted text-xl max-w-xl leading-relaxed">
           StreamYard is great for starting out. Restream is great for reach. Zerocast is for creators who want AI to handle the production so they can focus on content.
         </p>
       </section>
@@ -50,17 +50,17 @@ export default function ComparePage() {
         <table className="w-full min-w-[600px] border-collapse">
           <thead>
             <tr className="border-b border-white/5">
-              <th className="text-left pb-6 text-xs font-bold uppercase tracking-widest text-neutral-600 w-48">Feature</th>
-              <th className="pb-6 text-center text-sm font-bold text-neutral-500">StreamYard</th>
-              <th className="pb-6 text-center text-sm font-bold text-neutral-500">Restream</th>
-              <th className="pb-6 text-center text-sm font-bold text-neutral-500">MelonApp</th>
-              <th className="pb-6 text-center text-sm font-bold text-indigo-400 bg-indigo-500/5 rounded-t-xl px-4">Zerocast ✦</th>
+              <th className="text-left pb-6 text-xs font-bold uppercase tracking-widest text-ink-faint w-48">Feature</th>
+              <th className="pb-6 text-center text-sm font-bold text-ink-subtle">StreamYard</th>
+              <th className="pb-6 text-center text-sm font-bold text-ink-subtle">Restream</th>
+              <th className="pb-6 text-center text-sm font-bold text-ink-subtle">MelonApp</th>
+              <th className="pb-6 text-center text-sm font-bold text-brand-soft bg-brand/5 rounded-t-xl px-4">Zerocast ✦</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row) => (
               <tr key={row.feature} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
-                <td className="py-5 text-sm font-medium text-neutral-300 pr-4">{row.feature}</td>
+                <td className="py-5 text-sm font-medium text-ink-emphasis pr-4">{row.feature}</td>
                 <Cell val={row.sy} />
                 <Cell val={row.rs} />
                 <Cell val={row.ma} />
@@ -69,11 +69,11 @@ export default function ComparePage() {
             ))}
           </tbody>
         </table>
-        <p className="text-xs text-neutral-700 mt-6">✦ AI features exclusive to Zerocast. Platform data represents publicly available information as of 2026.</p>
+        <p className="text-xs text-ink-fainter mt-6">✦ AI features exclusive to Zerocast. Platform data represents publicly available information as of 2026.</p>
       </section>
 
       {/* Positioning statement */}
-      <section className="border-t border-white/5 px-6 py-24 bg-neutral-950/40">
+      <section className="border-t border-white/5 px-6 py-24 bg-surface-1/40">
         <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-0">
           {[
             ["Choose StreamYard if…", "You value ease-of-use above all and are just starting out with browser-based streaming for interviews or webinars."],
@@ -81,8 +81,8 @@ export default function ComparePage() {
             ["Choose Zerocast if…", "You want an AI production team that learns your style, automates your chat, and scales your engagement without scaling your workload."],
           ].map(([heading, desc], i) => (
             <div key={heading} className={`py-10 ${i > 0 ? "border-l border-white/5 pl-10" : "pr-10"}`}>
-              <p className={`font-bold text-lg mb-3 ${i === 2 ? "text-indigo-300" : "text-neutral-400"}`}>{heading}</p>
-              <p className="text-neutral-500 text-sm leading-relaxed">{desc}</p>
+              <p className={`font-bold text-lg mb-3 ${i === 2 ? "text-brand-softer" : "text-ink-muted"}`}>{heading}</p>
+              <p className="text-ink-subtle text-sm leading-relaxed">{desc}</p>
             </div>
           ))}
         </div>
@@ -91,7 +91,7 @@ export default function ComparePage() {
       {/* CTA */}
       <section className="px-6 py-20 max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
         <h2 className="font-black text-white text-4xl tracking-tight">Ready to make the switch?</h2>
-        <Link href="?beta=true" scroll={false} className="shrink-0 inline-flex items-center gap-2 bg-white text-neutral-950 font-bold px-8 py-4 rounded-full text-sm hover:bg-indigo-100 transition-all">
+        <Link href="?beta=true" scroll={false} className="shrink-0 inline-flex items-center gap-2 bg-white text-ink-inverse font-bold px-8 py-4 rounded-full text-sm hover:bg-brand-on-light transition-all">
           Join the Beta <ArrowRight size={16} />
         </Link>
       </section>

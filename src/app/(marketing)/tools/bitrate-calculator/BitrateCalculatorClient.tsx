@@ -47,11 +47,11 @@ export function BitrateCalculatorClient() {
     <section className="px-6 pb-12 max-w-4xl mx-auto">
       <div className="grid md:grid-cols-3 gap-4 mb-10">
         <div>
-          <label className="block text-xs font-bold uppercase tracking-widest text-neutral-500 mb-3">Resolution</label>
+          <label className="block text-xs font-bold uppercase tracking-widest text-ink-subtle mb-3">Resolution</label>
           <select
             value={resolution}
             onChange={(e) => setResolution(e.target.value as ResKey)}
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-indigo-500/60"
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand/60"
           >
             {(Object.keys(RESOLUTIONS) as ResKey[]).map((k) => (
               <option key={k} value={k}>{k} ({RESOLUTIONS[k].w}×{RESOLUTIONS[k].h})</option>
@@ -60,11 +60,11 @@ export function BitrateCalculatorClient() {
         </div>
 
         <div>
-          <label className="block text-xs font-bold uppercase tracking-widest text-neutral-500 mb-3">Framerate</label>
+          <label className="block text-xs font-bold uppercase tracking-widest text-ink-subtle mb-3">Framerate</label>
           <select
             value={framerate}
             onChange={(e) => setFramerate(Number(e.target.value))}
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-indigo-500/60"
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand/60"
           >
             {FRAMERATES.map((f) => (
               <option key={f} value={f}>{f} fps</option>
@@ -73,11 +73,11 @@ export function BitrateCalculatorClient() {
         </div>
 
         <div>
-          <label className="block text-xs font-bold uppercase tracking-widest text-neutral-500 mb-3">Destination</label>
+          <label className="block text-xs font-bold uppercase tracking-widest text-ink-subtle mb-3">Destination</label>
           <select
             value={platform}
             onChange={(e) => setPlatform(e.target.value as PlatformKey)}
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-indigo-500/60"
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand/60"
           >
             {(Object.keys(PLATFORM_LIMITS) as PlatformKey[]).map((k) => (
               <option key={k} value={k}>{PLATFORM_LIMITS[k].name}</option>
@@ -86,37 +86,37 @@ export function BitrateCalculatorClient() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-indigo-500/40 bg-indigo-500/5 p-8">
-        <p className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-4">Recommended Setup</p>
+      <div className="rounded-2xl border border-brand/40 bg-brand/5 p-8">
+        <p className="text-xs font-bold uppercase tracking-widest text-brand-soft mb-4">Recommended Setup</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div>
-            <p className="text-xs text-neutral-500 mb-1">Video bitrate</p>
-            <p className="font-black text-white text-3xl">{videoBitrate.toLocaleString()}<span className="text-neutral-600 text-base font-bold ml-1">kbps</span></p>
+            <p className="text-xs text-ink-subtle mb-1">Video bitrate</p>
+            <p className="font-black text-white text-3xl">{videoBitrate.toLocaleString()}<span className="text-ink-faint text-base font-bold ml-1">kbps</span></p>
           </div>
           <div>
-            <p className="text-xs text-neutral-500 mb-1">Audio bitrate</p>
-            <p className="font-black text-white text-3xl">{audioBitrate}<span className="text-neutral-600 text-base font-bold ml-1">kbps</span></p>
+            <p className="text-xs text-ink-subtle mb-1">Audio bitrate</p>
+            <p className="font-black text-white text-3xl">{audioBitrate}<span className="text-ink-faint text-base font-bold ml-1">kbps</span></p>
           </div>
           <div>
-            <p className="text-xs text-neutral-500 mb-1">Upload required</p>
-            <p className="font-black text-white text-3xl">{(totalUpload / 1000).toFixed(1)}<span className="text-neutral-600 text-base font-bold ml-1">Mbps</span></p>
+            <p className="text-xs text-ink-subtle mb-1">Upload required</p>
+            <p className="font-black text-white text-3xl">{(totalUpload / 1000).toFixed(1)}<span className="text-ink-faint text-base font-bold ml-1">Mbps</span></p>
           </div>
           <div>
-            <p className="text-xs text-neutral-500 mb-1">Platform cap</p>
-            <p className={`font-black text-3xl ${overLimit ? "text-red-400" : "text-white"}`}>
-              {(limit.max / 1000).toFixed(1)}<span className="text-neutral-600 text-base font-bold ml-1">Mbps</span>
+            <p className="text-xs text-ink-subtle mb-1">Platform cap</p>
+            <p className={`font-black text-3xl ${overLimit ? "text-danger-text" : "text-white"}`}>
+              {(limit.max / 1000).toFixed(1)}<span className="text-ink-faint text-base font-bold ml-1">Mbps</span>
             </p>
           </div>
         </div>
 
         {overLimit && (
-          <p className="mt-6 text-sm text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3">
+          <p className="mt-6 text-sm text-danger-soft bg-danger/10 border border-danger/20 rounded-lg px-4 py-3">
             Warning: {videoBitrate.toLocaleString()} kbps exceeds {limit.name}&apos;s {(limit.max / 1000).toFixed(1)} Mbps cap. The platform will transcode or drop frames. Try lowering resolution or framerate.
           </p>
         )}
 
-        <p className="mt-6 text-xs text-neutral-500">
-          {limit.name} recommends: <span className="text-neutral-300">{limit.recommended}</span>
+        <p className="mt-6 text-xs text-ink-subtle">
+          {limit.name} recommends: <span className="text-ink-emphasis">{limit.recommended}</span>
         </p>
       </div>
     </section>

@@ -12,7 +12,7 @@ export default function PodcastersPage() {
   return (
     <UseCaseTemplate
       kicker="For Podcasters"
-      headline={<>One session.<br /><span className="text-neutral-600">Recorded and live everywhere.</span></>}
+      headline={<>One session.<br /><span className="text-ink-faint">Recorded and live everywhere.</span></>}
       intro="Stop choosing between a clean podcast recording and a live stream. Zerocast captures broadcast-quality video to the cloud while simultaneously fanning your show out to YouTube Live, Twitch, Kick, and TikTok — with an AI Co-Host fielding chat in your voice."
       painPoints={[
         { title: "Recording vs streaming", body: "Riverside-class recording quality is great — but it doesn't reach live audiences. Streaming tools record poorly. You're forced to pick." },

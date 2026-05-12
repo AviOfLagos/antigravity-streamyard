@@ -27,27 +27,27 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const title = titleFromSlug(slug);
 
   return (
-    <div className="text-white selection:bg-indigo-500/30">
+    <div className="text-white selection:bg-brand/30">
       <section className="px-6 pt-24 pb-16 max-w-3xl mx-auto">
-        <Link href="/blog" className="inline-flex items-center gap-2 text-neutral-500 hover:text-white transition-colors mb-12 text-sm font-bold">
+        <Link href="/blog" className="inline-flex items-center gap-2 text-ink-subtle hover:text-white transition-colors mb-12 text-sm font-bold">
           <ArrowLeft size={16} /> Back to Blog
         </Link>
         
         <div className="mb-12">
-          <p className="text-indigo-400 font-bold tracking-widest uppercase text-xs mb-4">Product Updates • May 10, 2026</p>
+          <p className="text-brand-soft font-bold tracking-widest uppercase text-xs mb-4">Product Updates • May 10, 2026</p>
           <h1 className="font-black text-white tracking-tight leading-[1] mb-8" style={{ fontSize: "clamp(40px, 6vw, 64px)" }}>
             {title}
           </h1>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-indigo-500/20 border border-indigo-500/30" />
+            <div className="w-10 h-10 rounded-full bg-brand/20 border border-brand/30" />
             <div>
               <p className="font-bold text-sm">Avi</p>
-              <p className="text-xs text-neutral-500">Founder, NexProve</p>
+              <p className="text-xs text-ink-subtle">Founder, NexProve</p>
             </div>
           </div>
         </div>
 
-        <div className="prose prose-invert prose-lg max-w-none prose-headings:font-black prose-headings:tracking-tight prose-a:text-indigo-400 prose-a:no-underline hover:prose-a:underline">
+        <div className="prose prose-invert prose-lg max-w-none prose-headings:font-black prose-headings:tracking-tight prose-a:text-brand-soft prose-a:no-underline hover:prose-a:underline">
           <p>
             Welcome to the detailed breakdown of our latest features. At Zerocast, we are constantly pushing the boundaries of what is possible with browser-based live streaming and AI automation.
           </p>

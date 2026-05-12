@@ -115,7 +115,7 @@ const productJsonLd = {
 
 export default function PricingPage() {
   return (
-    <div className="text-white selection:bg-indigo-500/30">
+    <div className="text-white selection:bg-brand/30">
       <Script
         id="pricing-jsonld"
         type="application/ld+json"
@@ -123,15 +123,15 @@ export default function PricingPage() {
       />
 
       <section className="px-6 pt-24 pb-12 max-w-7xl mx-auto">
-        <p className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-6">Pricing</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-brand-soft mb-6">Pricing</p>
         <h1
           className="font-black text-white tracking-tight leading-[0.95] mb-6"
           style={{ fontSize: "clamp(48px, 8vw, 104px)" }}
         >
           Free while we&apos;re in beta.<br />
-          <span className="text-neutral-600">Fair when we&apos;re not.</span>
+          <span className="text-ink-faint">Fair when we&apos;re not.</span>
         </h1>
-        <p className="text-neutral-400 text-lg max-w-2xl leading-relaxed">
+        <p className="text-ink-muted text-lg max-w-2xl leading-relaxed">
           Beta participants get full Zerocast — every feature, every platform, every AI capability — at no cost. Public pricing launches later in 2026; lock in early-adopter rates by joining now.
         </p>
       </section>
@@ -141,21 +141,21 @@ export default function PricingPage() {
           {tiers.map((tier) => (
             <div
               key={tier.name}
-              className={`flex flex-col p-8 rounded-2xl border ${tier.highlight ? "border-indigo-500/40 bg-indigo-500/5" : "border-white/5 bg-white/[0.02]"}`}
+              className={`flex flex-col p-8 rounded-2xl border ${tier.highlight ? "border-brand/40 bg-brand/5" : "border-white/5 bg-white/[0.02]"}`}
             >
               <div className="flex items-center justify-between mb-4">
                 <p className="font-bold text-white text-lg">{tier.name}</p>
-                <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full ${tier.highlight ? "bg-indigo-500/20 text-indigo-300" : "bg-white/5 text-neutral-500"}`}>
+                <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full ${tier.highlight ? "bg-brand/20 text-brand-softer" : "bg-white/5 text-ink-subtle"}`}>
                   {tier.badge}
                 </span>
               </div>
               <p className="font-black text-white text-5xl tracking-tight mb-1">{tier.price}</p>
-              <p className="text-xs text-neutral-500 mb-6">{tier.cadence}</p>
-              <p className="text-sm text-neutral-400 mb-6 leading-relaxed">{tier.description}</p>
-              <ul className="space-y-3 mb-8 text-sm text-neutral-300 flex-1">
+              <p className="text-xs text-ink-subtle mb-6">{tier.cadence}</p>
+              <p className="text-sm text-ink-muted mb-6 leading-relaxed">{tier.description}</p>
+              <ul className="space-y-3 mb-8 text-sm text-ink-emphasis flex-1">
                 {tier.features.map((f) => (
                   <li key={f} className="flex items-start gap-2">
-                    <Check size={16} className="text-indigo-400 mt-0.5 shrink-0" />
+                    <Check size={16} className="text-brand-soft mt-0.5 shrink-0" />
                     <span>{f}</span>
                   </li>
                 ))}
@@ -163,7 +163,7 @@ export default function PricingPage() {
               <Link
                 href={tier.cta.href}
                 scroll={tier.cta.href.startsWith("?") ? false : undefined}
-                className={`inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-bold transition-all ${tier.highlight ? "bg-white text-neutral-950 hover:bg-indigo-100" : "border border-white/10 text-white hover:bg-white/5"}`}
+                className={`inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-bold transition-all ${tier.highlight ? "bg-white text-ink-inverse hover:bg-brand-on-light" : "border border-white/10 text-white hover:bg-white/5"}`}
               >
                 {tier.cta.label} <ArrowRight size={14} />
               </Link>
@@ -173,7 +173,7 @@ export default function PricingPage() {
       </section>
 
       <section className="border-t border-white/5 px-6 py-24 max-w-4xl mx-auto">
-        <p className="text-xs font-bold uppercase tracking-widest text-neutral-600 mb-12">Pricing FAQ</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-ink-faint mb-12">Pricing FAQ</p>
         <div className="space-y-10">
           {[
             ["When does public pricing launch?", "Public pricing rolls out alongside Zerocast 1.0 in late 2026. Beta participants will be grandfathered into the lowest paid tier for 12 months as a thank-you."],
@@ -183,7 +183,7 @@ export default function PricingPage() {
           ].map(([q, a]) => (
             <div key={q} className="border-b border-white/5 pb-8 last:border-0">
               <h3 className="font-bold text-white text-lg mb-3">{q}</h3>
-              <p className="text-neutral-400 text-sm leading-relaxed">{a}</p>
+              <p className="text-ink-muted text-sm leading-relaxed">{a}</p>
             </div>
           ))}
         </div>

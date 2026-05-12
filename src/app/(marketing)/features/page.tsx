@@ -123,13 +123,13 @@ export default function FeaturesPage() {
       {/* Header */}
       <header className="pt-20 pb-12 px-6">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-violet-500/10 text-violet-400 border border-violet-500/20 rounded-full px-4 py-1.5 text-sm font-medium mb-6">
+          <div className="inline-flex items-center gap-2 bg-accent-violet/10 text-accent-violet-text border border-accent-violet/20 rounded-full px-4 py-1.5 text-sm font-medium mb-6">
             {liveCount} live features + {comingSoonCount} coming soon
           </div>
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white mb-4">
-            Everything you need to <span className="text-violet-400">go live</span>
+            Everything you need to <span className="text-accent-violet-text">go live</span>
           </h1>
-          <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+          <p className="text-lg text-ink-muted max-w-2xl mx-auto">
             A complete browser-based live streaming studio. No downloads, no plugins — just open a tab and start broadcasting to every platform.
           </p>
         </div>
@@ -142,14 +142,14 @@ export default function FeaturesPage() {
             <section key={category.title}>
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-white mb-1">{category.title}</h2>
-                <p className="text-gray-500 text-sm">{category.description}</p>
+                <p className="text-ink-subtle text-sm">{category.description}</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {category.features.map((feature) => (
                   <div
                     key={feature.name}
                     className={[
-                      "bg-[#111111] border rounded-xl p-5 transition-colors",
+                      "bg-surface-2 border rounded-xl p-5 transition-colors",
                       feature.status === "live"
                         ? "border-white/6 hover:border-white/12"
                         : "border-dashed border-white/8 opacity-60",
@@ -158,7 +158,7 @@ export default function FeaturesPage() {
                     <div className="flex items-start gap-3">
                       <div className={[
                         "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
-                        feature.status === "live" ? "bg-violet-500/10 text-violet-400" : "bg-gray-500/10 text-gray-500",
+                        feature.status === "live" ? "bg-accent-violet/10 text-accent-violet-text" : "bg-ink-subtle/10 text-ink-subtle",
                       ].join(" ")}>
                         {feature.icon}
                       </div>
@@ -166,12 +166,12 @@ export default function FeaturesPage() {
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="text-white font-medium text-sm">{feature.name}</h3>
                           {feature.status === "coming-soon" && (
-                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 whitespace-nowrap">
+                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-warn/10 text-warn-text border border-warn/20 whitespace-nowrap">
                               Coming Soon
                             </span>
                           )}
                         </div>
-                        <p className="text-gray-500 text-xs leading-relaxed">{feature.detail}</p>
+                        <p className="text-ink-subtle text-xs leading-relaxed">{feature.detail}</p>
                       </div>
                     </div>
                   </div>
@@ -186,7 +186,7 @@ export default function FeaturesPage() {
       <section className="py-16 px-6 border-t border-white/5">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
           <h2 className="font-black text-white text-4xl tracking-tight">Ready to try it?</h2>
-          <Link href="?beta=true" scroll={false} className="inline-flex items-center gap-2 bg-white text-neutral-950 font-bold px-8 py-4 rounded-full text-sm hover:bg-indigo-100 transition-all">
+          <Link href="?beta=true" scroll={false} className="inline-flex items-center gap-2 bg-white text-ink-inverse font-bold px-8 py-4 rounded-full text-sm hover:bg-brand-on-light transition-all">
             Join the Beta <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
