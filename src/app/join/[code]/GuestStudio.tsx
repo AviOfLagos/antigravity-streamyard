@@ -234,7 +234,8 @@ function GuestConnectionMonitor({ wasKicked }: { wasKicked: boolean }) {
 // ─── Network quality indicator ──────────────────────────────────────────────
 
 function GuestNetworkQualityIndicator() {
-  const { quality } = useConnectionQualityIndicator()
+  const { localParticipant } = useLocalParticipant()
+  const { quality } = useConnectionQualityIndicator({ participant: localParticipant })
 
   let icon: React.ReactNode
   let label: string
@@ -423,7 +424,7 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
   const [backstageOpen, setBackstageOpen] = useState(false)
 
   // Layout state mirrored from the host via LiveKit data messages
-  const [activeLayout, setActiveLayout] = useState<StudioLayout>("grid")
+  const [activeLayout, setActiveLayout] = useState<StudioLayout>("four-grid")
   const [pinnedParticipantId, setPinnedParticipantId] = useState<string | null>(null)
   const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([])
   const [stageBackground, setStageBackground] = useState("#0d0d0d")
@@ -501,7 +502,7 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
         }
 
         if (msg.type === "LAYOUT_CHANGE") {
-          const validLayouts: StudioLayout[] = ["grid", "spotlight", "screen-grid", "screen-only", "single"]
+          const validLayouts: StudioLayout[] = ["four-grid", "spotlight-side-strip", "screen-with-strip", "screen-presenter-pip", "solo"]
           const layout = msg.layout as StudioLayout
           if (validLayouts.includes(layout)) {
             setActiveLayout(layout)
@@ -576,7 +577,7 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
   // ── Layout rendering — mirrors VideoGrid.tsx ───────────────────────────────
   let stageContent: React.ReactNode
 
-  if (activeLayout === "spotlight" && stageTracks.length > 0) {
+  if (activeLayout === "spotlight-side-strip" && stageTracks.length > 0) {
     stageContent = (
       <div className="flex gap-2 h-full">
         <div className="flex-3 min-w-0">
@@ -589,7 +590,7 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
         )}
       </div>
     )
-  } else if (activeLayout === "screen-grid") {
+  } else if (activeLayout === "screen-with-strip") {
     const hasScreenshare = screenshareTracks.length > 0
     stageContent = (
       <div className="flex flex-col gap-2 h-full">
@@ -611,7 +612,7 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
         )}
       </div>
     )
-  } else if (activeLayout === "screen-only") {
+  } else if (activeLayout === "screen-presenter-pip") {
     stageContent =
       screenshareTracks.length > 0 ? (
         <div className="flex gap-2 h-full">
@@ -622,7 +623,7 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
           <p className="text-gray-600 text-sm">No screenshare active</p>
         </div>
       )
-  } else if (activeLayout === "single") {
+  } else if (activeLayout === "solo") {
     stageContent = primaryTrack ? (
       renderTile(primaryTrack)
     ) : (
@@ -631,7 +632,7 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
       </div>
     )
   } else {
-    // "grid" — default equal grid
+    // "four-grid" — default equal grid
     stageContent =
       stageTracks.length > 0 ? (
         <div className={`grid ${gridCols(stageTracks.length)} gap-2 h-full content-center`}>

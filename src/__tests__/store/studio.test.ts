@@ -5,7 +5,7 @@ describe("StudioStore", () => {
   beforeEach(() => {
     useStudioStore.setState({
       onScreenParticipantIds: [],
-      activeLayout: "grid",
+      activeLayout: "four-grid",
       pinnedParticipantId: null,
       pendingGuests: [],
       isLive: false,
@@ -70,7 +70,7 @@ describe("StudioStore", () => {
   // ── Layout ──────────────────────────────────────────────────────────────
 
   describe("setLayout", () => {
-    it.each(["grid", "spotlight", "screen-grid", "screen-only", "single"] as const)(
+    it.each(["four-grid", "spotlight-side-strip", "screen-with-strip", "screen-presenter-pip", "solo"] as const)(
       "sets layout to %s",
       (layout) => {
         useStudioStore.getState().setLayout(layout)
@@ -173,20 +173,20 @@ describe("StudioStore", () => {
   describe("hydrateFromSaved", () => {
     it("hydrates partial state without overwriting unset fields", () => {
       useStudioStore.getState().bringOnStage("p1")
-      useStudioStore.getState().hydrateFromSaved({ activeLayout: "spotlight" })
+      useStudioStore.getState().hydrateFromSaved({ activeLayout: "spotlight-side-strip" })
       const state = useStudioStore.getState()
-      expect(state.activeLayout).toBe("spotlight")
+      expect(state.activeLayout).toBe("spotlight-side-strip")
       expect(state.onScreenParticipantIds).toEqual(["p1"]) // preserved
     })
 
     it("hydrates all fields", () => {
       useStudioStore.getState().hydrateFromSaved({
-        activeLayout: "single",
+        activeLayout: "solo",
         pinnedParticipantId: "p5",
         onScreenParticipantIds: ["p5", "p6"],
       })
       const state = useStudioStore.getState()
-      expect(state.activeLayout).toBe("single")
+      expect(state.activeLayout).toBe("solo")
       expect(state.pinnedParticipantId).toBe("p5")
       expect(state.onScreenParticipantIds).toEqual(["p5", "p6"])
     })

@@ -83,7 +83,7 @@ export default function ControlBar({ roomCode }: ControlBarProps) {
           setRecordingState(false, null, null)
         } else {
           const data = await res.json().catch(() => ({}))
-          console.error("[ControlBar] Stop recording failed:", data)
+          console.error(`[ControlBar] Stop recording failed: ${res.status}`, data)
         }
       } else {
         const res = await fetch(`/api/rooms/${roomCode}/record`, { method: "POST" })
@@ -92,7 +92,7 @@ export default function ControlBar({ roomCode }: ControlBarProps) {
           setRecordingState(true, data.egressId, new Date())
         } else {
           const data = await res.json().catch(() => ({}))
-          console.error("[ControlBar] Start recording failed:", data)
+          console.error(`[ControlBar] Start recording failed: ${res.status}`, data)
         }
       }
     } finally {

@@ -1,11 +1,12 @@
 import { create } from "zustand"
+import type { LayoutPresetId } from "@/lib/layout/types"
 
 interface PendingGuest {
   guestId: string
   name: string
 }
 
-export type StudioLayout = "grid" | "spotlight" | "screen-grid" | "screen-only" | "single"
+export type StudioLayout = LayoutPresetId
 export type ChatOverlayPosition = "bottom-left" | "bottom-right" | "top-left" | "top-right"
 
 export interface TextOverlay {
@@ -92,7 +93,16 @@ interface StudioStore {
     activeLayout?: StudioLayout
     pinnedParticipantId?: string | null
     onScreenParticipantIds?: string[]
+    tileOrder?: string[]
   }) => void
+
+  /**
+   * Drag-reorder result: explicit participant identity order. Empty array =
+   * use natural connect order. Identities not in this array fall to the tail.
+   */
+  tileOrder: string[]
+  setTileOrder: (order: string[]) => void
+  moveTile: (identity: string, toIndex: number) => void
 }
 
 let overlayIdCounter = 0
@@ -102,9 +112,10 @@ function newOverlayId() {
 
 export const useStudioStore = create<StudioStore>((set) => ({
   onScreenParticipantIds: [],
-  activeLayout: "grid",
+  activeLayout: "four-grid",
   pinnedParticipantId: null,
   pendingGuests: [],
+  tileOrder: [],
 
   // Text overlays
   textOverlays: [],
@@ -151,7 +162,18 @@ export const useStudioStore = create<StudioStore>((set) => ({
       onScreenParticipantIds: state.onScreenParticipantIds.filter((p) => p !== id),
       pinnedParticipantId:
         state.pinnedParticipantId === id ? null : state.pinnedParticipantId,
+      tileOrder: state.tileOrder.filter((p) => p !== id),
     })),
+
+  setTileOrder: (order) => set({ tileOrder: order }),
+
+  moveTile: (identity, toIndex) =>
+    set((state) => {
+      const without = state.tileOrder.filter((id) => id !== identity)
+      const clamped = Math.max(0, Math.min(toIndex, without.length))
+      const next = [...without.slice(0, clamped), identity, ...without.slice(clamped)]
+      return { tileOrder: next }
+    }),
 
   setLayout: (layout) => set({ activeLayout: layout }),
 
@@ -236,5 +258,6 @@ export const useStudioStore = create<StudioStore>((set) => ({
       activeLayout: saved.activeLayout ?? state.activeLayout,
       pinnedParticipantId: saved.pinnedParticipantId ?? state.pinnedParticipantId,
       onScreenParticipantIds: saved.onScreenParticipantIds ?? state.onScreenParticipantIds,
+      tileOrder: saved.tileOrder ?? state.tileOrder,
     })),
 }))

@@ -16,12 +16,12 @@
  *
  * Transition rules (Option A — no mouse-activity tracking)
  * ─────────────────────────────────────────────────────────
- * Any          → SCREEN_SHARE      When a ScreenShare track appears     → layout "screen-grid"
- * SCREEN_SHARE → SINGLE_SPEAKER    Screen share disappears + 1 speaker  → layout "spotlight", pin speaker
- * SCREEN_SHARE → MULTI_SPEAKER     Screen share disappears + 2+ speakers→ layout "grid"
+ * Any          → SCREEN_SHARE      When a ScreenShare track appears     → layout "screen-with-strip"
+ * SCREEN_SHARE → SINGLE_SPEAKER    Screen share disappears + 1 speaker  → layout "spotlight-side-strip", pin speaker
+ * SCREEN_SHARE → MULTI_SPEAKER     Screen share disappears + 2+ speakers→ layout "four-grid"
  * SCREEN_SHARE → IDLE              Screen share disappears + 0 speakers  → keep current layout
- * Any          → SINGLE_SPEAKER    1 speaker for > 2 s (no screenshare) → layout "spotlight", pin speaker
- * Any          → MULTI_SPEAKER     2+ speakers (no screenshare)          → layout "grid"
+ * Any          → SINGLE_SPEAKER    1 speaker for > 2 s (no screenshare) → layout "spotlight-side-strip", pin speaker
+ * Any          → MULTI_SPEAKER     2+ speakers (no screenshare)          → layout "four-grid"
  * SINGLE_SPEAKER → IDLE            Speaker stops for > 5 s               → keep current layout
  *
  * Guards
@@ -144,7 +144,7 @@ export default function AutoLayoutManager() {
         clearSingleSpeakerTimer()
         clearSpeakerStopTimer()
         autoStateRef.current = "SCREEN_SHARE"
-        applyLayout("screen-grid", null)
+        applyLayout("screen-with-strip", null)
       }
     } else {
       // Screen share ended — fall back based on current speakers
@@ -152,10 +152,10 @@ export default function AutoLayoutManager() {
         const speakers = Array.from(activeSpeakersRef.current.keys())
         if (speakers.length === 1) {
           autoStateRef.current = "SINGLE_SPEAKER"
-          applyLayout("spotlight", speakers[0])
+          applyLayout("spotlight-side-strip", speakers[0])
         } else if (speakers.length > 1) {
           autoStateRef.current = "MULTI_SPEAKER"
-          applyLayout("grid", null)
+          applyLayout("four-grid", null)
         } else {
           autoStateRef.current = "IDLE"
           // Keep current layout — don't switch when nobody is speaking
@@ -236,7 +236,7 @@ export default function AutoLayoutManager() {
       clearSpeakerStopTimer()
       if (autoStateRef.current !== "MULTI_SPEAKER") {
         autoStateRef.current = "MULTI_SPEAKER"
-        applyLayout("grid", null)
+        applyLayout("four-grid", null)
       }
       return
     }
@@ -248,7 +248,7 @@ export default function AutoLayoutManager() {
       if (autoStateRef.current === "SINGLE_SPEAKER") {
         // Already in single-speaker — ensure pinned is correct (speaker may have changed)
         // Only re-pin if it's a different person, but still respect the flicker guard
-        applyLayout("spotlight", identity)
+        applyLayout("spotlight-side-strip", identity)
         return
       }
 
@@ -260,7 +260,7 @@ export default function AutoLayoutManager() {
           const currentSpeakers = Array.from(activeSpeakersRef.current.keys())
           if (currentSpeakers.length === 1) {
             autoStateRef.current = "SINGLE_SPEAKER"
-            applyLayout("spotlight", currentSpeakers[0])
+            applyLayout("spotlight-side-strip", currentSpeakers[0])
           }
         }, SINGLE_SPEAKER_THRESHOLD_MS)
       }

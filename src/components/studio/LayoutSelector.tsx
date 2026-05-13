@@ -13,11 +13,11 @@ interface Preset {
 }
 
 const PRESETS: Preset[] = [
-  { id: "grid", label: "Grid", icon: <LayoutGrid className="w-4 h-4" /> },
-  { id: "spotlight", label: "Spotlight", icon: <Focus className="w-4 h-4" /> },
-  { id: "screen-grid", label: "Scr+Grid", icon: <PictureInPicture2 className="w-4 h-4" /> },
-  { id: "screen-only", label: "Screen", icon: <Monitor className="w-4 h-4" /> },
-  { id: "single", label: "Single", icon: <Square className="w-4 h-4" /> },
+  { id: "four-grid", label: "Grid", icon: <LayoutGrid className="w-4 h-4" /> },
+  { id: "spotlight-side-strip", label: "Spotlight", icon: <Focus className="w-4 h-4" /> },
+  { id: "screen-with-strip", label: "Scr+Grid", icon: <PictureInPicture2 className="w-4 h-4" /> },
+  { id: "screen-presenter-pip", label: "Screen", icon: <Monitor className="w-4 h-4" /> },
+  { id: "solo", label: "Single", icon: <Square className="w-4 h-4" /> },
 ]
 
 export default function LayoutSelector() {

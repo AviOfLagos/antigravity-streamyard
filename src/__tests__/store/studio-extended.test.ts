@@ -5,7 +5,7 @@ describe("StudioStore — Extended Features", () => {
   beforeEach(() => {
     useStudioStore.setState({
       onScreenParticipantIds: [],
-      activeLayout: "grid",
+      activeLayout: "four-grid",
       pinnedParticipantId: null,
       pendingGuests: [],
       textOverlays: [],
@@ -219,8 +219,8 @@ describe("StudioStore — Extended Features", () => {
 
     it("manual layout change works while auto is enabled", () => {
       useStudioStore.getState().setAutoLayoutEnabled(true)
-      useStudioStore.getState().setLayout("spotlight")
-      expect(useStudioStore.getState().activeLayout).toBe("spotlight")
+      useStudioStore.getState().setLayout("spotlight-side-strip")
+      expect(useStudioStore.getState().activeLayout).toBe("spotlight-side-strip")
     })
   })
 })

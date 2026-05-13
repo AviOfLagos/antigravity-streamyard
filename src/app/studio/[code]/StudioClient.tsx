@@ -15,8 +15,10 @@ import ConnectionStatus from "@/components/studio/ConnectionStatus"
 import ControlBar from "@/components/studio/ControlBar"
 import GuestRequestToast from "@/components/studio/GuestRequestToast"
 import RoomEventRelay from "@/components/studio/RoomEventRelay"
+import StudioCoachMarks from "@/components/studio/StudioCoachMarks"
 import TopToolbar from "@/components/studio/TopToolbar"
 import VideoGrid from "@/components/studio/VideoGrid"
+import PlatformIcon, { PLATFORM_META } from "@/components/ui/PlatformIcon"
 import { SSEEventDataSchema } from "@/lib/schemas/sse"
 import { PlatformListResponseSchema } from "@/lib/schemas/platform"
 import type { SSEEventData } from "@/lib/chat/types"
@@ -159,7 +161,8 @@ function ConnectionMonitor() {
 }
 
 function NetworkQualityIndicator() {
-  const { quality } = useConnectionQualityIndicator()
+  const { localParticipant } = useLocalParticipant()
+  const { quality } = useConnectionQualityIndicator({ participant: localParticipant })
 
   let icon: React.ReactNode
   let label: string
@@ -481,15 +484,28 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
           {/* LIVE badge in header when streaming */}
           <LiveBadge />
           {connectedPlatforms.length > 0 && (
-            <div className="flex items-center gap-1">
-              {connectedPlatforms.map((p) => (
+            <div className="hidden sm:flex items-center gap-1 ml-1" aria-label="Connected platforms">
+              {connectedPlatforms.slice(0, 3).map((p) => (
                 <span
                   key={p.platform}
-                  title={`${p.platform}: ${p.channelName}`}
-                  className="w-1.5 h-1.5 rounded-full"
-                  style={{ backgroundColor: (PLATFORM_COLORS as Record<string, string>)[p.platform] ?? "#6b7280" }}
-                />
+                  title={`${PLATFORM_META[p.platform]?.label ?? p.platform}: ${p.channelName}`}
+                  className="inline-flex items-center gap-1 bg-white/5 border border-white/10 rounded-full pl-1.5 pr-2 py-0.5"
+                  style={{ borderColor: `${(PLATFORM_COLORS as Record<string, string>)[p.platform] ?? "#6b7280"}33` }}
+                >
+                  <PlatformIcon platform={p.platform} size={10} />
+                  <span className="text-[10px] font-medium text-gray-200">
+                    {PLATFORM_META[p.platform]?.label ?? p.platform}
+                  </span>
+                </span>
               ))}
+              {connectedPlatforms.length > 3 && (
+                <span
+                  title={connectedPlatforms.slice(3).map((p) => p.platform).join(", ")}
+                  className="text-[10px] text-gray-400 px-1.5 py-0.5 bg-white/5 border border-white/10 rounded-full"
+                >
+                  +{connectedPlatforms.length - 3}
+                </span>
+              )}
             </div>
           )}
         </div>
@@ -570,6 +586,8 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
           </div>
           {/* F-12: Connection status indicator inside LiveKitRoom context */}
           <ConnectionStatus />
+          {/* Progressive coach marks — first-run host hints, host-only */}
+          <StudioCoachMarks connectedPlatforms={connectedPlatforms} isHost={true} />
           <div className="flex-1 overflow-hidden">
             <VideoGrid roomCode={roomCode} isHost={true} hostToken={hostToken} />
           </div>

@@ -2,8 +2,10 @@
 
 import React, { useCallback, useMemo, useState } from "react"
 
+import { useSortable } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 import type { Participant } from "livekit-client"
-import { Mic, MicOff, Video, VideoOff, UserX } from "lucide-react"
+import { GripVertical, Mic, MicOff, Video, VideoOff, UserX } from "lucide-react"
 import { toast } from "sonner"
 
 import { useStudioStore } from "@/store/studio"
@@ -29,6 +31,10 @@ const ParticipantRow = React.memo(function ParticipantRow({
   const camOn = participant.isCameraEnabled
   const isHost = participant.identity?.startsWith("host-")
   const [acting, setActing] = useState(false)
+
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: participant.identity,
+  })
 
   const authHeaders = useMemo<Record<string, string>>(() => ({
     "Content-Type": "application/json",
@@ -116,7 +122,25 @@ const ParticipantRow = React.memo(function ParticipantRow({
   }, [roomCode, participant.identity, displayName, isHost, acting, authHeaders, sendToBackstage])
 
   return (
-    <div className="flex flex-col items-center gap-1 shrink-0 w-[5.5rem] group relative">
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.4 : 1,
+      }}
+      className="flex flex-col items-center gap-1 shrink-0 w-[5.5rem] group relative"
+    >
+      {/* Drag handle */}
+      <button
+        type="button"
+        {...listeners}
+        {...attributes}
+        aria-label={`Drag ${displayName} to reorder`}
+        className="h-4 flex items-center justify-center text-gray-600 hover:text-white cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-1 focus-visible:ring-offset-studio-bg-deep rounded"
+      >
+        <GripVertical className="w-3 h-3" />
+      </button>
       {/* Avatar */}
       <div className="relative w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-sm font-semibold text-white select-none shrink-0">
         {initial}
