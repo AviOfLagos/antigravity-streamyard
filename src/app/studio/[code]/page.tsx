@@ -19,9 +19,9 @@ function StudioSkeleton() {
       {/* Header skeleton */}
       <header className="flex-none h-12 flex items-center px-4 bg-studio-bg-deep border-b border-white/6">
         <div className="flex items-center gap-2.5">
-          <div className="w-20 h-4 bg-white/6 rounded animate-pulse" />
+          <div className="w-20 h-4 bg-white/6 rounded motion-safe:animate-pulse" />
           <div className="h-4 w-px bg-white/10" />
-          <div className="w-16 h-3 bg-white/4 rounded animate-pulse" />
+          <div className="w-16 h-3 bg-white/4 rounded motion-safe:animate-pulse" />
         </div>
       </header>
 
@@ -31,28 +31,28 @@ function StudioSkeleton() {
           {/* Top toolbar shimmer */}
           <div className="flex-none flex items-center gap-1.5 px-3 py-1.5 bg-studio-bg-deep border-b border-white/6">
             {Array.from({ length: 7 }).map((_, i) => (
-              <div key={i} className="w-8 h-8 bg-white/5 rounded-lg animate-pulse" />
+              <div key={i} className="w-8 h-8 bg-white/5 rounded-lg motion-safe:animate-pulse" />
             ))}
           </div>
           {/* Stage — single 16:9 tile centered (mirrors empty-stage default) */}
           <div className="flex-1 flex items-center justify-center overflow-hidden">
             <div className="w-full max-w-[1280px] px-3 py-3 h-full flex items-center justify-center">
-              <div className="w-full bg-studio-elevated rounded-xl animate-pulse" style={{ aspectRatio: "16/9" }} />
+              <div className="w-full bg-studio-elevated rounded-xl motion-safe:animate-pulse" style={{ aspectRatio: "16/9" }} />
             </div>
           </div>
           {/* Backstage strip shimmer */}
           <div className="min-h-[5.5rem] flex items-center gap-2 px-3 py-2 bg-studio-bg-deep border-t border-white/6">
             {[1, 2, 3].map((i) => (
               <div key={i} className="w-[5.5rem] flex flex-col items-center gap-1 shrink-0">
-                <div className="w-9 h-9 rounded-full bg-white/10 animate-pulse" />
-                <div className="w-12 h-2 bg-white/5 rounded animate-pulse" />
+                <div className="w-9 h-9 rounded-full bg-white/10 motion-safe:animate-pulse" />
+                <div className="w-12 h-2 bg-white/5 rounded motion-safe:animate-pulse" />
               </div>
             ))}
           </div>
           {/* Control bar shimmer */}
           <div className="h-14 bg-studio-bg-deep border-t border-white/6 flex items-center justify-center gap-2 px-4">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="w-[52px] h-10 bg-white/5 rounded-xl animate-pulse" />
+              <div key={i} className="w-[52px] h-10 bg-white/5 rounded-xl motion-safe:animate-pulse" />
             ))}
           </div>
         </div>
@@ -60,20 +60,20 @@ function StudioSkeleton() {
         {/* Chat panel skeleton */}
         <div className="hidden lg:flex flex-col w-72 xl:w-80 border-l border-white/6 bg-studio-bg">
           <div className="flex items-center gap-2 px-3 py-2.5 border-b border-white/10">
-            <div className="w-3.5 h-3.5 bg-indigo-400/30 rounded-full animate-pulse" />
-            <div className="w-16 h-3 bg-white/6 rounded animate-pulse" />
+            <div className="w-3.5 h-3.5 bg-indigo-400/30 rounded-full motion-safe:animate-pulse" />
+            <div className="w-16 h-3 bg-white/6 rounded motion-safe:animate-pulse" />
           </div>
           {/* Platform filter shimmer */}
           <div className="flex items-center gap-1.5 px-3 py-2 border-b border-white/6">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-5 w-12 bg-white/4 rounded animate-pulse" />
+              <div key={i} className="h-5 w-12 bg-white/4 rounded motion-safe:animate-pulse" />
             ))}
           </div>
           <div className="flex-1 px-3 py-2 space-y-3">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="space-y-1">
-                <div className="h-2.5 w-1/3 bg-white/6 rounded animate-pulse" />
-                <div className="h-2 w-2/3 bg-white/4 rounded animate-pulse" />
+                <div className="h-2.5 w-1/3 bg-white/6 rounded motion-safe:animate-pulse" />
+                <div className="h-2 w-2/3 bg-white/4 rounded motion-safe:animate-pulse" />
               </div>
             ))}
           </div>

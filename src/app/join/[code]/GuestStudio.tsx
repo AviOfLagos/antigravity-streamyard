@@ -178,7 +178,7 @@ function GuestConnectionMonitor({ wasKicked }: { wasKicked: boolean }) {
         className="absolute inset-0 flex items-center justify-center bg-black/40 z-20 pointer-events-none"
       >
         <div className="text-center">
-          <div className="w-6 h-6 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+          <div className="w-6 h-6 border-2 border-indigo-400 border-t-transparent rounded-full motion-safe:animate-spin mx-auto mb-2" />
           <p className="text-white text-sm">Connecting to studio...</p>
         </div>
       </div>
@@ -211,7 +211,7 @@ function GuestConnectionMonitor({ wasKicked }: { wasKicked: boolean }) {
             </>
           ) : (
             <>
-              <div className="w-6 h-6 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin mx-auto" />
+              <div className="w-6 h-6 border-2 border-indigo-400 border-t-transparent rounded-full motion-safe:animate-spin mx-auto" />
               <p className="text-white font-semibold">
                 Reconnecting... (attempt {attemptCount}/{MAX_RECONNECT_ATTEMPTS})
               </p>
@@ -309,7 +309,7 @@ function ParticipantRow({ participant, localIdentity }: { participant: Participa
           {initial}
         </div>
         {isSpeaking && (
-          <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-indigo-500 ring-1 ring-[#0d0d0d] animate-pulse" />
+          <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-indigo-500 ring-1 ring-[#0d0d0d] motion-safe:animate-pulse" />
         )}
       </div>
 

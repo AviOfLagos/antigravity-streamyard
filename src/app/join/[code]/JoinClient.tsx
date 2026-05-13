@@ -493,9 +493,9 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
           <CardContent className="py-10">
             {/* Animated waiting indicator */}
             <div className="flex items-center justify-center gap-1.5 mb-5">
-              <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "0ms" }} />
-              <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "150ms" }} />
-              <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+              <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 motion-safe:animate-bounce" style={{ animationDelay: "0ms" }} />
+              <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 motion-safe:animate-bounce" style={{ animationDelay: "150ms" }} />
+              <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 motion-safe:animate-bounce" style={{ animationDelay: "300ms" }} />
             </div>
             <h2 className="text-white font-semibold mb-1">Waiting for host to let you in...</h2>
             <p className="text-gray-400 text-sm">
@@ -713,7 +713,7 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
             This is the primary mechanism for participants to hear each other (like StreamYard/Meet SFU model). */}
         <RoomAudioRenderer />
         {/* StartAudio handles browser autoplay policy — shows button when audio context is suspended */}
-        <StartAudio label="Click to enable audio" className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium shadow-lg transition-all animate-pulse" />
+        <StartAudio label="Click to enable audio" className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium shadow-lg transition-all motion-safe:animate-pulse" />
         <GuestStudio
           roomCode={roomCode}
           displayName={displayName}

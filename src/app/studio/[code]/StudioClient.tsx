@@ -18,6 +18,7 @@ import GuestRequestToast from "@/components/studio/GuestRequestToast"
 import RoomEventRelay from "@/components/studio/RoomEventRelay"
 import StreamHealthBadge from "@/components/studio/StreamHealthBadge"
 import StudioCoachMarks from "@/components/studio/StudioCoachMarks"
+import StudioKeyboard from "@/components/studio/StudioKeyboard"
 import TopToolbar from "@/components/studio/TopToolbar"
 import VideoGrid from "@/components/studio/VideoGrid"
 import PlatformIcon, { PLATFORM_META } from "@/components/ui/PlatformIcon"
@@ -105,7 +106,7 @@ function ConnectionMonitor() {
         className="absolute inset-0 flex items-center justify-center bg-black/40 z-50 pointer-events-none"
       >
         <div className="text-center">
-          <div className="w-6 h-6 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+          <div className="w-6 h-6 border-2 border-indigo-400 border-t-transparent rounded-full motion-safe:animate-spin mx-auto mb-2" />
           <p className="text-white text-sm">Connecting to studio...</p>
         </div>
       </div>
@@ -138,7 +139,7 @@ function ConnectionMonitor() {
             </>
           ) : (
             <>
-              <div className="w-6 h-6 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin mx-auto" />
+              <div className="w-6 h-6 border-2 border-indigo-400 border-t-transparent rounded-full motion-safe:animate-spin mx-auto" />
               <p className="text-white font-semibold">
                 Reconnecting... (attempt {attemptCount}/{MAX_RECONNECT_ATTEMPTS})
               </p>
@@ -225,7 +226,7 @@ function LiveBadge() {
   return (
     <span className="inline-flex items-center gap-1.5 bg-red-500/15 border border-red-500/20 text-red-400 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
       <span className="relative flex h-1.5 w-1.5">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+        <span className="motion-safe:animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
         <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500" />
       </span>
       LIVE
@@ -611,6 +612,20 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
       >
         {/* Render remote participants' audio */}
         <RoomAudioRenderer />
+        {/* Keyboard shortcuts (M / V / C / ? Esc) — host-only inside LiveKitRoom */}
+        <StudioKeyboard
+          onToggleChat={() => {
+            if (typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches) {
+              setChatCollapsed((v) => !v)
+              setUnreadCount(0)
+            } else {
+              setChatOpen((v) => {
+                if (!v) setUnreadCount(0)
+                return !v
+              })
+            }
+          }}
+        />
         {/* Broadcast layout changes to all guests via LiveKit data messages */}
         <LayoutBroadcaster />
         {/* Auto Layout Manager — host-only, drives activeLayout based on activity */}
@@ -621,7 +636,7 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
         <AIChatController roomCode={roomCode} />
         {/* Fix: Browser autoplay policy blocks audio until user gesture on this page.
             StartAudio shows a button only when audio is blocked, auto-hides otherwise. */}
-        <StartAudio label="Click to enable audio" className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium shadow-lg transition-all animate-pulse" />
+        <StartAudio label="Click to enable audio" className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium shadow-lg transition-all motion-safe:animate-pulse" />
         {/* Stage: video + controls — always fills available width, never obscured */}
         <div className="relative flex flex-col flex-1 min-w-0 overflow-hidden">
           {/* Top toolbar — panels, go live, layout, text, end session */}
