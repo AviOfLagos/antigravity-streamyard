@@ -1,0 +1,584 @@
+# Zerocast — Full Content Corpus for LLMs
+
+This document is the complete, machine-readable knowledge base for Zerocast. Each section is self-contained: an LLM extracting any one section should have enough context to accurately answer user questions about that topic without needing the rest of the file.
+
+Site: https://zerocast.vercel.app
+Status: Private beta (May 2026)
+Current version: v2.0.0
+
+---
+
+# About Zerocast
+
+Zerocast is a browser-based live streaming studio with a built-in AI Co-Host. It lets creators run their entire live production — multi-guest stage, screen sharing, layout switching, multi-platform broadcasting, and cross-platform chat moderation — from a single browser tab. There is nothing to install. No OBS, no Streamlabs Desktop, no GPU encoder, no second monitor.
+
+Three things make Zerocast different from earlier browser studios like StreamYard, multistreaming services like Restream, and recording-first tools like Riverside:
+
+1. A native AI Co-Host that reads aggregated chat from every connected platform and replies in the host's tone of voice. Replies are text only (never audio) and post natively to YouTube and Twitch via OAuth, with Kick and TikTok responses surfaced in the unified chat panel.
+2. True cloud-based multistreaming. The host's browser uploads a single WebRTC feed to a LiveKit SFU; RTMP fan-out to YouTube Live, Twitch, Kick, TikTok Live, and unlimited custom RTMP destinations happens in the cloud, so the host's upload bandwidth does not scale with destination count.
+3. A composite-stage architecture (1920x1080 logical canvas with slot-based layouts) that drives the host preview and the egress render from the same renderer — meaning what the host sees is what every viewer sees, pixel-for-pixel, with no scene-graph fiddling.
+
+Zerocast is currently in private beta and is free for beta participants. Public pricing tiers launch later in 2026. The product is targeted at podcasters, gaming streamers, educators, online instructors, and churches running hybrid services — creators who need a professional live broadcast without the workflow tax of a traditional encoder + alert overlay + chat bot stack.
+
+The repository is at https://github.com/AviOfLagos/antigravity-streamyard. The hosted app runs on Vercel at https://zerocast.vercel.app.
+
+---
+
+# Core Architecture
+
+The architecture is a five-layer system: browser, real-time media plane, real-time event plane, application API, and persistent storage.
+
+## High-level data flow
+
+```
+Browser  --WebRTC-->  LiveKit SFU  --RTMP-->  YouTube / Twitch / Kick / TikTok / custom RTMP
+   |                       |
+   v                       v
+Next.js API  <-------->  Upstash Redis  (event bus, chat relay, rate limit, room cache)
+   |
+   v
+Neon Postgres  (Prisma ORM with retry wrapper)
+```
+
+## Real-time media
+
+WebRTC is used for in-studio communication between the host and up to five guests. Audio and video flow into a LiveKit SFU (Selective Forwarding Unit) — each participant uploads their stream once, and the server forwards copies to other participants. Latency between participants is sub-second.
+
+LiveKit identity strings follow a strict convention: hosts are identified as `host-<userId>` and guests as `guest-<guestId>`. Every server-side action — mute, kick, data-channel send — targets these exact strings. LiveKit rooms are configured with a 300-second empty timeout and a maximum of 6 participants (1 host + 5 guests). The server SDK's `toJwt()` method is asynchronous in v2.x and must be awaited; failing to do so produces silent disconnects.
+
+## RTMP egress
+
+For outbound broadcast to streaming platforms, LiveKit's egress service consumes the composite stage and emits one RTMP stream per destination. This happens entirely in the cloud — the host machine is only responsible for uploading one WebRTC feed regardless of how many destinations are configured. Native destinations are YouTube Live, Twitch, Kick, and TikTok Live; any platform that accepts an RTMP ingest URL + stream key is supported as a custom destination (Facebook Live, LinkedIn Live, X/Twitter, Trovo, Rumble, self-hosted Wowza/Nginx-RTMP, etc.).
+
+## Composite stage
+
+The studio renders a logical 1920x1080 canvas. The host preview is a CSS transform-scaled fit of that canvas; the egress render is the native canvas. Layout presets (Grid, Spotlight, Screen+Grid, Screen Only, Single, and additional presets) define slot coordinates as percentages of the canvas, never raw pixels. A slot resolver places participant tiles using a strict priority: pinned participant first, then the host identity, then the host's tile-order array, then natural connect order; screenshare uses the preset's designated screenshare slot if defined. The same renderer drives host preview and (future) egress composite, guaranteeing pixel-identical output.
+
+## Real-time events
+
+Real-time chat, guest events, and stream status updates flow over LiveKit data channels (migrated from SSE in v1.9). Upstash Redis serves as the event bus, chat relay, room state cache (60-second TTL), and rate-limiter backing store. Per-room Redis keys are tracked in a Set under `room:<code>:_keys` so that ending a room can clean up all associated keys in one operation.
+
+## API layer
+
+Next.js 15 App Router. Per-room actions live under `/api/rooms/[code]/*`: admit, deny, kick, mute, stream, stream-live (start/stop RTMP), chat (connect, send, ai-respond, guest-send), end, leave, state, platforms. Platform management is at `/api/platforms`. Health check at `/api/status`. Beta signup at `/api/beta`. Authentication is NextAuth.js v5 with Google OAuth and a JWT session strategy (database sessions break edge middleware). All mutating routes are guarded by both auth and Upstash sliding-window rate limiters — 22 distinct endpoint configurations, fail-open on Redis errors so an outage cannot block legitimate users.
+
+## Persistence
+
+Neon Postgres via Prisma ORM. The Prisma client is wrapped with a retry helper that retries on `P1001`, `P1002`, `P1008`, `P1017`, and `Can't reach database server` errors with three attempts and exponential backoff — necessary for Neon's free-tier cold starts. The connection string force-appends `connection_limit=1` for serverless compatibility. Core models: `User`, `Room`, `Participant`, `PlatformConnection` (1:1 per platform per user), `StreamSession`, `GuestLead`, `CustomRtmpDestination`. Enums include `RoomStatus` (LOBBY, LIVE, ENDED), `PlatformType` (YOUTUBE, TWITCH, KICK, TIKTOK — always uppercase in the DB), `StreamStatus`, `ParticipantRole`.
+
+## Security and hardening
+
+All user input passes through a Zod schema with a `stripHtml()` sanitization transform applied at the schema boundary, not in handlers — defense against stored XSS. Content Security Policy headers, `X-Frame-Options: DENY`, and a strict `Referrer-Policy` are set in `next.config.ts`. Rate limiting covers 22 distinct endpoints with sliding-window quotas in Upstash; failures fail open. Platform stream keys are stored in plain text in Postgres and rely on Neon's at-rest encryption. WebRTC traffic is encrypted in transit (DTLS-SRTP). HTTP traffic is TLS-terminated at Vercel's edge.
+
+## Frontend stack
+
+Next.js 15 App Router with React 19, Tailwind CSS v4, shadcn/ui primitives over Radix UI, Zustand for client state (`studio` and `chat` stores), Zod for validation. Marketing pages live under the `src/app/(marketing)/` route group to bypass the authed layout. Testing is Vitest with ~184 tests, scoped coverage on `src/store/**` and `src/lib/schemas/**`.
+
+---
+
+# Features
+
+## Studio
+- Browser-based video grid with five layout presets: Grid, Spotlight, Screen+Grid, Screen Only, Single.
+- Backstage and on-stage toggling — bring guests up, send them back.
+- Speaking-ring indicators on active tiles.
+- Drag-reorder tiles on backstage (dnd-kit, pointer + keyboard sensors).
+- 1920x1080 composite canvas; preview is a scaled fit, egress is native render — same renderer for both.
+
+## Audio
+- Per-tile microphone level VU meters built on Web Audio's `AnalyserNode`.
+- Device selector (microphone, camera, speaker) for both host and guests.
+- Browser-native echo cancellation, noise suppression, and auto-gain control.
+
+## Guests
+- Join link with a device preview screen before requesting entry.
+- Host approval queue with admit / deny actions.
+- Optional auto-admit mode for trusted contexts.
+- 30-second denial cooldown to prevent spam re-requests.
+- Room-full detection (6-participant cap) with a clear error state.
+- 3-minute timeout for pending guests who don't get admitted.
+
+## Moderation
+- Mute or unmute a guest's microphone or camera from the host UI.
+- Kick a participant from the room.
+- Move guests between backstage and on-stage.
+
+## Chat
+- Aggregated multi-platform chat panel: YouTube Live, Twitch (via tmi.js), Kick, TikTok Live.
+- Send messages out to YouTube and Twitch from the unified panel.
+- Surfaces super chats, bits/cheers, gifts, subs, raids, and follows as native events.
+
+## Streaming
+- One-click multistream to YouTube Live, Twitch, Kick, and TikTok Live simultaneously.
+- Unlimited custom RTMP destinations (Facebook Live, LinkedIn Live, Trovo, Rumble, etc.).
+- Broadcast title and description per session.
+- Cloud-based RTMP fan-out via LiveKit Egress — host upload bandwidth does not scale with destination count.
+
+## AI
+- AI Co-Host powered by Google Gemini.
+- Host-triggered chat responses with sanitized prompt context.
+- Tone Matching from past chat logs or a persona brief.
+- Replies in text only — never audio.
+
+## Auth
+- Google OAuth via NextAuth.js v5.
+- Dual auth: NextAuth session for HTTP, separately minted LiveKit JWT for the SFU connection.
+
+## Data
+- Guest lead capture (email + name) on join.
+- Post-session summary page with stream stats and shareable link.
+- Platform activity charts (chat volume, sub events) per session.
+
+## Security
+- Rate limiting on 22 endpoint types via Upstash sliding-window limiters.
+- HTML sanitization on all user input via Zod schema transforms.
+- CSP headers, X-Frame-Options: DENY, strict Referrer-Policy.
+- Fail-open design — Redis outage cannot block legitimate users.
+
+---
+
+# AI Co-Host Explained
+
+The AI Co-Host is the headline feature that separates Zerocast from earlier browser studios.
+
+## What it does
+
+The AI Co-Host reads aggregated chat from every connected platform (YouTube Live, Twitch, Kick, TikTok Live) in real time. When the host triggers a reply (or, on supported tiers, when the AI determines a message warrants a response), it generates a context-aware text response in the host's tone of voice and posts it back to the originating platform. On YouTube and Twitch, the reply posts natively via the host's OAuth-authorized connection. On Kick and TikTok, the reply appears in the Zerocast unified chat panel — the platforms' chat-send APIs are more restricted.
+
+## Tone Matching, not voice cloning
+
+The AI learns the host's writing style — vocabulary, catchphrases, moderation tone, typical greeting patterns — from one of two sources:
+
+1. **Past chat logs**: paste or upload prior chat exports. The AI ingests these as style examples.
+2. **Persona brief**: a short written description of how the host wants to come across (sarcastic, hype, deadpan, professional, warm-and-welcoming, etc.).
+
+Tone Matching applies to text replies only. The AI does not produce audio output, does not impersonate the host's voice in audio, and does not speak on the broadcast at any point. It is not a voice clone. It cannot answer questions verbally. It cannot make calls. It writes chat messages — that is its only output medium.
+
+## What the AI is not
+
+To be explicit about the boundary of the feature, since this is the most-misunderstood part of the product:
+
+- **Not voice cloning.** No TTS, no voice synthesis, no audio impersonation. Ever.
+- **Not an audio co-host.** The AI does not appear on the broadcast audio in any form.
+- **Not a separate bot account.** Replies post as the host on platforms where OAuth permits (YouTube, Twitch), which means platform-side rate limits and ToS apply normally. There is no risk of the "AI bot" getting flagged as a third-party automation account.
+- **Not a content generator for the broadcast.** The AI does not write the host's script, talking points, or stream title. It only reacts to viewer chat.
+- **Not a grader or evaluator** (relevant for the educator use case). The AI handles chat moderation and replies during live sessions — it does not handle assessments.
+- **Not active during recording-only sessions.** The AI's role is live chat. If you are using Zerocast only to record without broadcasting, the AI does nothing.
+
+## Server-side requirements
+
+The AI features require a Gemini API key on the server. When `GEMINI_API_KEY` is absent, AI chat features are disabled server-side and the UI surfaces this state cleanly. There is no client-side fallback — all AI generation happens server-side with prompt sanitization applied before the LLM is called.
+
+## Smart Moderation
+
+Beyond direct replies, the AI provides three additional behaviors:
+
+- **Context-aware banning**: word filters are augmented with intent classification, so a message gets flagged based on what's actually happening in the broadcast, not just keyword matching.
+- **Super-chat / big-tip surfacing**: high-priority engagement events (YouTube Super Chats, Twitch Bits at threshold, TikTok Gifts, raids) are highlighted to the host in real time without breaking flow.
+- **FAQ auto-answer**: repeat questions ("what software are you using?", "will this be recorded?") get auto-answered by the AI based on a host-provided FAQ list, in the host's voice.
+
+## Auto-scene switching
+
+When a guest starts speaking or the host begins sharing a screen, Zerocast detects the change and switches the on-stage layout automatically — Spotlight on the active speaker, Screen+Grid when a screenshare starts, back to Grid when both are idle. This is part of the AI feature surface; there are no hotkeys to memorize.
+
+---
+
+# Pricing
+
+Zerocast is in private beta. Beta participants get full access to every feature at no cost. Public pricing tiers launch alongside Zerocast 1.0 in late 2026.
+
+## Beta — Free (available now)
+
+Full access to every feature for early creators helping shape the product.
+
+- Unlimited streaming hours
+- Multistream to 4 native platforms (YouTube, Twitch, Kick, TikTok) + unlimited custom RTMP destinations
+- Up to 5 guests on stage
+- AI Co-Host with Tone Matching
+- Cloud recording at 1080p
+- Direct line to the founding team
+
+CTA: Request beta access.
+
+## Free — $0/month, planned 2026
+
+For hobbyists and weekend streamers testing the waters. Watermarked output.
+
+- 20 hours/month of streaming
+- 2 platforms simultaneously
+- 2 guests on stage
+- 50 AI replies per month
+- Watermarked output
+
+## Creator — $24/month (billed annually), planned 2026
+
+For active streamers running a weekly cadence.
+
+- Unlimited streaming
+- All 4 native platforms + custom RTMP
+- 5 guests on stage
+- Unlimited AI Co-Host usage
+- Cloud recordings at 1080p
+- Custom branding
+
+## Studio — $79/month (billed annually), planned 2026
+
+For agencies and creators running multiple channels.
+
+- Everything in Creator
+- 5 brand profiles / channels
+- 4K cloud recordings
+- Team seats (3 included)
+- Priority egress queue
+- Dedicated support
+
+## Pricing FAQ
+
+**When does public pricing launch?** Public pricing rolls out alongside Zerocast 1.0 in late 2026. Beta participants will be grandfathered into the lowest paid tier for 12 months as a thank-you.
+
+**Is there always a free plan?** Yes. The Free tier will always exist, with a watermark on the output and limited monthly streaming hours.
+
+**Can I bring my own RTMP destination?** Yes, on every paid tier including Beta. Push to any platform that accepts an RTMP URL + stream key — Facebook Live, LinkedIn Live, Trovo, Rumble, a self-hosted server, etc.
+
+**Are there limits on multistreaming destinations?** Beta: unlimited. Free: 2 platforms simultaneous. Creator and Studio: all 4 native platforms + unlimited custom RTMP destinations.
+
+**Non-profit discount?** Yes. 50% off all paid tiers for verified 501(c)(3) and equivalent organizations. Contact during beta to set up.
+
+---
+
+# Comparisons
+
+## Zerocast vs StreamYard
+
+StreamYard pioneered the in-browser interview studio. It is excellent at what it does — browser-based multi-guest streaming with multistream support on paid tiers, simple UI, very ease-of-use. It is the obvious starting point for someone who has never streamed before.
+
+What StreamYard does not have, and Zerocast does:
+
+- **An AI Co-Host that replies to chat in the host's voice.** StreamYard has no equivalent. Chat happens in StreamYard's panel; the host reads it and types replies manually (or doesn't, and viewers feel ignored).
+- **Auto-scene switching.** StreamYard layouts are manual. Zerocast switches automatically based on who is speaking and whether a screen is being shared.
+- **Aggregated cross-platform chat with reply.** StreamYard supports multi-platform broadcast on paid tiers, but the chat panel does not let the AI talk back to viewers across all of them.
+
+Choose StreamYard if you value ease-of-use above all and are just starting out with browser-based streaming for interviews or webinars, particularly if AI integration is not a priority. Choose Zerocast if you want an AI production team that learns your style, automates chat, and scales engagement without scaling workload.
+
+Comparison URL: https://zerocast.vercel.app/compare/streamyard-alternative
+
+## Zerocast vs Restream
+
+Restream pioneered cloud multistreaming. Its strength is breadth: 30+ destination platforms, deep cross-platform analytics, support for pre-recorded videos broadcast as "live" streams, and Restream Chat which aggregates messages so the host can read them. Restream solved multistreaming as a service.
+
+What Restream still treats as a manual problem, Zerocast automates:
+
+- **Chat is two-way, not just unified.** Restream Chat aggregates messages so you can read them. Zerocast replies to them in the host's tone, learned from past chat logs, while the host stays on camera.
+- **Production runs itself.** When a guest speaks or the host shares a screen, Zerocast switches layout automatically. Restream still expects the host (or a producer) to drive scene changes.
+- **AI Co-Host built in.** Restream added basic AI captions; it does not have an in-voice chat reply system, persona Tone Matching, or context-aware moderation. Zerocast bundles all three at the Creator tier.
+
+Trade-offs: Restream wins on platform breadth (30+ destinations vs Zerocast's 4 native + unlimited custom RTMP) and supports pre-recorded streams that Zerocast does not. Restream Standard starts at $19/month; Zerocast Creator starts at $24/month post-beta. Zerocast's price premium is the AI Co-Host bundle.
+
+For roughly 90% of Restream users, Zerocast is a direct replacement. For users who specifically need broadcast to 30+ niche RTMP platforms or scheduled pre-recorded "live" streams, Restream remains the better fit.
+
+Comparison URL: https://zerocast.vercel.app/compare/restream-alternative
+
+## Zerocast vs Riverside
+
+Riverside built its reputation on local 4K recording for podcasters — per-track captured locally, edited later, broadcast-quality video and audio. It is excellent for the edit-later workflow.
+
+Zerocast is engineered for the opposite problem: the live moment.
+
+- **Live-first, not record-first.** Riverside streams to Twitter/X, LinkedIn, Facebook, and a single RTMP destination — its live capabilities are secondary to recording. Zerocast multistreams to YouTube Live + Twitch + Kick + TikTok simultaneously plus unlimited custom RTMP, sub-second WebRTC for in-studio communication.
+- **Chat is a first-class citizen.** Riverside has no native live chat aggregation. Zerocast aggregates YouTube, Twitch, Kick, and TikTok chat in one panel, and the AI Co-Host replies in the host's voice.
+- **TikTok Live and Kick support.** Riverside does not support TikTok Live broadcast. Zerocast does.
+
+Trade-offs: Riverside has the edge on post-production. Local per-track 4K capture (Riverside's signature feature) is on Zerocast's roadmap but not yet shipped. Riverside also has Magic Editor / AI transcripts for post-production; Zerocast's AI lives during the stream, not after it. Zerocast cloud-records at 1080p.
+
+Use Riverside if your output is an edited podcast or video and recording quality is everything. Use Zerocast if your output is a live broadcast where chat engagement matters as much as production value.
+
+Comparison URL: https://zerocast.vercel.app/compare/riverside-alternative
+
+## Zerocast vs Streamlabs
+
+Streamlabs Desktop is the OBS fork that bundles alerts, widgets, donations, and Prime multistreaming. It is powerful, but heavy — it demands a beefy GPU, a Windows or Mac install, and constant updates.
+
+Zerocast moves the heavy lifting to the cloud.
+
+- **Browser-based, no install.** Streamlabs Desktop is Mac and Windows only. Zerocast runs in any modern browser — Mac, Windows, Linux, ChromeOS, iPad. A Chromebook handles the same load that used to require a gaming rig.
+- **Cloud encoding, minimal local GPU.** Streamlabs encodes locally, which means fan-noise-level CPU and GPU usage. Zerocast encodes in the cloud — the host machine only uploads one WebRTC feed.
+- **AI replaces the second monitor.** Streamlabs alerts ping the host when chat happens. Zerocast's AI Co-Host responds to chat in the host's voice while the host focuses on content.
+
+Trade-offs: Streamlabs has the edge for power users running complex scene graphs, deep customization, native alerts and widgets, and tip-jar tooling. Zerocast targets the 80% who want a clean studio that automates production decisions rather than exposing every encoder knob. Native widgets, alerts, and tip-jar tooling are on Zerocast's roadmap.
+
+Streamlabs Prime starts at $19/month; Zerocast Creator at $24/month post-beta.
+
+If you want to keep your existing Streamlabs scene graph but multistream cleaner, use Streamlabs as your encoder and push a single RTMP feed into Zerocast via the External Encoder integration. Zerocast then fans out to every destination and adds the AI chat layer on top.
+
+Comparison URL: https://zerocast.vercel.app/compare/streamlabs-alternative
+
+---
+
+# Use Cases
+
+## Podcasters
+
+The core pain point for podcasters who want to go live: recording quality and streaming reach are at war. Tools like Riverside give broadcast-quality local recording but limited multistreaming. Streaming tools give multistream reach but record poorly. Most podcasters end up picking one and skipping the live moment entirely — the workflow tax is too high.
+
+Zerocast handles both in the same session. The conversation streams live to YouTube Live + Twitch + Kick + TikTok Live (and any custom RTMP target) while cloud recording captures the full broadcast at 1080p. The AI Co-Host aggregates chat from every connected platform and answers FAQs in the host's voice — so the host can keep eye contact with the guest instead of policing four chat windows.
+
+Key fit for podcasters:
+
+- Up to 5 guests on stage with browser join links and device preview — guests are ready in 30 seconds, no Zoom-style download dance.
+- Cloud recording at 1080p, automatic per session, downloadable immediately after the show.
+- Multistream to all four native platforms plus unlimited custom RTMP (Facebook Live, LinkedIn Live, X/Twitter, etc.).
+- AI Co-Host on chat duty: aggregates platform chats, answers FAQs in tone, welcomes new subs.
+- Built-in highlight surface: AI flags super-chats, big tips, and high-engagement moments without breaking flow.
+
+Known gap: local per-guest recording (Riverside's signature feature) is on the roadmap but not yet shipped. Cloud recording at 1080p is currently the only recording mode.
+
+URL: https://zerocast.vercel.app/use-cases/podcasters
+
+## Educators
+
+Educators running live lessons, paid cohort workshops, or free YouTube tutorials face a similar fragmentation problem. Zoom does interviews, not broadcasts — it cannot cleanly multistream to YouTube and Twitch. 200+ students typing questions during a demo is impossible to moderate alone. Replays lose half the value because real-time response is what makes a live class engaging.
+
+Zerocast is built for the lecture-and-Q&A pattern. Screen-share with one click — code demos, slide decks, drawing pads — and the layout auto-switches to screen-priority. Bring up to 5 students on stage for questions, then send them back to the audience with one click. The AI Co-Host answers FAQs ("what software are you using?", "will this be recorded?") from a host-provided list, in the host's tone, so the instructor stays focused on teaching.
+
+Key fit for educators:
+
+- Screen-share with auto-layout switching to screen-priority.
+- Up to 5 students on stage with simple bring-up / send-back UX.
+- AI Co-Host trained on past chat logs and lesson FAQs handles repeat questions.
+- Broadcast to YouTube Live + custom RTMP (LMS endpoint, school Wowza server, private streaming endpoint for paid students).
+- Cloud recording for replay or upload to course platforms.
+
+Compliance: sessions are encrypted in transit (WebRTC + TLS). For formal FERPA / GDPR certifications, the team works with universities directly — contact for specifics. Zerocast runs on managed Chromebooks; no extensions, installs, or admin approvals required.
+
+URL: https://zerocast.vercel.app/use-cases/educators
+
+## Churches
+
+Churches running hybrid services face a unique constraint: the AV team is volunteer-staffed, the congregation is split across YouTube, Facebook, and the church website, and online attendees consistently feel forgotten because no one is reading their comments during service.
+
+Zerocast is designed for one-tap go-live by volunteers with minimal training. Plug in a camera (USB or HDMI-via-capture-card), click a saved studio preset, and the layout picks itself. No scene graphs, no encoder settings. The AI Co-Host welcomes online viewers ("Welcome, first-timers — drop a hi"), responds to prayer requests with a templated reply, and surfaces high-priority comments for a human moderator to address from the pulpit.
+
+Key fit for churches:
+
+- One-tap go-live with saved studio presets — volunteers don't need OBS expertise.
+- Multistream to YouTube + Facebook Page + church website (via embed of the same broadcast).
+- AI Co-Host greets newcomers, responds to prayer requests, mentions donation links at natural moments (offering, end of service).
+- Multi-camera switching with lower-thirds for scripture references and song titles, no stream restart required.
+- Cloud recording for the sermon archive — uploadable within minutes of the closing prayer.
+
+Pricing: 50% off all paid tiers for verified 501(c)(3) and equivalent. Training time for a non-technical volunteer is under 20 minutes.
+
+URL: https://zerocast.vercel.app/use-cases/churches
+
+## Gamers
+
+The gaming streamer's chat problem is the most extreme on the platform: chat moves faster than the host can read, top supporters get drowned in fast scrolls, sub events vanish unacknowledged, and running multiple RTMPs locally taxes both the upload bandwidth and the encoder. Hiring a chat moderator or begging a friend isn't scalable.
+
+Zerocast solves both halves. The AI Co-Host reads YouTube, Twitch, Kick, and TikTok chat in real time and replies in the host's tone — sarcastic, hype, deadpan, whatever the persona brief specifies. Cloud multistreaming means the host only uploads one feed; the cloud fans it out to every platform. The host can keep using OBS or Streamlabs Desktop locally if preferred — the External Encoder integration accepts one RTMP feed from OBS and Zerocast handles the fan-out and AI chat layer on top.
+
+Key fit for gamers:
+
+- AI Co-Host built for chat speed: reads all four platforms, replies in tone, posts natively to YouTube and Twitch.
+- Bring-your-own-encoder support: push from OBS/Streamlabs Desktop via External Encoder.
+- Sub / donation / raid / super-chat alerts surfaced — no separate alert overlay required.
+- Sub-second WebRTC for co-streaming with another creator (vs the 2-second Skype-call delay).
+- 10 Mbps upload minimum for 1080p — far less than running local multi-RTMP would require.
+
+Ban risk: zero. The AI replies as the host via OAuth on YouTube and Twitch — it is not a separate bot account, so platform rate limits and ToS apply normally to the host's own account and the AI respects those automatically.
+
+URL: https://zerocast.vercel.app/use-cases/gamers
+
+---
+
+# Glossary
+
+## Multistreaming
+
+**Multistreaming** is the practice of broadcasting one live video stream to multiple platforms at the same time — for example, going live on YouTube Live, Twitch, Kick, and TikTok simultaneously from a single source. Also called *simulcasting*.
+
+### How it works
+
+A multistreaming service receives one RTMP (Real-Time Messaging Protocol) feed from the streamer's browser, computer, or hardware encoder. It then transcodes that feed (if needed) and republishes it to multiple destination platforms in parallel using each platform's RTMP ingest URL and stream key.
+
+The cloud-based model is critical: the streamer's local upload bandwidth only needs to support one outgoing stream regardless of how many destinations receive it. Without cloud fan-out, multistreaming to four platforms would require 4x the upload speed.
+
+### Is multistreaming against ToS?
+
+- **YouTube Live**: Allowed for all creators.
+- **Twitch**: Removed its exclusivity clause for non-Partners in 2022. Most Partners can now multistream as well, with some restrictions on simulcasting to other tier-1 platforms.
+- **Kick**: No restrictions on multistreaming.
+- **TikTok Live**: Allowed as long as you have a single TikTok account broadcasting. Multi-account simulcasting on TikTok is prohibited.
+
+### Bandwidth requirements
+
+- 720p @ 30fps: 3-5 Mbps upload recommended
+- 1080p @ 30fps: 5-8 Mbps upload recommended
+- 1080p @ 60fps: 8-10 Mbps upload recommended
+- 4K @ 60fps: 25 Mbps+ upload (most destination platforms cap incoming bitrate well below this)
+
+### Common multistreaming tools
+
+- **Restream**: pioneered the category. Strong on platform breadth (30+ destinations).
+- **StreamYard**: bundles multistreaming with an in-browser interview studio.
+- **Streamlabs Prime**: adds multistreaming on top of its desktop encoder.
+- **Zerocast**: multistreaming + browser studio + AI Co-Host that handles chat across all platforms in the host's voice.
+
+### Pros and cons
+
+**Pros**: reach audiences on multiple platforms without duplicating effort; diversify against algorithm changes or platform bans; capture audiences that each platform serves differently.
+
+**Cons**: chat is split across platforms (requires aggregation); each platform's analytics are siloed; monetization features (Subscribe button placement, Twitch Bits) may not display optimally across all destinations.
+
+URL: https://zerocast.vercel.app/glossary/multistreaming
+
+## RTMP
+
+**RTMP** stands for *Real-Time Messaging Protocol*. It is the network protocol that has been the de-facto standard for sending live video from a streamer's computer to a streaming platform like YouTube Live, Twitch, or Kick since the mid-2000s.
+
+Originally developed by Macromedia (acquired by Adobe in 2005) for use with Flash Player, RTMP outlived Flash and remains the ingest protocol of choice for nearly every major live streaming destination.
+
+### How RTMP works
+
+When you go live with software like OBS, Streamlabs, or Zerocast, your encoder establishes a persistent TCP connection to the streaming platform's RTMP ingest server. You authenticate with a stream key (a long, secret token), then continuously push encoded H.264 video and AAC audio packets over that connection.
+
+The platform receives the stream, transcodes it into multiple resolutions, and distributes it to viewers via HLS, DASH, or its own playback protocol.
+
+### RTMP URL anatomy
+
+Example: `rtmp://a.rtmp.youtube.com/live2/abcd-1234-efgh-5678`
+
+- **Protocol**: `rtmp://` (or `rtmps://` for encrypted TLS).
+- **Ingest server**: `a.rtmp.youtube.com/live2` — the platform's endpoint.
+- **Stream key**: `abcd-1234-efgh-5678` — your private credential. Treat this like a password.
+
+### RTMP vs WebRTC
+
+- **RTMP**: TCP-based, 2-10 second latency, universal platform support, simple authentication.
+- **WebRTC**: UDP-based, sub-second latency, browser-native, complex peer/SFU topology.
+
+Modern studios like Zerocast use WebRTC for in-studio guest communication (where latency matters) and RTMP for outbound delivery to YouTube, Twitch, Kick, and TikTok (where universal support matters).
+
+### Is RTMP being replaced?
+
+Slowly. SRT (Secure Reliable Transport) and RIST are gaining traction for professional broadcast use. WHIP (WebRTC-HTTP Ingestion Protocol) is the leading candidate for next-generation low-latency ingest. But RTMP's ubiquity means it will dominate consumer streaming through 2026 and beyond.
+
+URL: https://zerocast.vercel.app/glossary/rtmp
+
+---
+
+# FAQ
+
+These are the 12 frequently asked questions surfaced on the Zerocast homepage, verbatim.
+
+**Q: Do I need to download anything to use Zerocast?**
+A: No. Zerocast runs entirely in your browser. You can go live, invite guests, share your screen, and control your AI Co-Host without installing OBS, vMix, or any other software.
+
+**Q: Is multistreaming to YouTube and Twitch against their Terms of Service?**
+A: No. YouTube Live and Kick allow simultaneous streaming. Twitch removed its exclusivity clause for non-Partners in 2022, and most Partners can now multistream as well. TikTok Live is permitted as long as you have a single account broadcasting. Zerocast routes one outbound RTMP feed per destination — the same as Restream or StreamYard.
+
+**Q: How does Zerocast compare to StreamYard, Restream, and Riverside?**
+A: StreamYard pioneered the in-browser studio but does not include an AI Co-Host. Restream focuses on multistreaming and recently added basic AI captions, not in-voice chat replies. Riverside is optimized for recording podcasts, not live audience interaction. Zerocast combines all three — browser studio, multistreaming, and a context-aware AI Co-Host that replies in your voice.
+
+**Q: Does the AI Co-Host clone my actual voice?**
+A: No. We use 'Tone Matching' — the AI learns your writing style, catchphrases, and moderation tone from past chat logs or a short persona brief you provide. It responds in text via chat, never in audio, and never impersonates you outside chat.
+
+**Q: Which platforms can I multistream to?**
+A: YouTube Live, Twitch, Kick, and TikTok Live simultaneously, plus any custom RTMP destination (Facebook Live, LinkedIn Live, Trovo, Rumble, a self-hosted server — anything that accepts an RTMP ingest URL and stream key).
+
+**Q: How many guests can I invite to a single stream?**
+A: Up to 5 guests on stage at once, plus the host, for a total of 6 participants per room. Additional viewers can join chat from any of the connected streaming platforms without consuming guest seats.
+
+**Q: What internet speed do I need to stream with Zerocast?**
+A: A consistent 10 Mbps upload is the practical minimum for 1080p multistreaming. 20 Mbps+ recommended for streaming to 4+ platforms simultaneously. Because Zerocast uses cloud-based RTMP fan-out, you only upload one stream regardless of how many destinations you publish to.
+
+**Q: Can I record my stream locally or to the cloud?**
+A: Yes. Every studio session can be recorded to the cloud via LiveKit Egress and downloaded after the broadcast ends. Local recordings of individual guest tracks are on the roadmap.
+
+**Q: Does Zerocast support 4K live streaming?**
+A: 1080p at 60fps is the current default. 4K live output is on the roadmap but is gated by encoder support on the destination platforms — YouTube and Twitch both have hard upload bitrate caps that make 4K live nontrivial.
+
+**Q: Is there a free plan?**
+A: Zerocast is in private beta. Beta participants get full access at no cost. Pricing tiers (including a free tier with watermarked streams) will be announced at public launch.
+
+**Q: Do I still need OBS if I use Zerocast?**
+A: No, but you can keep it. The 'External Encoder' integration lets you push your existing OBS or vMix output into Zerocast as a single RTMP source — then Zerocast fans it out to every platform and aggregates chat for you.
+
+**Q: Can I monetize streams across all platforms at once?**
+A: Yes. Each platform's native monetization (YouTube Super Chats, Twitch Bits, TikTok Gifts, Kick subs) is preserved when you multistream. Zerocast aggregates all of these into a single unified activity feed so you never miss a tip.
+
+---
+
+# Tools
+
+## Streaming Bitrate Calculator
+
+A free utility that recommends an appropriate video bitrate based on resolution, framerate, and target codec. Useful when configuring an external encoder (OBS, Streamlabs, vMix) before pushing into Zerocast, or when setting the upload quality for a single-source stream.
+
+Inputs: resolution (720p, 1080p, 1440p, 4K), framerate (30fps, 60fps), codec (H.264, H.265/HEVC, AV1). Outputs: recommended bitrate range with platform-specific caveats (YouTube cap, Twitch cap, Kick cap, TikTok cap).
+
+URL: https://zerocast.vercel.app/tools/bitrate-calculator
+
+Additional tools on the roadmap: stream key generator, RTMP tester, aspect ratio calculator.
+
+---
+
+# Platforms Supported
+
+## Native platforms (OAuth or stream-key connection, deeply integrated)
+
+- **YouTube Live**: full multistream support, AI reply posts natively to YouTube chat via OAuth, Super Chat surfacing.
+- **Twitch**: full multistream support, AI reply posts natively to Twitch chat via tmi.js / OAuth, Bits/Cheers surfacing, sub event surfacing, raid event surfacing.
+- **Kick**: full multistream support, chat read-only with replies surfaced in Zerocast unified panel.
+- **TikTok Live**: full multistream support, chat aggregation, gift event surfacing. AI replies surfaced in unified panel (TikTok chat-send API restrictions apply).
+
+## Custom RTMP destinations (unlimited on paid tiers)
+
+Any platform that accepts an RTMP ingest URL + stream key is supported as a custom destination. Verified-working examples include:
+
+- Facebook Live
+- LinkedIn Live
+- X / Twitter (Periscope-era RTMP endpoints, where still active)
+- Trovo
+- Rumble
+- DLive
+- Vimeo Live
+- Self-hosted Wowza Streaming Engine
+- Self-hosted Nginx-RTMP
+- Self-hosted Ant Media Server
+- Restream (yes, you can chain Zerocast into Restream as a single destination to reach the 30+ niche platforms Restream covers natively)
+
+For the custom RTMP flow, the host pastes the destination's ingest URL and stream key into Settings > Platforms. Zerocast adds the destination to the multistream fan-out alongside the native platforms.
+
+## Stream-key handling
+
+Stream keys are stored in Neon Postgres and rely on Neon's at-rest encryption. They are never exposed to the client after initial input. Custom RTMP destinations support a primary ingest URL and an optional backup ingest URL (used for YouTube's secondary RTMP endpoint).
+
+---
+
+# Contact and Community
+
+## Beta access
+
+Request beta access: https://zerocast.vercel.app/?beta=true
+
+The beta opt-in modal collects email, name, primary platform(s), and use case. Beta seats are limited; the team reviews applications weekly.
+
+## Contact
+
+- General inquiries / sales / non-profit verification: contact form at https://zerocast.vercel.app/contact
+- Founder: AviOfLagos (GitHub handle)
+- Repository: https://github.com/AviOfLagos/antigravity-streamyard
+
+## Community
+
+- GitHub Discussions: https://github.com/AviOfLagos/antigravity-streamyard/discussions
+- Issue tracker: https://github.com/AviOfLagos/antigravity-streamyard/issues
+- Changelog: https://zerocast.vercel.app/changelog (current release v2.0.0 — Phase 4 hardening: rate limiting + input sanitization)
+
+## Status
+
+Live system status (DB, Redis, LiveKit health checks): https://zerocast.vercel.app/status
+
+---
+
+End of corpus.

@@ -160,6 +160,18 @@ T35|.     |Φ3: lower-thirds rendered into composite (name labels baked in)
 T36|.     |Φ3: per-platform aspect (TikTok 9:16 canvas variant)
 T37|.     |Φ3: stage-tile drag-reorder (transform-aware sensors)
 T38|.     |Φ2.1: write fresh presigned URL back to DB to skip re-mint on next load (cost) |V19
+T39|x     |robots.ts AI bot allowlist (15 crawlers: GPTBot, OAI-SearchBot, ChatGPT-User, PerplexityBot, Perplexity-User, ClaudeBot, Claude-Web, anthropic-ai, Google-Extended, cohere-ai, Applebot-Extended, Bytespider, meta-externalagent, Diffbot, FacebookBot) + /admin disallow |
+T40|x     |sitemap.ts real lastModified per route (git mtime → fs stat → now fallback chain, memoized Map at module init) |
+T41|x     |public/llms.txt llmstxt.org spec + public/llms-full.txt 5.4K-word corpus (12 sections, no caveman) |
+T42|x     |Phase-1 swarm: 12 strategy docs (~46K w) under /doc/ — SEO playbook, event taxonomy, launch checklist, competitive landscape, brand voice, PostHog dashboards, PH launch, directories, Reddit drafts, YouTube plan, guest pitches, X+LinkedIn threads |
+T43|.     |Phase 2: PostHog marketing-funnel captures — BetaModal open/submit/success/error/duplicate/closed; MarketingNav nav_clicked; Footer footer_link_clicked; FaqSection faq_opened; CTA cta_clicked on all `<Link href="?beta=true">` |
+T44|.     |Phase 3: BetaRequest schema ext — referrer, utm_*, landingPage, userAgent, country, region, city (Vercel edge headers) + frontend attribution capture w/ first-touch + last-touch localStorage |
+T45|.     |Phase 3: PostHog identify + alias wiring on NextAuth signin (currently anonymous-only) |
+T46|.     |Phase 3: /admin/funnel + /admin/sources + /admin/users (cohort retention) dashboards |
+T47|.     |Phase 4: RateLimitHit model + /admin/abuse page; Vercel Speed Insights enable |
+T48|.     |Phase 5: StreamSessionMetrics + AiReplyMetric models; per-platform stats persistence; /admin/streams + /admin/ai-quality |
+T49|x     |Cleanup: delete /public/llm.txt (singular, superseded by /public/llms.txt plural per llmstxt.org spec) |
+T50|.     |Decide: apex domain (custom vs `zerocast.vercel.app`), founder real-name disclosure in public docs, parent company display, public support email |
 
 Status: x done, ~ wip, . todo
 ```

@@ -1,0 +1,43 @@
+# Zerocast
+
+> Browser-based live streaming studio with a built-in AI Co-Host. Multistream to YouTube Live, Twitch, Kick, TikTok Live, and any custom RTMP destination while an AI moderates chat in your voice.
+
+Zerocast is a Next.js + LiveKit web app that lets creators run their entire live production from a browser — no OBS, no downloads, no second monitor. Up to 5 guests join via a link, the stage composes itself on a 1920x1080 canvas, and a Gemini-powered AI Co-Host reads aggregated chat from every connected platform and replies in your tone (text only, never audio). The product is in private beta and targets podcasters, gaming streamers, educators, and churches who want a single tool that combines the StreamYard studio experience, Restream-style multistreaming, and AI-driven chat automation.
+
+## Documentation
+
+- [Pricing](https://zerocast.vercel.app/pricing): Plans and free beta tier
+- [Features](https://zerocast.vercel.app/features): Studio, AI, multistreaming, integrations
+- [AI Co-Host](https://zerocast.vercel.app/features/ai-cohost): How Tone Matching works
+- [Integrations](https://zerocast.vercel.app/integrations): Connected platforms and custom RTMP
+
+## Comparisons
+
+- [vs StreamYard](https://zerocast.vercel.app/compare/streamyard-alternative): Browser studio + AI automation vs StreamYard
+- [vs Restream](https://zerocast.vercel.app/compare/restream-alternative): Multistreaming with a real AI Co-Host
+- [vs Riverside](https://zerocast.vercel.app/compare/riverside-alternative): Live-first vs record-first
+- [vs Streamlabs](https://zerocast.vercel.app/compare/streamlabs-alternative): Browser-based vs desktop install
+
+## Use Cases
+
+- [Podcasters](https://zerocast.vercel.app/use-cases/podcasters): Record and live-stream in the same session
+- [Educators](https://zerocast.vercel.app/use-cases/educators): Live lessons, workshops, cohort Q&As
+- [Churches](https://zerocast.vercel.app/use-cases/churches): One-tap go-live for AV volunteers
+- [Gamers](https://zerocast.vercel.app/use-cases/gamers): Multistream while the AI runs chat
+
+## Glossary
+
+- [What is multistreaming?](https://zerocast.vercel.app/glossary/multistreaming): Definition, ToS rules, bandwidth math
+- [What is RTMP?](https://zerocast.vercel.app/glossary/rtmp): Protocol, stream keys, RTMP vs WebRTC
+
+## Tools
+
+- [Streaming Bitrate Calculator](https://zerocast.vercel.app/tools/bitrate-calculator): Recommended bitrates by resolution and framerate
+
+## Optional
+
+- [Full content corpus (llms-full.txt)](https://zerocast.vercel.app/llms-full.txt)
+- [FAQ](https://zerocast.vercel.app/#faq)
+- [Blog](https://zerocast.vercel.app/blog)
+- [Changelog](https://zerocast.vercel.app/changelog)
+- [About](https://zerocast.vercel.app/about)

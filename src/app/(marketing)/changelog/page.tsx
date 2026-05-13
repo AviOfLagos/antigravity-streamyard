@@ -30,6 +30,67 @@ const tagStyles: Record<Tag, string> = {
 
 const entries: ChangelogEntry[] = [
   {
+    date: "May 13, 2026",
+    version: "v2.4.0",
+    title: "Marketing Design System, Admin Console & Observability",
+    changes: [
+      // Marketing design system
+      { tag: "feat", text: "Semantic color tokens — surface / ink / brand / accent / status — registered in globals.css @theme inline so Tailwind v4 auto-generates utilities (oklch base, /alpha modifier works)" },
+      { tag: "feat", text: "Signal Static design philosophy + full styleguide (docs/styleguide.md, docs/design/philosophy.md) — invariants, token catalog, usage patterns, forbidden patterns, add-a-token instructions" },
+      { tag: "improvement", text: "Every marketing page + MarketingNav + Footer + FaqSection + AnimatedChatWidget + BetaModal + components/seo/* migrated from hardcoded hex / palette-direct classes to semantic tokens" },
+
+      // Marketing assets
+      { tag: "feat", text: "/og/marketing dynamic image generator — 6 content scenes (hero, multistream, ai-cohost, browser, beta, quote) × 5 variants (square 1080², og 1200×630, story 1080×1920, banner 1500×500, portrait 1080×1350) rendered on demand via @vercel/og with per-scene foreground graphics, brand glow, scanline whisper, hairline frame" },
+      { tag: "feat", text: "Inline SVG illustration components (PulseRing, MultistreamFan, SignalArc) — token-driven via currentColor" },
+      { tag: "improvement", text: "SignalArc embedded as low-opacity backdrop behind /features hero" },
+
+      // Admin console
+      { tag: "feat", text: "/adminos sign-in entrypoint — dev test signin + Google + Resend magic link, redirects to /admin on success, shows forbidden panel for non-admin sessions" },
+      { tag: "feat", text: "/admin operations console — gated layout via requireAdmin(), top nav (Overview, Beta Requests, Errors, Marketing Kit), sign-out, current-admin badge" },
+      { tag: "feat", text: "/admin/marketing-kit — generates social cards via /og/marketing, illustration showcase, campaign concept scaffolding for future asset ideas (Product Hunt kit, email headers, Lottie reel, podcast covers, X teaser, overlay templates, community pack, sticker pack, conference backdrop, in-app empty states)" },
+      { tag: "improvement", text: "Centralized admin allow-list at src/lib/admin.ts (requireAdmin / isAdminEmail) — replaces ad-hoc ADMIN_EMAILS Sets in individual routes" },
+
+      // Observability
+      { tag: "feat", text: "Homegrown error reporter — ErrorBeacon (client window.error + unhandledrejection, keepalive POST) + instrumentation.ts onRequestError hook (server App Router + actions + middleware) → Redis ring buffer errors:recent capped at 200 → /admin/errors viewer with grouped Top Messages + expandable Recent Feed" },
+      { tag: "feat", text: "/api/errors ingest endpoint — Zod-validated, stripHtml-sanitized, rate-limited via errors:ingest limiter (30/min/IP), fail-open" },
+
+      // Fixes
+      { tag: "fix", text: "Studio rehydration crash — guard CompositeStage + studio store against stale activeLayout id from older Redis snapshots (preset.slots of undefined regression). Two-layer defense: fallback to four-grid at compositor + reject unknown ids at hydrateFromSaved." },
+    ],
+  },
+  {
+    date: "May 13, 2026",
+    version: "v2.3.0",
+    title: "Studio Layout Rewrite + Recording to R2 (Composite Egress Template)",
+    changes: [
+      { tag: "feat", text: "Fixed 1920×1080 virtual canvas for the studio stage — CSS container queries + transform:scale fit any viewport while preserving exact pixel coordinates" },
+      { tag: "feat", text: "10 slot-based layout presets (solo, two-side, three-row, four/five/six-grid, two spotlight variants, two screen-share variants) replace CSS-grid responsive reflow" },
+      { tag: "feat", text: "Slot resolver in CompositeStage — pinned > host-* > tileOrder, screenshare → dedicated slot if preset defines one" },
+      { tag: "feat", text: "Drag-to-reorder participants in backstage strip via @dnd-kit (pointer + keyboard sensors) — order persists in tileOrder and propagates to the composite egress" },
+      { tag: "feat", text: "Cloud recording to Cloudflare R2 (S3-compatible, free egress) — EncodedFileOutput.s3 with R2 creds, 1080p30 encoding" },
+      { tag: "feat", text: "Custom composite egress template at /composite/[code] — public LK subscriber renders the same CompositeStage as the host preview, so recording and RTMP match viewer-side pixel-for-pixel" },
+      { tag: "feat", text: "Session summary now shows a Download recording button with 24h presigned URL refresh on stale links" },
+      { tag: "improvement", text: "LayoutBroadcaster widened with tileOrder + onScreenParticipantIds; rebroadcasts on participant join so late subscribers (composite egress workers) get full state without waiting" },
+      { tag: "improvement", text: "RTMP live egress (Go Live to YouTube/Twitch/Kick/TikTok) now also uses the custom composite template — drops LiveKit's built-in grid template" },
+      { tag: "improvement", text: "StreamSession schema extended with recordingPath + recordingUrl; record route persists the row on start and updates on stop" },
+      { tag: "fix", text: "Studio 'Something went wrong' crash on entry — useConnectionQualityIndicator() now passes localParticipant explicitly (LK components-react v2.9.20 throws when no ParticipantContext exists)" },
+      { tag: "fix", text: "Recording start/stop error logs include HTTP status code for easier debugging" },
+      { tag: "fix", text: "Migration drift recovery — schema synced via prisma db push (matches existing prod build flow)" },
+    ],
+  },
+  {
+    date: "May 13, 2026",
+    version: "v2.2.0",
+    title: "SEO Foundation Phase 1 — AI Bot Allowlist, llms.txt Spec, Real Sitemap Lastmod",
+    changes: [
+      { tag: "feat", text: "AI crawler allowlist in robots.ts — 15 bots explicitly permitted (GPTBot, OAI-SearchBot, ChatGPT-User, PerplexityBot, Perplexity-User, ClaudeBot, Claude-Web, anthropic-ai, Google-Extended, cohere-ai, Applebot-Extended, Bytespider, meta-externalagent, Diffbot, FacebookBot) to maximize AI Overview / ChatGPT / Perplexity citation eligibility" },
+      { tag: "feat", text: "/llms.txt now follows the full llmstxt.org spec — structured H1/H2 site map for LLM ingestion (replaces old /llm.txt singular)" },
+      { tag: "feat", text: "/llms-full.txt — 5,400-word content corpus covering features, pricing, comparisons, use cases, glossary, FAQ, platforms — one-shot LLM ingestion file" },
+      { tag: "improvement", text: "sitemap.xml now reports real per-route lastModified via git mtime, with fs.stat and now() fallback chain — Google can prioritize freshly-updated content" },
+      { tag: "security", text: "/admin and /api/admin added to robots disallow list across all crawlers" },
+    ],
+  },
+  {
     date: "May 11, 2026",
     version: "v2.1.0",
     title: "Marketing Site Overhaul & Beta Infrastructure",

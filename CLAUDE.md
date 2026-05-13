@@ -104,4 +104,4 @@ Neon Postgres (Prisma)
 
 - `docs/architecture-audit.md`, `docs/audit-v1.8.0.md`, `docs/frontend-performance-audit.md`, `docs/qa-test-plan.md`, `docs/orchestration-plan.md` — historical context for prior audits / migrations.
 - `docs/zerocast-api.postman_collection.json` — API collection.
-- Changelog: `src/app/changelog/page.tsx` (current: **v2.0.0**, Phase 4 hardening — rate limiting + sanitization).
+- Changelog: `src/app/(marketing)/changelog/page.tsx` (current: **v2.3.0**, slot-based canvas + R2 recording + composite egress template).
