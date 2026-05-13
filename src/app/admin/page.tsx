@@ -1,18 +1,23 @@
 import Link from "next/link";
-import { Mail, Palette, ArrowRight } from "lucide-react";
+import { Mail, Palette, ArrowRight, AlertTriangle } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
+import { getRecentErrors } from "@/lib/errors";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminHome() {
-  const [betaCount, recentBeta] = await Promise.all([
+  const [betaCount, recentBeta, errors] = await Promise.all([
     prisma.betaRequest.count(),
     prisma.betaRequest.findFirst({
       orderBy: { createdAt: "desc" },
       select: { createdAt: true },
     }),
+    getRecentErrors(200),
   ]);
+
+  const errorCount = errors.length;
+  const lastError = errors[0];
 
   const tools = [
     {
@@ -24,6 +29,17 @@ export default async function AdminHome() {
       sub: recentBeta
         ? `Latest ${recentBeta.createdAt.toISOString().slice(0, 10)}`
         : "No requests yet",
+    },
+    {
+      href: "/admin/errors",
+      icon: AlertTriangle,
+      title: "Errors",
+      blurb:
+        "Client + server runtime errors captured by the beacon + Next.js instrumentation hook.",
+      stat: `${errorCount} ${errorCount === 1 ? "error" : "errors"}`,
+      sub: lastError
+        ? `Latest ${new Date(lastError.ts).toISOString().slice(0, 10)}`
+        : "Quiet — none captured yet",
     },
     {
       href: "/admin/marketing-kit",
@@ -52,7 +68,7 @@ export default async function AdminHome() {
         admin allow-list — extend in <code className="text-brand-soft font-mono text-sm">src/lib/admin.ts</code>.
       </p>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {tools.map((t) => {
           const Icon = t.icon;
           return (

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { LogOut, Mail, Palette, Home } from "lucide-react";
+import { LogOut, Mail, Palette, Home, AlertTriangle } from "lucide-react";
 
 import { signOut } from "@/auth";
 import { requireAdmin } from "@/lib/admin";
@@ -12,6 +12,7 @@ export const metadata = {
 const NAV = [
   { href: "/admin", label: "Overview", icon: Home },
   { href: "/admin/beta-requests", label: "Beta Requests", icon: Mail },
+  { href: "/admin/errors", label: "Errors", icon: AlertTriangle },
   { href: "/admin/marketing-kit", label: "Marketing Kit", icon: Palette },
 ];
 
