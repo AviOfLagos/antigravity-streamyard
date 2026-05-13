@@ -17,7 +17,9 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable"
 import { useParticipants } from "@livekit/components-react"
-import { Users } from "lucide-react"
+import { Check, Copy, Users } from "lucide-react"
+import { useState } from "react"
+import { toast } from "sonner"
 
 import ParticipantRow from "@/components/studio/ParticipantRow"
 import { useStudioStore } from "@/store/studio"
@@ -33,6 +35,22 @@ export default function BackstagePanel({ isHost, roomCode, hostToken }: Backstag
   const onScreenParticipantIds = useStudioStore((s) => s.onScreenParticipantIds)
   const tileOrder = useStudioStore((s) => s.tileOrder)
   const setTileOrder = useStudioStore((s) => s.setTileOrder)
+  const [copiedInvite, setCopiedInvite] = useState(false)
+
+  const handleCopyInvite = async () => {
+    const url =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/join/${roomCode}`
+        : `/join/${roomCode}`
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopiedInvite(true)
+      toast.success("Invite link copied")
+      setTimeout(() => setCopiedInvite(false), 2000)
+    } catch {
+      toast.error("Could not copy — your browser blocked clipboard access")
+    }
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -89,14 +107,27 @@ export default function BackstagePanel({ isHost, roomCode, hostToken }: Backstag
     return (
       <div className="relative min-h-[5.5rem] bg-studio-bg-deep border-t border-white/6">
         <div
-          className="flex items-center gap-2 px-3 py-2 overflow-x-auto min-h-[5.5rem] scroll-smooth"
+          className="flex items-center justify-center gap-3 px-3 py-2 min-h-[5.5rem]"
           role="group"
           aria-label="Participants"
         >
-          <div className="flex items-center gap-2 text-gray-400 text-xs mx-auto">
-            <Users className="w-3.5 h-3.5" />
-            <span>No guests yet — share the invite link</span>
+          <div className="flex items-center gap-2 text-gray-400 text-xs">
+            <Users className="w-3.5 h-3.5" aria-hidden="true" />
+            <span>No guests yet —</span>
           </div>
+          <button
+            type="button"
+            onClick={handleCopyInvite}
+            aria-label={copiedInvite ? "Invite link copied" : "Copy invite link"}
+            className="inline-flex items-center gap-1.5 bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 hover:text-indigo-200 text-xs font-medium px-3 py-1.5 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-studio-bg-deep"
+          >
+            {copiedInvite ? (
+              <Check className="w-3.5 h-3.5" aria-hidden="true" />
+            ) : (
+              <Copy className="w-3.5 h-3.5" aria-hidden="true" />
+            )}
+            {copiedInvite ? "Copied!" : "Copy invite link"}
+          </button>
         </div>
       </div>
     )

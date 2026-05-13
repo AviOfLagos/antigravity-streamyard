@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import type { SSEEventData } from "@/lib/chat/types"
 import { SSEEventDataSchema } from "@/lib/schemas/sse"
 import { GuestRequestResponseSchema } from "@/lib/schemas/guest"
+import Spinner from "@/components/ui/Spinner"
 import GuestStudio from "./GuestStudio"
 
 type JoinStatus = "form" | "preview" | "waiting" | "denied" | "joining" | "joined" | "timeout" | "room-full" | "kicked"
@@ -138,6 +139,7 @@ function DevicePreview({
 
 export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
   const [status, setStatus] = useState<JoinStatus>("form")
+  const [requesting, setRequesting] = useState(false)
   const [displayName, setDisplayName] = useState("")
   const [guestEmail, setGuestEmail] = useState("")
   const [guestId, setGuestId] = useState<string | null>(null)
@@ -248,8 +250,9 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
   }
 
   const handleRequestJoin = async () => {
-    if (!displayName.trim()) return
+    if (!displayName.trim() || requesting) return
     setError(null)
+    setRequesting(true)
 
     try {
       const payload: Record<string, string> = { name: displayName.trim() }
@@ -285,6 +288,8 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
       setStatus("waiting")
     } catch {
       setError("Network error. Please try again.")
+    } finally {
+      setRequesting(false)
     }
   }
 
@@ -434,9 +439,17 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
               </Button>
               <Button
                 onClick={handleRequestJoin}
-                className="flex-1 bg-indigo-600 hover:bg-indigo-500"
+                disabled={requesting || !displayName.trim()}
+                className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Request to Join
+                {requesting ? (
+                  <span className="inline-flex items-center gap-2 text-white">
+                    <Spinner size="sm" />
+                    Requesting…
+                  </span>
+                ) : (
+                  "Request to Join"
+                )}
               </Button>
             </div>
 
@@ -475,6 +488,20 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
             {sseError && (
               <p className="text-yellow-400/70 text-xs mt-3">Connection interrupted. Reconnecting...</p>
             )}
+            <button
+              type="button"
+              onClick={() => {
+                if (sseRef.current) {
+                  sseRef.current.close()
+                  sseRef.current = null
+                }
+                setGuestId(null)
+                setStatus("preview")
+              }}
+              className="mt-5 inline-flex items-center justify-center text-xs text-gray-500 hover:text-gray-300 underline-offset-4 hover:underline transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded px-2 py-1"
+            >
+              Cancel request
+            </button>
           </CardContent>
         </Card>
       </div>

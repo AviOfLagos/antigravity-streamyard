@@ -12,6 +12,7 @@ import {
 import { Radio, Square, ExternalLink, CheckCircle2, AlertCircle, Info } from "lucide-react"
 import { toast } from "sonner"
 import PlatformIcon, { PLATFORM_META } from "@/components/ui/PlatformIcon"
+import Spinner from "@/components/ui/Spinner"
 import { useStudioStore } from "@/store/studio"
 
 interface PlatformStreamStatus {
@@ -298,7 +299,7 @@ export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle,
               >
                 {stopping ? (
                   <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <Spinner size="md" />
                     Ending...
                   </span>
                 ) : (
@@ -493,7 +494,7 @@ export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle,
                 >
                   {starting ? (
                     <span className="flex items-center gap-2">
-                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <Spinner size="md" />
                       Starting...
                     </span>
                   ) : (

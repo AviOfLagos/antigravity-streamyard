@@ -101,7 +101,7 @@ export default function ControlBar({ roomCode }: ControlBarProps) {
   }
 
   return (
-    <div className="flex items-center justify-center px-4 py-2 bg-studio-bg-deep border-t border-white/6 gap-2">
+    <div className="flex items-center justify-center px-4 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] bg-studio-bg-deep border-t border-white/6 gap-2">
       <TrackButton
         source={Track.Source.Microphone}
         onIcon={<Mic className="w-5 h-5" />}
