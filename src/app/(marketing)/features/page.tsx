@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
+import { SignalArc } from "@/components/marketing/illustrations"
 import {
   ArrowRight,
   BarChart2,
@@ -121,8 +122,14 @@ export default function FeaturesPage() {
     <div className="text-white">
 
       {/* Header */}
-      <header className="pt-20 pb-12 px-6">
-        <div className="max-w-4xl mx-auto text-center">
+      <header className="relative pt-20 pb-12 px-6 overflow-hidden">
+        <div
+          aria-hidden
+          className="absolute inset-x-0 top-8 flex justify-center -z-10 text-brand-soft/40 pointer-events-none"
+        >
+          <SignalArc width={1200} />
+        </div>
+        <div className="relative max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-accent-violet/10 text-accent-violet-text border border-accent-violet/20 rounded-full px-4 py-1.5 text-sm font-medium mb-6">
             {liveCount} live features + {comingSoonCount} coming soon
           </div>

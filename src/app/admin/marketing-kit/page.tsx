@@ -1,29 +1,46 @@
 import type { Metadata } from "next";
 import {
-  PulseRing,
-  MultistreamFan,
-  SignalArc,
-} from "@/components/marketing/illustrations";
+  Sparkles,
+  Mail,
+  Film,
+  Mic,
+  Send,
+  Layers,
+  MessageSquare,
+  Sticker,
+  Megaphone,
+  Image as ImageIcon,
+  Wand2,
+} from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Marketing Kit — Zerocast Admin",
   description:
-    "Generate social cards, OG images, and embeddable brand assets from the Signal Static design system.",
+    "Generate social cards, OG images, and campaign assets from the Signal Static design system.",
   robots: { index: false, follow: false },
 };
 
-const SCENES = [
+/* ─── scenes (rendered via /og/marketing) ────────────────────────── */
+
+type Scene = {
+  id: string;
+  label: string;
+  kicker: string;
+  blurb: string;
+};
+
+const SCENES: Scene[] = [
   {
     id: "hero",
     label: "Hero / Launch",
     kicker: "Private Beta",
-    blurb: "Top-of-funnel announcement. The headline card.",
+    blurb: "Top-of-funnel announcement.",
   },
   {
     id: "multistream",
     label: "Multistream",
     kicker: "Feature",
-    blurb: "Showcase the 4-platform + RTMP fan-out.",
+    blurb: "Four-platform fan-out.",
   },
   {
     id: "ai-cohost",
@@ -45,19 +62,169 @@ const SCENES = [
   },
   {
     id: "quote",
-    label: "Editorial / Quote",
+    label: "Editorial Quote",
     kicker: "Long-form",
-    blurb: "Pull-quote for blog & thought-leadership posts.",
+    blurb: "Pull-quote for blog + thought-leadership.",
   },
-] as const;
+];
 
-const VARIANTS = [
-  { id: "square", label: "Square", size: "1080 × 1080", platforms: "IG feed · X post · LinkedIn post" },
-  { id: "og", label: "OG / Link card", size: "1200 × 630", platforms: "Open Graph · X card · LinkedIn link" },
-  { id: "story", label: "Story", size: "1080 × 1920", platforms: "IG / TikTok / Snapchat story" },
-  { id: "banner", label: "Banner", size: "1500 × 500", platforms: "X header · LinkedIn cover" },
-  { id: "portrait", label: "Portrait", size: "1080 × 1350", platforms: "IG portrait · Pinterest" },
-] as const;
+type Variant = {
+  id: string;
+  label: string;
+  size: string;
+  platforms: string;
+};
+
+const VARIANTS: Variant[] = [
+  { id: "square", label: "1:1", size: "1080×1080", platforms: "IG · X · LinkedIn" },
+  { id: "og", label: "OG", size: "1200×630", platforms: "Link card / OG" },
+  { id: "story", label: "Story", size: "1080×1920", platforms: "IG / TikTok / Snap" },
+  { id: "banner", label: "Banner", size: "1500×500", platforms: "X / LinkedIn cover" },
+  { id: "portrait", label: "4:5", size: "1080×1350", platforms: "IG portrait" },
+];
+
+/* ─── campaign concept scaffolding ───────────────────────────────── */
+
+type CampaignStatus = "shipped" | "in-design" | "planned";
+
+type Campaign = {
+  id: string;
+  title: string;
+  blurb: string;
+  icon: React.ElementType;
+  status: CampaignStatus;
+  surface: "social" | "email" | "video" | "print" | "in-app";
+};
+
+const CAMPAIGNS: Campaign[] = [
+  {
+    id: "social-cards",
+    title: "Social card system",
+    blurb:
+      "Six scenes × five sizes via /og/marketing. Live and renderable from this page.",
+    icon: ImageIcon,
+    status: "shipped",
+    surface: "social",
+  },
+  {
+    id: "product-hunt-kit",
+    title: "Product Hunt launch kit",
+    blurb:
+      "Gallery hero (1270×760), thumbnail (240×240), Maker comment card, and a launch-day OG variant.",
+    icon: Sparkles,
+    status: "planned",
+    surface: "social",
+  },
+  {
+    id: "email-header-system",
+    title: "Email header system",
+    blurb:
+      "600px-wide announcement headers in three flavors: feature drop, beta invite, milestone.",
+    icon: Mail,
+    status: "planned",
+    surface: "email",
+  },
+  {
+    id: "lottie-reel",
+    title: "Animated banner reel",
+    blurb:
+      "Lottie loops for stream-deck overlays — pulse ring breathing, multistream fan-out, AI-cohost spark.",
+    icon: Film,
+    status: "in-design",
+    surface: "video",
+  },
+  {
+    id: "podcast-cover-series",
+    title: "Podcast cover series",
+    blurb:
+      "3000×3000 episode covers — episode number, guest name, signal-arc backdrop.",
+    icon: Mic,
+    status: "planned",
+    surface: "social",
+  },
+  {
+    id: "x-video-teaser",
+    title: "Beta wait-list teaser",
+    blurb:
+      "9-second silent loop for X / Bluesky / Threads. Headline reveal + co-host pulse.",
+    icon: Send,
+    status: "planned",
+    surface: "video",
+  },
+  {
+    id: "overlay-templates",
+    title: "Stream-overlay templates",
+    blurb:
+      "Browser-source overlays: starting soon, brb, intermission, ending — token-driven.",
+    icon: Layers,
+    status: "planned",
+    surface: "in-app",
+  },
+  {
+    id: "community-pack",
+    title: "Slack / Discord asset pack",
+    blurb:
+      "Server icon, channel banner, role badges, emoji set — for community moderators.",
+    icon: MessageSquare,
+    status: "planned",
+    surface: "in-app",
+  },
+  {
+    id: "sticker-set",
+    title: "Brand sticker pack",
+    blurb:
+      "Die-cut PNGs (4×4in) — wordmark, pulse ring, “co-host with AI” line. Sticker Mule ready.",
+    icon: Sticker,
+    status: "planned",
+    surface: "print",
+  },
+  {
+    id: "conference-backdrop",
+    title: "Conference backdrop",
+    blurb:
+      "10×8ft step-and-repeat for booth photo ops. Tiled wordmark + signal-arc pattern.",
+    icon: Megaphone,
+    status: "planned",
+    surface: "print",
+  },
+  {
+    id: "in-app-empty-states",
+    title: "In-app empty-state set",
+    blurb:
+      "Illustration kit for dashboard zero-states: no rooms, no recordings, no chat history.",
+    icon: Wand2,
+    status: "planned",
+    surface: "in-app",
+  },
+];
+
+const STATUS_STYLES: Record<
+  CampaignStatus,
+  { label: string; cls: string }
+> = {
+  shipped: {
+    label: "Shipped",
+    cls: "bg-success/10 text-success-text border-success/30",
+  },
+  "in-design": {
+    label: "In design",
+    cls: "bg-warn/10 text-warn-text border-warn/30",
+  },
+  planned: {
+    label: "Planned",
+    cls: "bg-brand/10 text-brand-soft border-brand/30",
+  },
+};
+
+const SURFACE_LABEL: Record<Campaign["surface"], string> = {
+  social: "Social",
+  email: "Email",
+  video: "Video",
+  print: "Print",
+  "in-app": "In-app",
+};
+
+/* ─── token swatch strip (compact) ───────────────────────────────── */
 
 type Swatch = { name: string; className: string; border?: boolean };
 
@@ -78,70 +245,75 @@ const TOKEN_SWATCHES: Swatch[] = [
   { name: "danger", className: "bg-danger" },
 ];
 
+/* ─── page ───────────────────────────────────────────────────────── */
+
 export default function MarketingKitPage() {
   return (
     <div className="text-white">
-      {/* ── HERO ────────────────────────────────────────── */}
-      <section className="relative px-6 pt-28 pb-20 max-w-7xl mx-auto overflow-hidden">
-        <div className="absolute inset-0 -z-10 brand-glow-hero" />
-        <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-brand-soft border border-brand/20 rounded-full px-4 py-1.5 mb-10">
-          <span className="w-1.5 h-1.5 rounded-full bg-brand-soft" />
-          Marketing Kit
-        </div>
-        <h1
-          className="font-black tracking-tighter leading-[1] mb-6"
-          style={{ fontSize: "clamp(40px, 6vw, 84px)" }}
-        >
-          Signal Static —<br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-soft to-accent-purple">
-            assets for the field.
-          </span>
-        </h1>
-        <p className="text-ink-muted text-lg max-w-2xl leading-relaxed">
-          Social cards, OG images, and embeddable brand graphics generated from
-          the design system. Pick a scene, pick a size, hit download. Every
-          asset is rendered fresh on request — edit the route to remix on the fly.
-        </p>
-        <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-mono text-ink-faint">
-          <span>docs/styleguide.md</span>
-          <span className="text-ink-fainter">·</span>
-          <span>docs/design/philosophy.md</span>
-          <span className="text-ink-fainter">·</span>
-          <a
-            href="/og/marketing?variant=og&scene=hero"
-            className="text-brand-soft hover:text-white transition-colors"
-            target="_blank"
-            rel="noreferrer"
-          >
-            /og/marketing →
-          </a>
+      {/* ── HERO ─────────────────────────────────────────────── */}
+      <section className="relative px-6 pt-20 pb-14 max-w-7xl mx-auto overflow-hidden">
+        <div className="absolute inset-0 -z-10 brand-glow-section" />
+        <div className="flex items-end justify-between flex-wrap gap-6">
+          <div>
+            <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-brand-soft border border-brand/20 rounded-full px-4 py-1.5 mb-8">
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-soft" />
+              Marketing Kit
+            </div>
+            <h1
+              className="font-black tracking-tighter leading-[1] mb-5"
+              style={{ fontSize: "clamp(36px, 5vw, 64px)" }}
+            >
+              Signal Static —<br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-soft to-accent-purple">
+                campaign assets.
+              </span>
+            </h1>
+            <p className="text-ink-muted max-w-xl leading-relaxed">
+              Social cards, OG images, and campaign concepts driven by the
+              design system. Generate any (scene × size) on demand. Scaffold
+              new campaign ideas as concept tiles before designing them.
+            </p>
+          </div>
+          <div className="flex flex-col gap-1.5 text-xs font-mono text-ink-faint">
+            <span>docs/styleguide.md</span>
+            <span>docs/design/philosophy.md</span>
+            <a
+              href="/og/marketing?variant=og&scene=hero"
+              className="text-brand-soft hover:text-white transition-colors"
+              target="_blank"
+              rel="noreferrer"
+            >
+              /og/marketing →
+            </a>
+          </div>
         </div>
       </section>
 
-      {/* ── SOCIAL CARDS ────────────────────────────────── */}
-      <section className="px-6 py-20 max-w-7xl mx-auto">
-        <div className="flex items-end justify-between gap-6 mb-16 flex-wrap">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-ink-faint mb-3">
-              Section 01
-            </p>
-            <h2
-              className="font-black leading-[1.05] tracking-tight"
-              style={{ fontSize: "clamp(28px, 3.5vw, 44px)" }}
-            >
-              Social cards
-            </h2>
+      {/* ── SOCIAL CARDS — 3-col grid ────────────────────────── */}
+      <section className="px-6 pb-20 max-w-7xl mx-auto">
+        <div className="flex items-end justify-between gap-6 mb-10 flex-wrap pb-5 border-b border-white/8">
+          <div className="flex items-baseline gap-4">
+            <span className="text-xs font-bold uppercase tracking-widest text-brand-soft">
+              01
+            </span>
+            <h2 className="font-bold text-2xl tracking-tight">Social cards</h2>
+            <span className="text-xs font-mono text-ink-faint">
+              {SCENES.length} scenes · {VARIANTS.length} sizes
+            </span>
           </div>
-          <p className="text-ink-muted text-sm max-w-md leading-relaxed">
-            Six scenes × five sizes. Each preview is the live OG endpoint —
-            right-click → save, or use the size buttons.
+          <p className="text-ink-muted text-sm">
+            Generated by <code className="text-brand-soft">/og/marketing</code>{" "}
+            — click any size pill to download.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-12">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {SCENES.map((scene) => (
-            <article key={scene.id} className="flex flex-col gap-5">
-              <div className="relative w-full aspect-[1200/630] rounded-2xl overflow-hidden border border-white/8 bg-surface-1">
+            <article
+              key={scene.id}
+              className="flex flex-col gap-3 rounded-xl border border-white/8 bg-surface-1/40 p-4 hover:border-brand/30 transition-colors"
+            >
+              <div className="relative w-full aspect-[1200/630] rounded-lg overflow-hidden border border-white/8 bg-surface-1">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={`/og/marketing?variant=og&scene=${scene.id}`}
@@ -149,29 +321,26 @@ export default function MarketingKitPage() {
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="flex items-baseline justify-between gap-4">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-brand-soft mb-1">
-                    {scene.kicker}
-                  </p>
-                  <h3 className="font-bold text-lg">{scene.label}</h3>
-                </div>
-                <p className="text-ink-faint text-xs">{scene.blurb}</p>
+              <div className="flex items-baseline justify-between gap-3">
+                <h3 className="font-bold text-sm text-white">{scene.label}</h3>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-brand-soft">
+                  {scene.kicker}
+                </span>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <p className="text-ink-faint text-xs leading-relaxed">
+                {scene.blurb}
+              </p>
+              <div className="flex flex-wrap gap-1.5 pt-1">
                 {VARIANTS.map((v) => (
                   <a
                     key={v.id}
                     href={`/og/marketing?variant=${v.id}&scene=${scene.id}`}
                     download={`zerocast-${scene.id}-${v.id}.png`}
-                    className="inline-flex flex-col items-start gap-0.5 px-3 py-2 rounded-lg border border-white/8 hover:border-brand/40 hover:bg-brand/5 transition-colors"
+                    title={`${v.size} — ${v.platforms}`}
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-white/8 hover:border-brand/40 hover:bg-brand/5 transition-colors text-[10px] font-mono"
                   >
-                    <span className="text-xs font-semibold text-white">
-                      {v.label}
-                    </span>
-                    <span className="text-[10px] font-mono text-ink-faint">
-                      {v.size}
-                    </span>
+                    <span className="font-bold text-white">{v.label}</span>
+                    <span className="text-ink-faint">{v.size}</span>
                   </a>
                 ))}
               </div>
@@ -180,156 +349,143 @@ export default function MarketingKitPage() {
         </div>
       </section>
 
-      {/* ── EMBEDDED ILLUSTRATIONS ──────────────────────── */}
-      <section className="px-6 py-24 max-w-7xl mx-auto border-t border-white/5">
-        <div className="flex items-end justify-between gap-6 mb-16 flex-wrap">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-ink-faint mb-3">
-              Section 02
-            </p>
-            <h2
-              className="font-black leading-[1.05] tracking-tight"
-              style={{ fontSize: "clamp(28px, 3.5vw, 44px)" }}
-            >
-              Embedded illustrations
+      {/* ── CAMPAIGN CONCEPTS — scaffolding for new ideas ───── */}
+      <section className="px-6 pb-20 max-w-7xl mx-auto">
+        <div className="flex items-end justify-between gap-6 mb-10 flex-wrap pb-5 border-b border-white/8">
+          <div className="flex items-baseline gap-4">
+            <span className="text-xs font-bold uppercase tracking-widest text-brand-soft">
+              02
+            </span>
+            <h2 className="font-bold text-2xl tracking-tight">
+              Campaign concepts
             </h2>
+            <span className="text-xs font-mono text-ink-faint">
+              {CAMPAIGNS.length} ideas ·{" "}
+              {CAMPAIGNS.filter((c) => c.status === "shipped").length} shipped ·{" "}
+              {CAMPAIGNS.filter((c) => c.status === "in-design").length} in
+              design ·{" "}
+              {CAMPAIGNS.filter((c) => c.status === "planned").length} planned
+            </span>
           </div>
-          <p className="text-ink-muted text-sm max-w-md leading-relaxed">
-            React components. Token-driven via <code className="text-brand-soft">currentColor</code>.
-            Import from <code className="text-brand-soft">@/components/marketing/illustrations</code>.
+          <p className="text-ink-muted text-sm max-w-md">
+            Scaffold the next asset before designing it. Edit{" "}
+            <code className="text-brand-soft">CAMPAIGNS</code> in this file to
+            add tiles.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          <figure className="rounded-2xl border border-white/8 bg-surface-1/40 p-10 flex flex-col items-center gap-8">
-            <div className="text-brand-soft">
-              <PulseRing size={240} />
-            </div>
-            <figcaption className="text-center">
-              <p className="font-bold mb-1">PulseRing</p>
-              <p className="text-xs text-ink-faint font-mono">{`<PulseRing size={240} />`}</p>
-            </figcaption>
-          </figure>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {CAMPAIGNS.map((c) => {
+            const Icon = c.icon;
+            const status = STATUS_STYLES[c.status];
+            return (
+              <div
+                key={c.id}
+                className="group flex flex-col gap-4 rounded-xl border border-white/8 bg-surface-1/40 p-5 hover:border-brand/30 hover:bg-surface-1 transition-colors"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="w-9 h-9 rounded-lg bg-brand/10 border border-brand/20 flex items-center justify-center text-brand-soft">
+                    <Icon size={16} />
+                  </div>
+                  <span
+                    className={`inline-flex items-center text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border ${status.cls}`}
+                  >
+                    {status.label}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-white mb-1.5">
+                    {c.title}
+                  </h3>
+                  <p className="text-ink-muted text-xs leading-relaxed">
+                    {c.blurb}
+                  </p>
+                </div>
+                <div className="pt-3 border-t border-white/5 flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-ink-faint">
+                    {SURFACE_LABEL[c.surface]}
+                  </span>
+                  <span className="text-[10px] font-mono text-ink-faint">
+                    {c.id}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
 
-          <figure className="rounded-2xl border border-white/8 bg-surface-1/40 p-10 flex flex-col items-center justify-center gap-8 md:col-span-2">
-            <div className="text-brand-soft w-full">
-              <MultistreamFan width={520} className="mx-auto" />
-            </div>
-            <figcaption className="text-center">
-              <p className="font-bold mb-1">MultistreamFan</p>
-              <p className="text-xs text-ink-faint font-mono">{`<MultistreamFan width={520} />`}</p>
-            </figcaption>
-          </figure>
-
-          <figure className="rounded-2xl border border-white/8 bg-surface-1/40 p-10 flex flex-col items-center gap-6 md:col-span-3">
-            <div className="text-brand-soft w-full">
-              <SignalArc width={880} className="mx-auto" />
-            </div>
-            <figcaption className="text-center">
-              <p className="font-bold mb-1">SignalArc</p>
-              <p className="text-xs text-ink-faint font-mono">{`<SignalArc width={880} />`}</p>
-            </figcaption>
-          </figure>
+          {/* placeholder "add new" tile — visual cue for future ideas */}
+          <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-white/10 bg-surface-1/20 p-5 text-center min-h-[180px]">
+            <Sparkles size={18} className="text-ink-faint" />
+            <p className="text-xs font-bold text-ink-muted">Add a concept</p>
+            <p className="text-[11px] text-ink-faint leading-relaxed max-w-[180px]">
+              Append a new entry to{" "}
+              <code className="text-brand-soft/80">CAMPAIGNS</code> in this
+              page to scaffold it.
+            </p>
+          </div>
         </div>
       </section>
 
-      {/* ── TOKEN SWATCHES ──────────────────────────────── */}
-      <section className="px-6 py-24 max-w-7xl mx-auto border-t border-white/5">
-        <div className="flex items-end justify-between gap-6 mb-16 flex-wrap">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-ink-faint mb-3">
-              Section 03
-            </p>
-            <h2
-              className="font-black leading-[1.05] tracking-tight"
-              style={{ fontSize: "clamp(28px, 3.5vw, 44px)" }}
-            >
-              Color tokens
+      {/* ── DESIGN SYSTEM — compact strip ────────────────────── */}
+      <section className="px-6 pb-20 max-w-7xl mx-auto">
+        <div className="flex items-end justify-between gap-6 mb-10 flex-wrap pb-5 border-b border-white/8">
+          <div className="flex items-baseline gap-4">
+            <span className="text-xs font-bold uppercase tracking-widest text-brand-soft">
+              03
+            </span>
+            <h2 className="font-bold text-2xl tracking-tight">
+              Design system
             </h2>
           </div>
-          <p className="text-ink-muted text-sm max-w-md leading-relaxed">
-            Full reference in <code className="text-brand-soft">docs/styleguide.md</code>.
-            Tokens auto-generate Tailwind utilities (oklch base, alpha modifier works).
+          <p className="text-ink-muted text-sm">
+            Full reference in{" "}
+            <code className="text-brand-soft">docs/styleguide.md</code>.
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+        <div className="grid grid-cols-7 md:grid-cols-14 gap-2">
           {TOKEN_SWATCHES.map((t) => (
-            <div key={t.name} className="flex flex-col gap-2">
+            <div
+              key={t.name}
+              className="flex flex-col items-center gap-1.5"
+              title={t.name}
+            >
               <div
-                className={`aspect-square rounded-xl ${t.className} ${t.border ? "border border-white/10" : ""}`}
+                className={`w-full aspect-square rounded-lg ${t.className} ${
+                  t.border ? "border border-white/10" : ""
+                }`}
               />
-              <p className="text-xs font-mono text-ink-muted">{t.name}</p>
+              <p className="text-[9px] font-mono text-ink-faint truncate w-full text-center">
+                {t.name}
+              </p>
             </div>
           ))}
         </div>
-      </section>
 
-      {/* ── USAGE NOTES ─────────────────────────────────── */}
-      <section className="px-6 py-24 max-w-7xl mx-auto border-t border-white/5">
-        <div className="grid md:grid-cols-2 gap-16">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-ink-faint mb-3">
-              Section 04
+        <div className="mt-10 grid md:grid-cols-2 gap-4">
+          <div className="rounded-xl border border-white/8 bg-surface-2/60 p-5">
+            <p className="text-xs font-bold uppercase tracking-widest text-brand-soft mb-3">
+              Custom copy
             </p>
-            <h2
-              className="font-black leading-[1.05] tracking-tight mb-6"
-              style={{ fontSize: "clamp(28px, 3.5vw, 44px)" }}
-            >
-              How to use this kit
-            </h2>
-          </div>
-          <div className="space-y-8 text-ink-muted text-sm leading-relaxed">
-            <div>
-              <p className="text-white font-bold text-base mb-2">
-                Posting to socials
-              </p>
-              <p>
-                Click any size button under a scene above. The PNG renders on
-                demand from <code className="text-brand-soft">/og/marketing</code>. Save the file, upload to the
-                target platform. Sizes already match each platform&apos;s native spec.
-              </p>
-            </div>
-            <div>
-              <p className="text-white font-bold text-base mb-2">
-                Custom copy
-              </p>
-              <p>
-                Override any text via query params:
-              </p>
-              <pre className="mt-3 p-4 rounded-lg bg-surface-2 border border-white/8 text-xs font-mono text-brand-softer overflow-x-auto">
-                {`/og/marketing?variant=square&scene=hero
+            <pre className="text-[11px] font-mono text-brand-softer leading-relaxed overflow-x-auto">
+              {`/og/marketing?variant=square&scene=hero
   &title=Launch%20Day
   &accent=Ship%20it.
-  &kicker=Today
-  &sub=Custom%20subtitle%20here.`}
-              </pre>
-            </div>
-            <div>
-              <p className="text-white font-bold text-base mb-2">
-                Embedding illustrations on platform pages
-              </p>
-              <pre className="p-4 rounded-lg bg-surface-2 border border-white/8 text-xs font-mono text-brand-softer overflow-x-auto">
-                {`import { PulseRing } from "@/components/marketing/illustrations";
+  &kicker=Today`}
+            </pre>
+          </div>
+          <div className="rounded-xl border border-white/8 bg-surface-2/60 p-5">
+            <p className="text-xs font-bold uppercase tracking-widest text-brand-soft mb-3">
+              Inline illustrations
+            </p>
+            <pre className="text-[11px] font-mono text-brand-softer leading-relaxed overflow-x-auto">
+              {`import { SignalArc } from
+  "@/components/marketing/illustrations";
 
-<div className="text-brand-soft">
-  <PulseRing size={320} />
+<div className="text-brand-soft/40">
+  <SignalArc width={1200} />
 </div>`}
-              </pre>
-              <p className="mt-3">
-                Color comes from <code className="text-brand-soft">currentColor</code> — set <code className="text-brand-soft">text-brand</code>,
-                <code className="text-brand-soft">text-brand-soft</code>, or any ink token on the parent to recolor.
-              </p>
-            </div>
-            <div>
-              <p className="text-white font-bold text-base mb-2">
-                Adding a new scene
-              </p>
-              <p>
-                Add an entry to <code className="text-brand-soft">SCENES</code> in <code className="text-brand-soft">src/app/og/marketing/route.tsx</code>,
-                then mirror it in this page&apos;s <code className="text-brand-soft">SCENES</code> array. Variants are shared.
-              </p>
-            </div>
+            </pre>
           </div>
         </div>
       </section>
