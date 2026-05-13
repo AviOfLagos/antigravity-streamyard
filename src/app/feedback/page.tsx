@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useState } from "react"
 import { Bug, Lightbulb, MessageSquare, Send, Zap } from "lucide-react"
+import posthog from "posthog-js"
 
 type FeedbackType = "bug" | "feature" | "other"
 
@@ -49,6 +50,7 @@ export default function FeedbackPage() {
       })
 
       if (res.ok) {
+        posthog.capture("feedback_submitted", { feedback_type: type })
         setSubmitted(true)
       }
     } catch {

@@ -5,6 +5,7 @@ import Link from "next/link"
 import { LiveKitRoom, RoomAudioRenderer, StartAudio, usePreviewTracks } from "@livekit/components-react"
 import { LocalVideoTrack } from "livekit-client"
 import { AlertCircle, Camera, CameraOff, Mic, MicOff, UserX, Video } from "lucide-react"
+import posthog from "posthog-js"
 import { AudioLevelBar } from "@/components/studio/AudioLevelIndicator"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -282,6 +283,12 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
       const parsed = GuestRequestResponseSchema.safeParse(data)
       const resolvedGuestId = parsed.success ? parsed.data.guestId : data.guestId
       setGuestId(resolvedGuestId)
+
+      posthog.capture("guest_join_requested", {
+        room_code: roomCode,
+        has_video: videoEnabled,
+        has_audio: audioEnabled,
+      })
 
       // Auto-admitted: go straight to waiting for SSE to deliver the token
       // (the GUEST_ADMITTED event was already published server-side)

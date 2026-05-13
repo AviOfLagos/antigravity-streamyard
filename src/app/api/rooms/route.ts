@@ -5,6 +5,7 @@ import { auth } from "@/auth"
 import { createLivekitRoom, generateHostToken } from "@/lib/livekit"
 import { prisma } from "@/lib/prisma"
 import { checkRateLimit } from "@/lib/rate-limit"
+import { getPostHogClient } from "@/lib/posthog-server"
 import { redis, setRoomInfo } from "@/lib/redis"
 import { warmRoomCache } from "@/lib/room-cache"
 import { CreateRoomRequestSchema } from "@/lib/schemas"
@@ -92,6 +93,19 @@ export async function POST(req: Request) {
 
     // Generate host token
     const hostToken = await generateHostToken(code, session.user.id, session.user.name ?? "Host")
+
+    const posthog = getPostHogClient()
+    posthog.capture({
+      distinctId: session.user.id,
+      event: "room_created",
+      properties: {
+        room_code: code,
+        platform_count: selectedPlatforms.length,
+        platforms: selectedPlatforms,
+        auto_admit: autoAdmit,
+        has_title: !!title,
+      },
+    })
 
     return NextResponse.json({ code, hostToken })
   } catch (err) {

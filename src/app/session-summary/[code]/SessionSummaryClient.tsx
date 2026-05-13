@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Check, ExternalLink, Users } from "lucide-react"
+import posthog from "posthog-js"
 
 import type { SessionSummary } from "./page"
 
@@ -56,6 +57,19 @@ function StatCard({ label, value, sub }: StatCardProps) {
 
 export default function SessionSummaryClient({ summary, limitedStats }: Props) {
   const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    posthog.capture("session_summary_viewed", {
+      room_code: summary.code,
+      duration_seconds: summary.durationSeconds,
+      participant_count: summary.participantCount,
+      message_count: summary.messageCount,
+      platform_count: summary.platforms.length,
+      platforms: summary.platforms,
+      limited_stats: limitedStats ?? false,
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const duration = formatDuration(summary.durationSeconds)
   const endedAtFormatted = formatEndedAt(summary.endedAt)

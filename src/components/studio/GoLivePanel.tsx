@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { Radio, Square, ExternalLink, CheckCircle2, AlertCircle, Info } from "lucide-react"
 import { toast } from "sonner"
+import posthog from "posthog-js"
 import PlatformIcon, { PLATFORM_META } from "@/components/ui/PlatformIcon"
 import Spinner from "@/components/ui/Spinner"
 import { useStudioStore } from "@/store/studio"
@@ -137,6 +138,11 @@ export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle,
       if (res.ok) {
         const data = await res.json()
         setLiveState(true, data.egressId, Array.from(selectedPlatforms), new Date())
+        posthog.capture("stream_started", {
+          room_code: roomCode,
+          platform_count: selectedPlatforms.size,
+          platforms: Array.from(selectedPlatforms),
+        })
         toast.success("You are live!", { description: `Streaming to ${selectedPlatforms.size} platform(s).` })
       } else {
         const err = await res.json().catch(() => ({ error: "Failed to start stream" }))
@@ -154,6 +160,7 @@ export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle,
     try {
       const res = await fetch(`/api/rooms/${roomCode}/stream-live`, { method: "DELETE" })
       if (res.ok) {
+        posthog.capture("stream_stopped", { room_code: roomCode })
         setLiveState(false)
         toast.info("Stream ended", { description: "You are no longer live." })
       } else {

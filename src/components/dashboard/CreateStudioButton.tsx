@@ -4,6 +4,8 @@ import { Check, Copy, Loader2, Plus } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
+import posthog from "posthog-js"
+
 import { Button } from "@/components/ui/button"
 import PlatformIcon from "@/components/ui/PlatformIcon"
 import { PlatformListResponseSchema } from "@/lib/schemas/platform"
@@ -75,11 +77,18 @@ export default function CreateStudioButton() {
         throw new Error(data.error ?? "Failed to create studio")
       }
       const parsed = CreateRoomResponseSchema.safeParse(data)
+      const code = parsed.success ? parsed.data.code : data.code
       if (parsed.success) {
         setRoomCode(parsed.data.code)
       } else {
         setRoomCode(data.code)
       }
+      posthog.capture("studio_created", {
+        room_code: code,
+        platform_count: selectedPlatforms.length,
+        platforms: selectedPlatforms,
+        auto_admit: autoAdmit,
+      })
       setStep("ready")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong")
@@ -98,10 +107,12 @@ export default function CreateStudioButton() {
     await navigator.clipboard.writeText(inviteUrl)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+    posthog.capture("invite_link_copied", { room_code: roomCode })
   }
 
   const handleEnterStudio = () => {
     if (!roomCode) return
+    posthog.capture("studio_entered", { room_code: roomCode })
     router.push(`/studio/${roomCode}`)
   }
 

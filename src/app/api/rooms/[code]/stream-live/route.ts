@@ -6,6 +6,7 @@ import { addDestination, removeDestination, startStream, stopStream } from "@/li
 import { prisma } from "@/lib/prisma"
 import { getCachedRoom, invalidateRoomCache } from "@/lib/room-cache"
 import { checkRateLimit } from "@/lib/rate-limit"
+import { getPostHogClient } from "@/lib/posthog-server"
 import { publishEvent } from "@/lib/redis"
 import { updateBroadcastMetadata, uploadThumbnail, hasValidAccessToken } from "@/lib/youtube-api"
 
@@ -169,6 +170,18 @@ export async function POST(
     await publishEvent(code, {
       type: "STREAM_STARTED",
       data: { platforms: requestedPlatforms, egressId },
+    })
+
+    const posthog = getPostHogClient()
+    posthog.capture({
+      distinctId: session.user.id,
+      event: "stream_live_started",
+      properties: {
+        room_code: code,
+        platform_count: requestedPlatforms.length,
+        platforms: requestedPlatforms,
+        egress_id: egressId,
+      },
     })
 
     return NextResponse.json({

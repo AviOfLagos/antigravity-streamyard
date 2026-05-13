@@ -4,6 +4,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { checkRateLimit } from "@/lib/rate-limit"
+import { getPostHogClient } from "@/lib/posthog-server"
 import { PlatformConnectRequestSchema } from "@/lib/schemas"
 import { validateRequestBody } from "@/lib/schemas/api"
 
@@ -44,6 +45,13 @@ export async function POST(req: Request) {
     where: { userId_platform: { userId: session.user.id, platform: dbPlatform } },
     create: { userId: session.user.id, platform: dbPlatform, channelName, channelId: resolvedChannelId },
     update: { channelName, channelId: resolvedChannelId },
+  })
+
+  const posthog = getPostHogClient()
+  posthog.capture({
+    distinctId: session.user.id,
+    event: "platform_connected",
+    properties: { platform, channel_name: channelName },
   })
 
   return NextResponse.json({ ok: true })

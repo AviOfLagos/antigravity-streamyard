@@ -7,6 +7,7 @@ import { stopStream } from "@/lib/egress"
 import { closeLivekitRoom, getParticipantCount, listParticipants, removeParticipant } from "@/lib/livekit"
 import { prisma } from "@/lib/prisma"
 import { getCachedRoom, invalidateRoomCache } from "@/lib/room-cache"
+import { getPostHogClient } from "@/lib/posthog-server"
 import { deleteRoomKeys, publishEvent, redis } from "@/lib/redis"
 import { stopConnectors } from "@/lib/chat/manager"
 
@@ -136,6 +137,20 @@ export async function POST(
 
   // Notify all participants before cleanup
   await publishEvent(code, { type: "STUDIO_ENDED" })
+
+  const posthog = getPostHogClient()
+  posthog.capture({
+    distinctId: session.user.id,
+    event: "session_ended",
+    properties: {
+      room_code: code,
+      duration_seconds: durationSeconds,
+      participant_count: participantCount,
+      message_count: messageCount,
+      platform_count: platforms.length,
+      platforms,
+    },
+  })
 
   // Stop chat connectors before closing the LiveKit room
   await stopConnectors(code)
