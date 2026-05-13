@@ -28,7 +28,9 @@ export default function CompositeStage({ tracks, isHost }: CompositeStageProps) 
   const chatOverlayEnabled = useStudioStore((s) => s.chatOverlayEnabled)
   const chatOverlayPosition = useStudioStore((s) => s.chatOverlayPosition)
 
-  const preset = LAYOUT_PRESETS[activeLayout]
+  // Fallback guards against stale `activeLayout` values rehydrated from
+  // older Redis snapshots whose preset id no longer exists in LAYOUT_PRESETS.
+  const preset = LAYOUT_PRESETS[activeLayout] ?? LAYOUT_PRESETS["four-grid"]
 
   const slotAssignments = useMemo(() => {
     const stage =

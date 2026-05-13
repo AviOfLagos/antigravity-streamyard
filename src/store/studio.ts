@@ -1,4 +1,5 @@
 import { create } from "zustand"
+import { LAYOUT_PRESETS } from "@/lib/layout/presets"
 import type { LayoutPresetId } from "@/lib/layout/types"
 
 interface PendingGuest {
@@ -252,10 +253,16 @@ export const useStudioStore = create<StudioStore>((set) => ({
   setChatOverlayEnabled: (enabled) => set({ chatOverlayEnabled: enabled }),
   setChatOverlayPosition: (position) => set({ chatOverlayPosition: position }),
 
-  // F-11: Hydrate studio state from Redis-persisted snapshot
+  // F-11: Hydrate studio state from Redis-persisted snapshot.
+  // Stale snapshots may carry a `saved.activeLayout` that no longer exists
+  // in LAYOUT_PRESETS (e.g. after a preset id rename) — reject those so the
+  // compositor doesn't crash on `preset.slots` of undefined.
   hydrateFromSaved: (saved) =>
     set((state) => ({
-      activeLayout: saved.activeLayout ?? state.activeLayout,
+      activeLayout:
+        saved.activeLayout && saved.activeLayout in LAYOUT_PRESETS
+          ? saved.activeLayout
+          : state.activeLayout,
       pinnedParticipantId: saved.pinnedParticipantId ?? state.pinnedParticipantId,
       onScreenParticipantIds: saved.onScreenParticipantIds ?? state.onScreenParticipantIds,
       tileOrder: saved.tileOrder ?? state.tileOrder,
