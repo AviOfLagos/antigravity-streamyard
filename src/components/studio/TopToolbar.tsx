@@ -10,13 +10,18 @@ import {
   LayoutGrid,
   Link,
   MessageSquare,
+  MicOff,
   MoreHorizontal,
   Radio,
   Settings,
   Sparkles,
   Type,
+  Volume2,
+  VolumeX,
 } from "lucide-react"
+import { useParticipants } from "@livekit/components-react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -28,6 +33,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import useNotificationSound from "@/hooks/useNotificationSound"
 import { useStudioStore } from "@/store/studio"
 
 import DeviceSelector from "./DeviceSelector"
@@ -184,6 +190,49 @@ export default function TopToolbar({
   const mobileMenuRef = useRef<HTMLDivElement>(null)
 
   const visibleOverlayCount = textOverlays.filter((o) => o.visible).length
+
+  // Sound notifications — host can toggle in Settings panel
+  const { isEnabled: getSoundsEnabled, setEnabled: setSoundsEnabled } = useNotificationSound()
+  const [soundsOn, setSoundsOn] = useState<boolean>(() => true)
+  useEffect(() => {
+    setSoundsOn(getSoundsEnabled())
+  }, [getSoundsEnabled])
+
+  // Bulk mute — call /api/rooms/[code]/mute for every guest with mic currently on
+  const participants = useParticipants()
+  const [bulkMuting, setBulkMuting] = useState(false)
+  const handleMuteAllGuests = async () => {
+    if (bulkMuting) return
+    const targets = participants.filter(
+      (p) => !p.identity.startsWith("host-") && p.isMicrophoneEnabled
+    )
+    if (targets.length === 0) {
+      toast.info("All guests are already muted")
+      return
+    }
+    setBulkMuting(true)
+    try {
+      const results = await Promise.all(
+        targets.map((p) =>
+          fetch(`/api/rooms/${roomCode}/mute`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ identity: p.identity, trackType: "audio", muted: true }),
+          }).then((r) => r.ok)
+        )
+      )
+      const muted = results.filter(Boolean).length
+      if (muted === targets.length) {
+        toast.success(`Muted ${muted} guest${muted === 1 ? "" : "s"}`)
+      } else {
+        toast.warning(`Muted ${muted}/${targets.length} guests`)
+      }
+    } catch {
+      toast.error("Failed to mute guests")
+    } finally {
+      setBulkMuting(false)
+    }
+  }
 
   // Close all panels when clicking outside
   useEffect(() => {
@@ -448,6 +497,52 @@ export default function TopToolbar({
             <div>
               <p className="text-[10px] text-gray-500 mb-2 uppercase tracking-wider">Devices</p>
               <DeviceSelector />
+            </div>
+
+            {/* Notifications */}
+            <div>
+              <p className="text-[10px] text-gray-500 mb-2 uppercase tracking-wider">Notifications</p>
+              <button
+                type="button"
+                onClick={() => {
+                  const next = !soundsOn
+                  setSoundsEnabled(next)
+                  setSoundsOn(next)
+                }}
+                role="switch"
+                aria-checked={soundsOn}
+                aria-label="Studio sound notifications"
+                className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg bg-white/4 hover:bg-white/8 text-gray-300 hover:text-white text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+              >
+                {soundsOn ? (
+                  <Volume2 className="w-3.5 h-3.5 text-indigo-400 shrink-0" aria-hidden="true" />
+                ) : (
+                  <VolumeX className="w-3.5 h-3.5 text-gray-500 shrink-0" aria-hidden="true" />
+                )}
+                <span className="flex-1 text-left">Sound alerts</span>
+                <span className={[
+                  "text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full",
+                  soundsOn ? "bg-indigo-500/30 text-indigo-300" : "bg-white/8 text-gray-500",
+                ].join(" ")}>
+                  {soundsOn ? "ON" : "OFF"}
+                </span>
+              </button>
+            </div>
+
+            {/* Quick actions */}
+            <div>
+              <p className="text-[10px] text-gray-500 mb-2 uppercase tracking-wider">Quick actions</p>
+              <button
+                type="button"
+                onClick={handleMuteAllGuests}
+                disabled={bulkMuting}
+                className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg bg-white/4 hover:bg-amber-500/15 text-gray-300 hover:text-amber-300 text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+              >
+                <MicOff className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                <span className="flex-1 text-left">
+                  {bulkMuting ? "Muting…" : "Mute all guests"}
+                </span>
+              </button>
             </div>
             {chatOverlayEnabled && (
               <div>

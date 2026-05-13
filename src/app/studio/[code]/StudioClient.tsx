@@ -23,6 +23,7 @@ import TopToolbar from "@/components/studio/TopToolbar"
 import VideoGrid from "@/components/studio/VideoGrid"
 import PlatformIcon, { PLATFORM_META } from "@/components/ui/PlatformIcon"
 import useNotificationSound from "@/hooks/useNotificationSound"
+import useVisualViewport from "@/hooks/useVisualViewport"
 import { SSEEventDataSchema } from "@/lib/schemas/sse"
 import { PlatformListResponseSchema } from "@/lib/schemas/platform"
 import type { SSEEventData } from "@/lib/chat/types"
@@ -294,6 +295,11 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
   const [connectedPlatforms, setConnectedPlatforms] = useState<{ platform: string; channelName: string }[]>(initialPlatforms ?? [])
   const [criticalErrors, setCriticalErrors] = useState<CriticalError[]>([])
   const { play: playSound, requestNotificationPermission } = useNotificationSound()
+  const viewport = useVisualViewport()
+  // Lift any fixed-bottom UI above the on-screen keyboard so it stays tappable.
+  const fixedBottomOffset = viewport.keyboardOpen
+    ? Math.max(96, window.innerHeight - viewport.height + 24)
+    : 96
 
   // F-11: Hydrate studio state from Redis on mount
   const hydratedRef = useRef(false)
@@ -636,7 +642,11 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
         <AIChatController roomCode={roomCode} />
         {/* Fix: Browser autoplay policy blocks audio until user gesture on this page.
             StartAudio shows a button only when audio is blocked, auto-hides otherwise. */}
-        <StartAudio label="Click to enable audio" className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium shadow-lg transition-all motion-safe:animate-pulse" />
+        <StartAudio
+          label="Click to enable audio"
+          style={{ bottom: fixedBottomOffset }}
+          className="fixed left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium shadow-lg transition-all motion-safe:animate-pulse"
+        />
         {/* Stage: video + controls — always fills available width, never obscured */}
         <div className="relative flex flex-col flex-1 min-w-0 overflow-hidden">
           {/* Top toolbar — panels, go live, layout, text, end session */}

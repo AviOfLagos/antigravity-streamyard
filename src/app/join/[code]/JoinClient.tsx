@@ -15,6 +15,7 @@ import type { SSEEventData } from "@/lib/chat/types"
 import { SSEEventDataSchema } from "@/lib/schemas/sse"
 import { GuestRequestResponseSchema } from "@/lib/schemas/guest"
 import Spinner from "@/components/ui/Spinner"
+import useVisualViewport from "@/hooks/useVisualViewport"
 import GuestStudio from "./GuestStudio"
 
 type JoinStatus = "form" | "preview" | "waiting" | "denied" | "joining" | "joined" | "timeout" | "room-full" | "kicked"
@@ -139,6 +140,11 @@ function DevicePreview({
 }
 
 export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
+  const viewport = useVisualViewport()
+  const startAudioBottom = viewport.keyboardOpen
+    ? Math.max(96, window.innerHeight - viewport.height + 24)
+    : 96
+
   const [status, setStatus] = useState<JoinStatus>("form")
   const [requesting, setRequesting] = useState(false)
   const [waitingSince, setWaitingSince] = useState<number | null>(null)
@@ -713,7 +719,11 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
             This is the primary mechanism for participants to hear each other (like StreamYard/Meet SFU model). */}
         <RoomAudioRenderer />
         {/* StartAudio handles browser autoplay policy — shows button when audio context is suspended */}
-        <StartAudio label="Click to enable audio" className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium shadow-lg transition-all motion-safe:animate-pulse" />
+        <StartAudio
+          label="Click to enable audio"
+          style={{ bottom: startAudioBottom }}
+          className="fixed left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium shadow-lg transition-all motion-safe:animate-pulse"
+        />
         <GuestStudio
           roomCode={roomCode}
           displayName={displayName}
