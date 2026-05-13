@@ -492,9 +492,9 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
     const decoder = new TextDecoder()
 
     const handleRoomEvent = (inner: Record<string, unknown>) => {
-      // STUDIO_ENDED — redirect immediately
+      // STUDIO_ENDED — send guest to public recap (acquisition surface).
       if (inner.type === "STUDIO_ENDED") {
-        window.location.href = "/studio-ended"
+        window.location.href = `/recap/${roomCode}`
         return
       }
       // STUDIO_PAUSED — host paused; redirect to paused landing. Guest can
@@ -563,7 +563,7 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
 
     room.on(RoomEvent.DataReceived, handler)
     return () => { room.off(RoomEvent.DataReceived, handler) }
-  }, [room, addMessage])
+  }, [room, addMessage, roomCode])
 
   const handleLeave = async () => {
     try {

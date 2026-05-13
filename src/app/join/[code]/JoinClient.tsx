@@ -199,14 +199,16 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
       }, 1000)
     }
     if (event.type === "STUDIO_ENDED") {
-      window.location.href = "/studio-ended"
+      // F-26: send guest to public recap (acquisition surface) instead of
+      // generic "/studio-ended" interstitial.
+      window.location.href = `/recap/${roomCode}`
     }
     if (event.type === "STUDIO_PAUSED") {
       // Host paused — bounce guest back to landing; they can rejoin later if
       // the host resumes from the same room code.
       window.location.href = "/studio-paused"
     }
-  }, [guestId])
+  }, [guestId, roomCode])
 
   // Clean up cooldown timer
   useEffect(() => {
@@ -329,15 +331,16 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
 
   // Form state — enter display name
   if (status === "form") {
-    // G20: studio has ended — show a dedicated message instead of the form
+    // G20: studio has ended — show a dedicated message instead of the form.
+    // F-26: link to the public recap so late-arriving viewers see stats + CTA.
     if (studioEnded) {
       return (
         <div className="min-h-screen bg-[#080808] flex items-center justify-center px-4">
           <Card className="w-full max-w-md bg-[#111111] border-white/6 text-center">
             <CardContent className="py-10 space-y-3">
               <p className="text-white font-semibold">This studio has ended.</p>
-              <Link href="/" className="text-sm text-gray-400 hover:text-white underline underline-offset-2 transition-colors">
-                Go home
+              <Link href={`/recap/${roomCode}`} className="text-sm text-indigo-400 hover:text-indigo-300 underline underline-offset-2 transition-colors">
+                See session recap
               </Link>
             </CardContent>
           </Card>

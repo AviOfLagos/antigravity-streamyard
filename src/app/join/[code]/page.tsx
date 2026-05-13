@@ -1,7 +1,7 @@
 import { RoomStatus } from "@prisma/client"
 import { getCachedRoom } from "@/lib/room-cache"
 import { setRoomInfo } from "@/lib/redis"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import JoinClient from "./JoinClient"
 
 interface Props {
@@ -19,14 +19,10 @@ export default async function JoinPage({ params }: Props) {
   await setRoomInfo(code, { hostId: room.hostId, createdAt: room.createdAt.toISOString(), title: room.title }).catch(() => {})
 
   if (room.status === RoomStatus.ENDED) {
-    return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-2">Studio Has Ended</h1>
-          <p className="text-gray-400">This streaming session has ended.</p>
-        </div>
-      </div>
-    )
+    // F-26: route ended rooms to the public recap instead of a generic
+    // interstitial. Server redirect so SEO + share previews land on the
+    // recap (acquisition surface).
+    redirect(`/recap/${code}`)
   }
 
   return (
