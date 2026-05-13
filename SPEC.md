@@ -75,6 +75,22 @@ V13: ∀ JSON-LD <script type="application/ld+json"> → real data only
 
 V14: ∀ failing 3rd-party component on marketing → wrap <SafeBoundary>
      Why: one widget crash ⊥ kill page. See src/components/SafeBoundary.tsx.
+
+V15: studio composite canvas = 1920×1080 logical px. Preview = transform:scale fit; egress = native render.
+     ∀ slot coord ∈ src/lib/layout/presets.ts → % of canvas. ⊥ raw px on slots.
+     Why: single renderer drives host preview + (future) egress composite → pixel-identical output.
+
+V16: ∀ stage tile placement → slot resolver in CompositeStage:
+       pinnedParticipantId → slot 0
+       else host-* identity → slot 0
+       else tileOrder[0] → slot 0
+       remaining cameras fill via tileOrder, then natural connect order
+       screenshare → preset.screenshareSlot if defined
+     ⊥ CSS grid reflow. ⊥ flex-N layout branches.
+
+V17: ∀ useConnectionQualityIndicator() (LK components-react v2.9.x) → ! pass {participant: localParticipant}
+     Why: no-arg call → useEnsureParticipant throws "No participant provided" outside ParticipantContext.
+     See B7.
 ```
 
 ## §B — Bugs (historical, fixed)
@@ -87,6 +103,8 @@ B3 |2026-05-12 |Marketing page.tsx extra </div> @ line 216                 |dele
 B4 |2026-05-12 |Webpack `__webpack_modules__[id] not a function` in dev    |stale .next cache after client-component edits. ∴ kill dev server + rm -rf .next + restart.
 B5 |2026-05-12 |blog/[slug] params typed `{slug:string}` broke Next 15    |`params: Promise<{slug:string}>` + await. V10.
 B6 |2026-05-12 |Build failed: prisma migrate deploy needs DATABASE_URL    |.env.local dummy + `build:next` script skips migrate.
+B7 |2026-05-13 |Studio "Something went wrong" — useConnectionQualityIndicator() no-arg throws outside ParticipantContext on LK components-react v2.9.20 |pass {participant: localParticipant}. V17.
+B8 |2026-05-13 |Studio "Something went wrong" #2 — stale dev server cached DATABASE_URL=dummy after .env.local update |kill + restart dev server. B6 carry-over.
 ```
 
 ## §T — Tasks (open / WIP / done since v2.0)
@@ -115,6 +133,13 @@ T19|.     |More tools: stream-key-generator, rtmp-tester, aspect-ratio-calculato
 T20|.     |Platform deep-dives: /integrations/{youtube-live,twitch,kick,tiktok-live} |
 T21|.     |Per-track local recording (Riverside-parity)        |
 T22|.     |4K live egress (gated by destination platform caps) |
+T23|x     |Layout Φ1: 1920×1080 canvas + 10 presets + slot resolver |V15,V16
+T24|x     |Drag-reorder backstage (dnd-kit pointer + keyboard)  |V16
+T25|.     |Layout Φ2: composite egress template /composite/[code] + R2 storage + recordingUrl on StreamSession |V15
+T26|.     |Layout Φ2: GuestStudio → reuse <CompositeStage>, drop guest-side grid branches |V15,V16
+T27|.     |Layout Φ3: lower-thirds + brand layer + per-platform aspect (9:16 TikTok) |
+T28|.     |Tile drag-reorder on stage canvas (dnd-kit + transform-aware sensors) |V16
+T29|.     |Custom Egress Template for RTMP egress (replaces built-in "grid") |V15
 
 Status: x done, ~ wip, . todo
 ```
