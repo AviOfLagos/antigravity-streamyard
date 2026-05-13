@@ -129,7 +129,7 @@ const ParticipantRow = React.memo(function ParticipantRow({
         transition,
         opacity: isDragging ? 0.4 : 1,
       }}
-      className="flex flex-col items-center gap-1 shrink-0 w-[5.5rem] group relative"
+      className="flex flex-col items-center gap-1 shrink-0 w-24 group relative"
     >
       {/* Drag handle */}
       <button
@@ -169,14 +169,14 @@ const ParticipantRow = React.memo(function ParticipantRow({
             disabled={acting}
             aria-label={micOn ? `Mute ${displayName}'s mic` : `Unmute ${displayName}'s mic`}
             className={[
-              "p-1 rounded transition-colors disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-1 focus-visible:ring-offset-studio-bg-deep",
+              "p-1.5 rounded transition-colors disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-1 focus-visible:ring-offset-studio-bg-deep",
               micOn
                 ? "text-emerald-400 hover:bg-emerald-500/15"
-                : "text-gray-600 hover:bg-white/6",
+                : "text-gray-500 hover:bg-white/6",
             ].join(" ")}
             title={micOn ? "Mute mic" : "Unmute mic"}
           >
-            {micOn ? <Mic className="w-3 h-3" /> : <MicOff className="w-3 h-3" />}
+            {micOn ? <Mic className="w-3.5 h-3.5" /> : <MicOff className="w-3.5 h-3.5" />}
           </button>
           <button
             type="button"
@@ -184,46 +184,46 @@ const ParticipantRow = React.memo(function ParticipantRow({
             disabled={acting}
             aria-label={camOn ? `Turn off ${displayName}'s camera` : `Turn on ${displayName}'s camera`}
             className={[
-              "p-1 rounded transition-colors disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-1 focus-visible:ring-offset-studio-bg-deep",
+              "p-1.5 rounded transition-colors disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-1 focus-visible:ring-offset-studio-bg-deep",
               camOn
                 ? "text-emerald-400 hover:bg-emerald-500/15"
-                : "text-gray-600 hover:bg-white/6",
+                : "text-gray-500 hover:bg-white/6",
             ].join(" ")}
             title={camOn ? "Turn off camera" : "Turn on camera"}
           >
-            {camOn ? <Video className="w-3 h-3" /> : <VideoOff className="w-3 h-3" />}
+            {camOn ? <Video className="w-3.5 h-3.5" /> : <VideoOff className="w-3.5 h-3.5" />}
           </button>
           <button
             type="button"
             onClick={handleKick}
             disabled={acting}
             aria-label={`Remove ${displayName} from studio`}
-            className="p-1 rounded text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-1 focus-visible:ring-offset-studio-bg-deep"
+            className="p-1.5 rounded text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-1 focus-visible:ring-offset-studio-bg-deep"
             title="Remove from studio"
           >
-            <UserX className="w-3 h-3" />
+            <UserX className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
 
-      {/* Stage / Backstage button */}
+      {/* Show / Hide stage toggle — verb-only labels for clarity */}
       {isOnStage ? (
         <button
           type="button"
           onClick={handleStageToggle}
-          aria-label={`Send ${displayName} to backstage`}
-          className="bg-white/6 text-gray-400 hover:bg-white/10 hover:text-white px-2.5 py-0.5 rounded text-[10px] min-w-[60px] text-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-1 focus-visible:ring-offset-studio-bg-deep"
+          aria-label={`Hide ${displayName} from stage`}
+          className="bg-white/6 text-gray-300 hover:bg-white/10 hover:text-white px-3 py-1 min-h-[26px] rounded-md text-[11px] font-medium min-w-[68px] text-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-1 focus-visible:ring-offset-studio-bg-deep"
         >
-          Backstage
+          Hide
         </button>
       ) : (
         <button
           type="button"
           onClick={handleStageToggle}
-          aria-label={`Bring ${displayName} on stage`}
-          className="bg-indigo-500/15 text-indigo-400 hover:bg-indigo-500/25 px-2.5 py-0.5 rounded text-[10px] min-w-[60px] text-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-1 focus-visible:ring-offset-studio-bg-deep"
+          aria-label={`Show ${displayName} on stage`}
+          className="bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 hover:text-indigo-200 px-3 py-1 min-h-[26px] rounded-md text-[11px] font-medium min-w-[68px] text-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-1 focus-visible:ring-offset-studio-bg-deep"
         >
-          Stage
+          Show
         </button>
       )}
     </div>

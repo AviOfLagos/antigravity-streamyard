@@ -426,6 +426,7 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
   // Layout state mirrored from the host via LiveKit data messages
   const [activeLayout, setActiveLayout] = useState<StudioLayout>("four-grid")
   const [pinnedParticipantId, setPinnedParticipantId] = useState<string | null>(null)
+  const [onScreenParticipantIds, setOnScreenParticipantIds] = useState<string[]>([])
   const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([])
   const [stageBackground, setStageBackground] = useState("#0d0d0d")
   const [chatOverlayEnabled, setChatOverlayEnabled] = useState(false)
@@ -508,6 +509,9 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
             setActiveLayout(layout)
           }
           setPinnedParticipantId((msg.pinnedParticipantId as string | null) ?? null)
+          if (Array.isArray(msg.onScreenParticipantIds)) {
+            setOnScreenParticipantIds(msg.onScreenParticipantIds as string[])
+          }
           if (Array.isArray(msg.textOverlays)) {
             setTextOverlays(msg.textOverlays as TextOverlay[])
           }
@@ -721,6 +725,25 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
           {stageContent}
           <TextOverlayRenderer overlays={textOverlays} />
           {chatOverlayEnabled && <ChatOverlay position={chatOverlayPosition} />}
+          {/* Off-stage coaching — render when host has explicitly limited
+              the stage and this guest is not on it. Empty list means "everyone
+              on stage" so the banner stays hidden. */}
+          {onScreenParticipantIds.length > 0 &&
+            !onScreenParticipantIds.includes(localParticipant.identity) && (
+              <div
+                role="status"
+                aria-live="polite"
+                className="pointer-events-none absolute top-2 left-1/2 -translate-x-1/2 z-20 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-2 motion-safe:duration-300"
+              >
+                <div className="flex items-center gap-2 bg-indigo-500/15 border border-indigo-400/30 text-indigo-100 text-[11px] px-3 py-1.5 rounded-full backdrop-blur-sm shadow-lg">
+                  <span className="relative flex h-1.5 w-1.5" aria-hidden="true">
+                    <span className="motion-safe:animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-indigo-400" />
+                  </span>
+                  <span>You&apos;re ready — host will bring you on stage shortly.</span>
+                </div>
+              </div>
+            )}
           <GuestConnectionMonitor wasKicked={wasKickedInternalRef.current} />
         </div>
 

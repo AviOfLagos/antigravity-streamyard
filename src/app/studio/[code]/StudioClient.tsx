@@ -224,6 +224,7 @@ function LayoutBroadcaster() {
   const { localParticipant } = useLocalParticipant()
   const activeLayout = useStudioStore((s) => s.activeLayout)
   const pinnedParticipantId = useStudioStore((s) => s.pinnedParticipantId)
+  const onScreenParticipantIds = useStudioStore((s) => s.onScreenParticipantIds)
   const textOverlays = useStudioStore((s) => s.textOverlays)
   const stageBackground = useStudioStore((s) => s.stageBackground)
   const chatOverlayEnabled = useStudioStore((s) => s.chatOverlayEnabled)
@@ -232,11 +233,14 @@ function LayoutBroadcaster() {
 
   useEffect(() => {
     if (!localParticipant) return
-    // Broadcast on every change (and once on first render for late-joining guests)
+    // Broadcast on every change (and once on first render for late-joining guests).
+    // onScreenParticipantIds is broadcast so guests can show their own
+    // off-stage coaching banner without a separate round-trip.
     const payload: Record<string, unknown> = {
       type: "LAYOUT_CHANGE",
       layout: activeLayout,
       pinnedParticipantId: pinnedParticipantId ?? null,
+      onScreenParticipantIds,
       textOverlays,
       stageBackground,
       chatOverlayEnabled,
@@ -247,7 +251,7 @@ function LayoutBroadcaster() {
       .publishData(encoder.encode(JSON.stringify(payload)), { reliable: true })
       .catch(() => {/* non-critical -- guest will fall back to default layout */})
     hasBroadcastedRef.current = true
-  }, [localParticipant, activeLayout, pinnedParticipantId, textOverlays, stageBackground, chatOverlayEnabled, chatOverlayPosition])
+  }, [localParticipant, activeLayout, pinnedParticipantId, onScreenParticipantIds, textOverlays, stageBackground, chatOverlayEnabled, chatOverlayPosition])
 
   return null
 }
