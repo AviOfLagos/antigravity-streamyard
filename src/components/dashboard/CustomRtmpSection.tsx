@@ -162,7 +162,7 @@ export default function CustomRtmpSection() {
             <Button
               onClick={handleAdd}
               disabled={adding || !name.trim() || !ingestUrl.trim() || !streamKey.trim()}
-              className="bg-violet-600 hover:bg-violet-700 text-white"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white"
             >
               {adding ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
               Add Destination

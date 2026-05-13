@@ -60,7 +60,7 @@ export default async function LoginPage() {
       <div className="bg-[#111111] border border-white/8 rounded-2xl p-8 w-full max-w-sm">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-7">
-          <div className="w-8 h-8 bg-violet-600 rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
             <Zap className="w-4 h-4 text-white" />
           </div>
           <span className="font-bold text-white text-lg tracking-tight">Zerocast</span>
@@ -85,7 +85,7 @@ export default async function LoginPage() {
             <form action={devSignIn}>
               <button
                 type="submit"
-                className="w-full bg-violet-600 hover:bg-violet-500 text-white rounded-xl py-2.5 flex items-center justify-center gap-2.5 font-medium text-sm transition-colors"
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl py-2.5 flex items-center justify-center gap-2.5 font-medium text-sm transition-colors"
               >
                 Continue as Test User
               </button>
@@ -148,7 +148,7 @@ export default async function LoginPage() {
                   type="email"
                   placeholder="you@example.com"
                   required
-                  className="w-full bg-[#1a1a1a] border border-white/8 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-gray-600 outline-none focus:ring-1 focus:ring-violet-500/50 focus:border-violet-500/40 transition-colors"
+                  className="w-full bg-[#1a1a1a] border border-white/8 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-gray-600 outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/40 transition-colors"
                 />
               </div>
               <button

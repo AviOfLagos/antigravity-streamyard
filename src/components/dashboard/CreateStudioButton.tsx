@@ -124,7 +124,7 @@ export default function CreateStudioButton() {
       <Button
         onClick={handleOpen}
         disabled={step === "submitting"}
-        className="bg-violet-600 hover:bg-violet-700 text-white"
+        className="bg-indigo-600 hover:bg-indigo-700 text-white"
       >
         <Plus className="w-4 h-4 mr-2" />
         Create Studio
@@ -150,7 +150,7 @@ export default function CreateStudioButton() {
                   placeholder="e.g. Morning Show, Product Demo..."
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full bg-[#1a1a1a] border border-white/8 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-gray-600 outline-none focus:ring-1 focus:ring-violet-500/50 focus:border-violet-500/40 transition-colors"
+                  className="w-full bg-[#1a1a1a] border border-white/8 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-gray-600 outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/40 transition-colors"
                 />
               </div>
 
@@ -169,7 +169,7 @@ export default function CreateStudioButton() {
                   onChange={(e) => setDescription(e.target.value)}
                   rows={2}
                   maxLength={2000}
-                  className="w-full bg-[#1a1a1a] border border-white/8 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-gray-600 outline-none focus:ring-1 focus:ring-violet-500/50 focus:border-violet-500/40 transition-colors resize-y"
+                  className="w-full bg-[#1a1a1a] border border-white/8 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-gray-600 outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/40 transition-colors resize-y"
                 />
               </div>
 
@@ -187,7 +187,7 @@ export default function CreateStudioButton() {
                   placeholder="https://example.com/thumbnail.jpg"
                   value={thumbnailUrl}
                   onChange={(e) => setThumbnailUrl(e.target.value)}
-                  className="w-full bg-[#1a1a1a] border border-white/8 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-gray-600 outline-none focus:ring-1 focus:ring-violet-500/50 focus:border-violet-500/40 transition-colors"
+                  className="w-full bg-[#1a1a1a] border border-white/8 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-gray-600 outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/40 transition-colors"
                 />
                 <p className="text-[10px] text-gray-600 mt-1">
                   If YouTube is connected via OAuth, this image will be set as the broadcast thumbnail when you go live.
@@ -210,7 +210,7 @@ export default function CreateStudioButton() {
                           <label className="flex items-center gap-3 cursor-pointer">
                             <input
                               type="checkbox"
-                              className="w-4 h-4 rounded accent-violet-500"
+                              className="w-4 h-4 rounded accent-indigo-500"
                               checked={isChecked}
                               onChange={() => handleTogglePlatform(platform)}
                             />
@@ -256,7 +256,7 @@ export default function CreateStudioButton() {
                     <input
                       type="radio"
                       name="access-control"
-                      className="w-4 h-4 accent-violet-500"
+                      className="w-4 h-4 accent-indigo-500"
                       checked={!autoAdmit}
                       onChange={() => setAutoAdmit(false)}
                     />
@@ -269,7 +269,7 @@ export default function CreateStudioButton() {
                     <input
                       type="radio"
                       name="access-control"
-                      className="w-4 h-4 accent-violet-500"
+                      className="w-4 h-4 accent-indigo-500"
                       checked={autoAdmit}
                       onChange={() => setAutoAdmit(true)}
                     />
@@ -297,7 +297,7 @@ export default function CreateStudioButton() {
                   type="button"
                   onClick={handleCreate}
                   disabled={title.trim() === "" || step === "submitting"}
-                  className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-xl px-4 py-2.5 text-sm transition-colors"
+                  className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-xl px-4 py-2.5 text-sm transition-colors"
                 >
                   {step === "submitting" && <Loader2 className="w-4 h-4 animate-spin" />}
                   Create Studio →
@@ -365,7 +365,7 @@ export default function CreateStudioButton() {
                 <button
                   type="button"
                   onClick={handleEnterStudio}
-                  className="w-full bg-violet-600 hover:bg-violet-700 text-white font-medium rounded-xl py-2.5 text-sm transition-colors"
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl py-2.5 text-sm transition-colors"
                 >
                   Enter Studio
                 </button>
@@ -457,7 +457,7 @@ function InlineConnectPlatforms({
                 type="button"
                 onClick={() => handleConnect(platform.id)}
                 disabled={!channelInput.trim() || connecting}
-                className="text-xs text-violet-400 hover:text-violet-300 font-medium disabled:opacity-40"
+                className="text-xs text-indigo-400 hover:text-indigo-300 font-medium disabled:opacity-40"
               >
                 {connecting ? "..." : "Connect"}
               </button>

@@ -184,7 +184,7 @@ function StreamKeySection({ platform, hasStreamKey: initialHasStreamKey, hasInge
           onClick={handleSaveStreamKey}
           disabled={saving || !streamKey.trim()}
           size="sm"
-          className="bg-violet-600 hover:bg-violet-700 text-white"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white"
         >
           {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Save"}
         </Button>
@@ -349,7 +349,7 @@ export default function PlatformConnectForm({
                 className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-600 flex-1"
                 onKeyDown={(e) => e.key === "Enter" && handleConnect()}
               />
-              <Button onClick={handleConnect} disabled={loading || !channelName.trim()} className="bg-violet-600 hover:bg-violet-500">
+              <Button onClick={handleConnect} disabled={loading || !channelName.trim()} className="bg-indigo-600 hover:bg-indigo-500">
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Connect"}
               </Button>
             </div>

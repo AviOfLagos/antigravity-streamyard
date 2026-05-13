@@ -85,7 +85,7 @@ export default function FeedbackPage() {
                   setDescription("")
                   setEmail("")
                 }}
-                className="text-sm text-violet-400 hover:text-violet-300 border border-violet-500/20 rounded-lg px-4 py-2 transition-colors hover:bg-violet-500/10"
+                className="text-sm text-indigo-400 hover:text-indigo-300 border border-indigo-500/20 rounded-lg px-4 py-2 transition-colors hover:bg-indigo-500/10"
               >
                 Submit another
               </button>
@@ -121,11 +121,11 @@ export default function FeedbackPage() {
                   onClick={() => setType(ft.value)}
                   className={`flex flex-col items-start gap-2 p-4 rounded-xl border transition-all text-left ${
                     type === ft.value
-                      ? "border-violet-500/40 bg-violet-500/10"
+                      ? "border-indigo-500/40 bg-indigo-500/10"
                       : "border-white/6 bg-[#111111] hover:border-white/10"
                   }`}
                 >
-                  <div className={`${type === ft.value ? "text-violet-400" : "text-gray-500"} transition-colors`}>
+                  <div className={`${type === ft.value ? "text-indigo-400" : "text-gray-500"} transition-colors`}>
                     {ft.icon}
                   </div>
                   <div>
@@ -151,7 +151,7 @@ export default function FeedbackPage() {
               onChange={(e) => setTitle(e.target.value)}
               placeholder={type === "bug" ? "e.g. Audio cuts out when switching layouts" : type === "feature" ? "e.g. Add screen share annotation tools" : "e.g. Suggestion about the dashboard"}
               required
-              className="w-full bg-[#111111] border border-white/6 rounded-xl px-4 py-3 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-violet-500/40 focus:ring-1 focus:ring-violet-500/20 transition-colors"
+              className="w-full bg-[#111111] border border-white/6 rounded-xl px-4 py-3 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-indigo-500/40 focus:ring-1 focus:ring-indigo-500/20 transition-colors"
             />
           </div>
 
@@ -167,7 +167,7 @@ export default function FeedbackPage() {
               placeholder={type === "bug" ? "Steps to reproduce:\n1. \n2. \n3. \n\nExpected behavior:\n\nActual behavior:" : type === "feature" ? "Describe the feature and why it would be useful..." : "Tell us what's on your mind..."}
               required
               rows={6}
-              className="w-full bg-[#111111] border border-white/6 rounded-xl px-4 py-3 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-violet-500/40 focus:ring-1 focus:ring-violet-500/20 transition-colors resize-y"
+              className="w-full bg-[#111111] border border-white/6 rounded-xl px-4 py-3 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-indigo-500/40 focus:ring-1 focus:ring-indigo-500/20 transition-colors resize-y"
             />
           </div>
 
@@ -182,7 +182,7 @@ export default function FeedbackPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full bg-[#111111] border border-white/6 rounded-xl px-4 py-3 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-violet-500/40 focus:ring-1 focus:ring-violet-500/20 transition-colors"
+              className="w-full bg-[#111111] border border-white/6 rounded-xl px-4 py-3 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-indigo-500/40 focus:ring-1 focus:ring-indigo-500/20 transition-colors"
             />
           </div>
 
@@ -190,7 +190,7 @@ export default function FeedbackPage() {
           <button
             type="submit"
             disabled={!title.trim() || !description.trim() || submitting}
-            className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium px-6 py-3 rounded-xl transition-colors text-sm"
+            className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium px-6 py-3 rounded-xl transition-colors text-sm"
           >
             {submitting ? "Sending..." : "Submit Feedback"}
             {!submitting && <Send className="w-4 h-4" />}
@@ -214,7 +214,7 @@ function Nav() {
         Back to home
       </Link>
       <div className="flex items-center gap-2">
-        <Zap className="w-5 h-5 text-violet-400" />
+        <Zap className="w-5 h-5 text-indigo-400" />
         <span className="font-bold text-white text-lg">Zerocast</span>
       </div>
     </nav>

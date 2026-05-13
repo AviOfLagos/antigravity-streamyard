@@ -15,7 +15,7 @@ function formatTime(iso: string) {
 
 const EVENT_STYLES: Record<string, { bg: string; border: string; label?: string }> = {
   donation: { bg: "bg-yellow-500/5", border: "border-l-yellow-500/40", label: "donation" },
-  subscription: { bg: "bg-violet-500/5", border: "border-l-violet-500/40", label: "sub" },
+  subscription: { bg: "bg-indigo-500/5", border: "border-l-indigo-500/40", label: "sub" },
   follow: { bg: "bg-emerald-500/5", border: "border-l-emerald-500/40", label: "follow" },
   raid: { bg: "bg-blue-500/5", border: "border-l-blue-500/40", label: "raid" },
   like: { bg: "bg-pink-500/5", border: "border-l-pink-500/40" },
@@ -95,7 +95,7 @@ function ChatMessageInner({ message }: { message: ChatMessageType }) {
 
           {/* Subscription tier badge */}
           {message.subscription && (
-            <span className="text-[10px] font-medium text-violet-400 bg-violet-500/10 px-1.5 py-0.5 rounded-full">
+            <span className="text-[10px] font-medium text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded-full">
               {message.subscription.tier ?? "Sub"}
               {message.subscription.isGift && message.subscription.gifterName
                 ? ` from ${message.subscription.gifterName}`
@@ -115,7 +115,7 @@ function ChatMessageInner({ message }: { message: ChatMessageType }) {
             {isLong && (
               <button
                 type="button"
-                className="ml-1 text-violet-400 hover:text-violet-300 text-[10px] font-medium transition-colors focus:outline-none focus-visible:underline focus-visible:underline-offset-2"
+                className="ml-1 text-indigo-400 hover:text-indigo-300 text-[10px] font-medium transition-colors focus:outline-none focus-visible:underline focus-visible:underline-offset-2"
                 onClick={() => setExpanded(!expanded)}
                 aria-expanded={expanded}
               >

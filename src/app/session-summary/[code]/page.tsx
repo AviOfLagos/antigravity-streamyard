@@ -51,7 +51,7 @@ export default async function SessionSummaryPage({ params }: Props) {
           </p>
           <Link
             href="/dashboard"
-            className="text-violet-400 hover:text-violet-300 text-sm underline underline-offset-4"
+            className="text-indigo-400 hover:text-indigo-300 text-sm underline underline-offset-4"
           >
             Back to Dashboard
           </Link>
@@ -90,7 +90,7 @@ export default async function SessionSummaryPage({ params }: Props) {
           </p>
           <Link
             href="/dashboard"
-            className="text-violet-400 hover:text-violet-300 underline underline-offset-4 text-sm transition-colors"
+            className="text-indigo-400 hover:text-indigo-300 underline underline-offset-4 text-sm transition-colors"
           >
             Back to Dashboard
           </Link>

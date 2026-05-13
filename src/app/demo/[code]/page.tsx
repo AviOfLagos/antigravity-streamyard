@@ -31,7 +31,7 @@ export default async function DemoStudioPage({ params, searchParams }: Props) {
           </p>
           <a
             href="/login"
-            className="text-violet-400 hover:text-violet-300 text-sm underline underline-offset-4"
+            className="text-indigo-400 hover:text-indigo-300 text-sm underline underline-offset-4"
           >
             Back to login
           </a>
@@ -47,7 +47,7 @@ export default async function DemoStudioPage({ params, searchParams }: Props) {
           <p className="text-gray-400 text-sm mb-6">This demo session has already ended.</p>
           <a
             href="/login"
-            className="text-violet-400 hover:text-violet-300 text-sm underline underline-offset-4"
+            className="text-indigo-400 hover:text-indigo-300 text-sm underline underline-offset-4"
           >
             Back to login
           </a>
@@ -83,7 +83,7 @@ export default async function DemoStudioPage({ params, searchParams }: Props) {
           <p className="text-gray-400 text-sm mb-6">{tokenError}</p>
           <a
             href="/login"
-            className="text-violet-400 hover:text-violet-300 text-sm underline underline-offset-4"
+            className="text-indigo-400 hover:text-indigo-300 text-sm underline underline-offset-4"
           >
             Back to login
           </a>

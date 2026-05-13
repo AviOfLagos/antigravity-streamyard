@@ -310,8 +310,8 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
       <div className="min-h-screen bg-[#080808] flex items-center justify-center px-4">
         <Card className="w-full max-w-md bg-[#111111] border-white/6">
           <CardHeader className="text-center">
-            <div className="w-12 h-12 bg-violet-500/10 rounded-xl flex items-center justify-center mx-auto mb-3">
-              <Video className="w-6 h-6 text-violet-400" />
+            <div className="w-12 h-12 bg-indigo-500/10 rounded-xl flex items-center justify-center mx-auto mb-3">
+              <Video className="w-6 h-6 text-indigo-400" />
             </div>
             <CardTitle className="text-white text-xl">Join Studio</CardTitle>
             <CardDescription className="text-gray-400">
@@ -352,7 +352,7 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
             <Button
               onClick={handleContinueToPreview}
               disabled={!displayName.trim()}
-              className="w-full bg-violet-600 hover:bg-violet-500"
+              className="w-full bg-indigo-600 hover:bg-indigo-500"
             >
               Continue
             </Button>
@@ -434,7 +434,7 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
               </Button>
               <Button
                 onClick={handleRequestJoin}
-                className="flex-1 bg-violet-600 hover:bg-violet-500"
+                className="flex-1 bg-indigo-600 hover:bg-indigo-500"
               >
                 Request to Join
               </Button>
@@ -457,9 +457,9 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
           <CardContent className="py-10">
             {/* Animated waiting indicator */}
             <div className="flex items-center justify-center gap-1.5 mb-5">
-              <span className="w-2.5 h-2.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: "0ms" }} />
-              <span className="w-2.5 h-2.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: "150ms" }} />
-              <span className="w-2.5 h-2.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+              <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+              <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+              <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "300ms" }} />
             </div>
             <h2 className="text-white font-semibold mb-1">Waiting for host to let you in...</h2>
             <p className="text-gray-400 text-sm">
@@ -582,7 +582,7 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
                   setError(null)
                   setStatus("preview")
                 }}
-                className="w-full bg-violet-600 hover:bg-violet-500"
+                className="w-full bg-indigo-600 hover:bg-indigo-500"
               >
                 Request to Rejoin
               </Button>
@@ -641,7 +641,7 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
             This is the primary mechanism for participants to hear each other (like StreamYard/Meet SFU model). */}
         <RoomAudioRenderer />
         {/* StartAudio handles browser autoplay policy — shows button when audio context is suspended */}
-        <StartAudio label="Click to enable audio" className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-violet-500 hover:bg-violet-600 text-white text-sm font-medium shadow-lg transition-all animate-pulse" />
+        <StartAudio label="Click to enable audio" className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium shadow-lg transition-all animate-pulse" />
         <GuestStudio
           roomCode={roomCode}
           displayName={displayName}

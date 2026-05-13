@@ -86,8 +86,8 @@ export default function GuestRequestToast({ roomCode, hostToken }: GuestRequestT
           key={guest.guestId}
           className="pointer-events-auto flex items-center gap-3 bg-studio-elevated border border-white/10 rounded-xl shadow-2xl px-4 py-3 motion-safe:animate-in motion-safe:slide-in-from-right-4 motion-safe:duration-200"
         >
-          <div className="w-8 h-8 rounded-full bg-violet-500/20 flex items-center justify-center shrink-0">
-            <UserPlus className="w-4 h-4 text-violet-400" aria-hidden="true" />
+          <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0">
+            <UserPlus className="w-4 h-4 text-indigo-400" aria-hidden="true" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-white text-sm font-medium leading-tight truncate">{guest.name}</p>
@@ -108,7 +108,7 @@ export default function GuestRequestToast({ roomCode, hostToken }: GuestRequestT
               type="button"
               onClick={() => handleDeny(guest.guestId)}
               disabled={processing === guest.guestId}
-              className="h-7 w-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/8 transition-colors disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-studio-elevated"
+              className="h-7 w-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/8 transition-colors disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-studio-elevated"
               aria-label={`Deny ${guest.name}`}
             >
               <X className="w-3.5 h-3.5" aria-hidden="true" />

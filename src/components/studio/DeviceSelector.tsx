@@ -58,7 +58,7 @@ function DevicePicker({ kind }: DeviceSelectorProps) {
         }}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/4 hover:bg-white/8 text-gray-400 hover:text-white text-[10px] transition-colors max-w-36 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-studio-panel"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/4 hover:bg-white/8 text-gray-400 hover:text-white text-[10px] transition-colors max-w-36 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-studio-panel"
         title={`Select ${LABELS[kind]}`}
       >
         {ICONS[kind]}
@@ -86,7 +86,7 @@ function DevicePicker({ kind }: DeviceSelectorProps) {
                 onClick={() => handleSelect(device.deviceId)}
                 className={`w-full text-left px-3 py-2 text-xs transition-colors truncate focus:outline-none focus-visible:bg-white/8 ${
                   device.deviceId === activeDeviceId
-                    ? "text-violet-400 bg-violet-500/10"
+                    ? "text-indigo-400 bg-indigo-500/10"
                     : "text-gray-300 hover:bg-white/5"
                 }`}
               >

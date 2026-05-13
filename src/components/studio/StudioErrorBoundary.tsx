@@ -68,7 +68,7 @@ export default class StudioErrorBoundary extends React.Component<
               <button
                 type="button"
                 onClick={this.handleRejoin}
-                className="px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-colors"
+                className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium transition-colors"
               >
                 Rejoin Studio
               </button>

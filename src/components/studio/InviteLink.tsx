@@ -28,7 +28,7 @@ export default function InviteLink({ roomCode }: { roomCode: string }) {
         onClick={handleCopy}
         aria-label={copied ? "Invite link copied" : "Copy invite link"}
         aria-live="polite"
-        className="p-1 rounded text-gray-400 hover:text-white hover:bg-white/8 transition-colors shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+        className="p-1 rounded text-gray-400 hover:text-white hover:bg-white/8 transition-colors shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
         title="Copy invite link"
       >
         {copied ? (

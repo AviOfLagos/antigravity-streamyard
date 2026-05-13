@@ -13,7 +13,7 @@ export default function QAPage() {
           <span aria-hidden>&larr;</span> Back to home
         </Link>
         <div className="flex items-center gap-2">
-          <Zap className="w-5 h-5 text-violet-400" />
+          <Zap className="w-5 h-5 text-indigo-400" />
           <span className="font-bold text-white text-lg">Zerocast</span>
         </div>
       </nav>
@@ -35,7 +35,7 @@ export default function QAPage() {
 
           <Step icon={<AlertCircle className="w-4 h-4" />} title="Get the .env.local file">
             <p className="text-gray-400 text-sm mb-2">
-              Request the <code className="text-violet-400 bg-violet-500/10 px-1.5 py-0.5 rounded">.env.local</code> file from the project lead. It contains credentials for:
+              Request the <code className="text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded">.env.local</code> file from the project lead. It contains credentials for:
             </p>
             <ul className="text-gray-400 text-sm space-y-1 ml-4 list-disc">
               <li>Neon Postgres (DATABASE_URL, DIRECT_URL)</li>
@@ -53,7 +53,7 @@ export default function QAPage() {
             <Code>npx prisma generate</Code>
             <Code>npm run dev</Code>
             <p className="text-gray-500 text-sm mt-1">
-              App runs at <a href="http://localhost:3000" className="text-violet-400 hover:underline">http://localhost:3000</a>
+              App runs at <a href="http://localhost:3000" className="text-indigo-400 hover:underline">http://localhost:3000</a>
             </p>
           </Step>
         </Section>
@@ -74,13 +74,13 @@ export default function QAPage() {
         <Section number="03" title="API Testing (Postman)">
           <Step icon={<Globe className="w-4 h-4" />} title="Import the Postman collection">
             <p className="text-gray-400 text-sm mb-2">
-              Find <code className="text-violet-400 bg-violet-500/10 px-1.5 py-0.5 rounded">docs/zerocast-api.postman_collection.json</code> in the repo.
+              Find <code className="text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded">docs/zerocast-api.postman_collection.json</code> in the repo.
             </p>
             <ol className="text-gray-400 text-sm space-y-1 ml-4 list-decimal">
               <li>Open Postman &rarr; Import &rarr; drag the JSON file</li>
-              <li>Set the <code className="text-violet-400">baseUrl</code> variable to <code className="text-gray-300">http://localhost:3000</code></li>
+              <li>Set the <code className="text-indigo-400">baseUrl</code> variable to <code className="text-gray-300">http://localhost:3000</code></li>
               <li>Sign in via browser, then copy session cookie for authenticated requests</li>
-              <li>Create a room first to get <code className="text-violet-400">roomCode</code> and <code className="text-violet-400">hostToken</code></li>
+              <li>Create a room first to get <code className="text-indigo-400">roomCode</code> and <code className="text-indigo-400">hostToken</code></li>
             </ol>
           </Step>
           <p className="text-gray-500 text-sm">
@@ -92,7 +92,7 @@ export default function QAPage() {
         <Section number="04" title="Manual Testing Checklist">
           <p className="text-gray-400 text-sm mb-4">
             Follow the full QA test plan at{" "}
-            <code className="text-violet-400 bg-violet-500/10 px-1.5 py-0.5 rounded">docs/qa-test-plan.md</code>{" "}
+            <code className="text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded">docs/qa-test-plan.md</code>{" "}
             in the repo. Key areas:
           </p>
 
@@ -127,7 +127,7 @@ export default function QAPage() {
               <strong className="text-white">Window 1 (Host):</strong> Sign in &rarr; Create studio &rarr; Enter studio
             </li>
             <li>
-              <strong className="text-white">Window 2 (Guest):</strong> Open incognito &rarr; Go to <code className="text-violet-400">/join/&#123;code&#125;</code> &rarr; Enter name &rarr; Request to join
+              <strong className="text-white">Window 2 (Guest):</strong> Open incognito &rarr; Go to <code className="text-indigo-400">/join/&#123;code&#125;</code> &rarr; Enter name &rarr; Request to join
             </li>
             <li>
               <strong className="text-white">Host window:</strong> See toast &rarr; Admit or Deny
@@ -149,7 +149,7 @@ export default function QAPage() {
           <div className="space-y-2">
             <a
               href="/feedback"
-              className="flex items-center gap-2 bg-[#111111] border border-white/6 rounded-xl px-4 py-3 text-sm text-violet-400 hover:border-violet-500/30 transition-colors"
+              className="flex items-center gap-2 bg-[#111111] border border-white/6 rounded-xl px-4 py-3 text-sm text-indigo-400 hover:border-indigo-500/30 transition-colors"
             >
               <Zap className="w-4 h-4" />
               Submit via /feedback page (bug report form)
@@ -213,7 +213,7 @@ function Section({ number, title, children }: { number: string; title: string; c
   return (
     <section className="mb-14">
       <div className="flex items-center gap-3 mb-5">
-        <span className="text-4xl font-black text-violet-500/20 leading-none select-none">{number}</span>
+        <span className="text-4xl font-black text-indigo-500/20 leading-none select-none">{number}</span>
         <h2 className="text-xl font-semibold text-white">{title}</h2>
       </div>
       <div className="space-y-4 pl-2">{children}</div>
@@ -225,7 +225,7 @@ function Step({ icon, title, children }: { icon: React.ReactNode; title: string;
   return (
     <div className="bg-[#111111] border border-white/6 rounded-xl p-4">
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-violet-400">{icon}</span>
+        <span className="text-indigo-400">{icon}</span>
         <h3 className="text-sm font-medium text-white">{title}</h3>
       </div>
       <div className="pl-6">{children}</div>

@@ -73,8 +73,8 @@ function ColorSwatch({
             aria-label={`${groupLabel ? groupLabel + ": " : ""}${c.label}`}
             onClick={() => onSelect(c.value)}
             className={[
-              "w-6 h-6 rounded-full border-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-studio-panel",
-              isSelected ? "border-violet-400 scale-110" : "border-white/20 hover:border-white/50",
+              "w-6 h-6 rounded-full border-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-studio-panel",
+              isSelected ? "border-indigo-400 scale-110" : "border-white/20 hover:border-white/50",
               c.value === "transparent" ? "bg-transparent" : "",
             ].join(" ")}
             style={c.value !== "transparent" ? { backgroundColor: c.value } : undefined}
@@ -131,7 +131,7 @@ export default function TextOverlayPanel() {
             onChange={(e) => setText(e.target.value)}
             placeholder="Enter overlay text..."
             rows={2}
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 resize-none focus:outline-none focus:border-violet-500/60 transition-colors"
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 resize-none focus:outline-none focus:border-indigo-500/60 transition-colors"
           />
 
           {/* Position grid */}
@@ -146,7 +146,7 @@ export default function TextOverlayPanel() {
                   className={[
                     "px-2 py-1 rounded-md text-[10px] font-medium transition-all",
                     position === p.value
-                      ? "bg-violet-500/30 text-violet-300 border border-violet-500/40"
+                      ? "bg-indigo-500/30 text-indigo-300 border border-indigo-500/40"
                       : "bg-white/5 text-gray-400 border border-white/8 hover:bg-white/8 hover:text-gray-300",
                   ].join(" ")}
                 >
@@ -168,7 +168,7 @@ export default function TextOverlayPanel() {
                   className={[
                     "flex-1 py-1 rounded-md font-medium transition-all border",
                     fontSize === s
-                      ? "bg-violet-500/30 text-violet-300 border-violet-500/40"
+                      ? "bg-indigo-500/30 text-indigo-300 border-indigo-500/40"
                       : "bg-white/5 text-gray-400 border-white/8 hover:bg-white/8 hover:text-gray-300",
                     s === "sm" ? "text-[10px]" : s === "md" ? "text-xs" : "text-sm",
                   ].join(" ")}
@@ -201,7 +201,7 @@ export default function TextOverlayPanel() {
                 value={durationSecs}
                 onChange={(e) => setDurationSecs(e.target.value)}
                 placeholder="Permanent"
-                className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-violet-500/60 transition-colors"
+                className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500/60 transition-colors"
               />
               <span className="text-xs text-gray-500 whitespace-nowrap">sec</span>
             </div>
@@ -212,7 +212,7 @@ export default function TextOverlayPanel() {
             type="button"
             onClick={handleAdd}
             disabled={!text.trim()}
-            className="w-full py-2 rounded-lg bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium transition-all"
+            className="w-full py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium transition-all"
           >
             Add to Stage
           </button>
@@ -261,7 +261,7 @@ export default function TextOverlayPanel() {
                     onClick={() => toggleTextOverlay(overlay.id)}
                     aria-label={overlay.visible ? `Hide overlay "${overlay.text}"` : `Show overlay "${overlay.text}"`}
                     aria-pressed={overlay.visible}
-                    className="p-1 rounded text-gray-500 hover:text-white transition-colors flex-none focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+                    className="p-1 rounded text-gray-500 hover:text-white transition-colors flex-none focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
                     title={overlay.visible ? "Hide overlay" : "Show overlay"}
                   >
                     {overlay.visible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
@@ -298,9 +298,9 @@ export default function TextOverlayPanel() {
                   aria-label={`Stage background: ${c.label}`}
                   onClick={() => setStageBackground(c.value)}
                   className={[
-                    "w-6 h-6 rounded-full border-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-studio-panel",
+                    "w-6 h-6 rounded-full border-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-studio-panel",
                     isSelected
-                      ? "border-violet-400 scale-110"
+                      ? "border-indigo-400 scale-110"
                       : "border-white/20 hover:border-white/50",
                   ].join(" ")}
                   style={{ backgroundColor: c.value }}

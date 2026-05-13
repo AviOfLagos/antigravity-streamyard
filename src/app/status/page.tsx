@@ -165,7 +165,7 @@ export default async function StatusPage() {
           <span aria-hidden>←</span> Back to home
         </Link>
         <div className="flex items-center gap-2">
-          <Zap className="w-4 h-4 text-violet-400" />
+          <Zap className="w-4 h-4 text-indigo-400" />
           <span className="font-bold text-white">Zerocast</span>
         </div>
       </nav>

@@ -43,8 +43,8 @@ export default function ConnectionStatus() {
   if (state === ConnectionState.Connecting) {
     return (
       <div role="status" aria-live="polite" className="absolute top-1 right-1 z-30 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-black/40 backdrop-blur-sm">
-        <span className="w-1.5 h-1.5 rounded-full bg-violet-400 motion-safe:animate-pulse shadow-[0_0_4px_theme(colors.violet.400)]" />
-        <span className="text-[10px] text-violet-300 font-medium">Connecting...</span>
+        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 motion-safe:animate-pulse shadow-[0_0_4px_theme(colors.violet.400)]" />
+        <span className="text-[10px] text-indigo-300 font-medium">Connecting...</span>
       </div>
     )
   }

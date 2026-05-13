@@ -155,7 +155,7 @@ export default async function DashboardPage({ searchParams }: Props) {
                         room.status === RoomStatus.LIVE
                           ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
                           : room.status === RoomStatus.LOBBY
-                            ? "bg-violet-500/20 text-violet-400 border-violet-500/30"
+                            ? "bg-indigo-500/20 text-indigo-400 border-indigo-500/30"
                             : "bg-gray-500/20 text-gray-500 border-gray-500/30"
                       }
                     >
@@ -163,7 +163,7 @@ export default async function DashboardPage({ searchParams }: Props) {
                     </Badge>
                     {room.status === RoomStatus.LOBBY && (
                       <Link href={`/studio/${room.code}`}>
-                        <Button size="sm" className="bg-violet-600 hover:bg-violet-500 text-white text-xs">
+                        <Button size="sm" className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs">
                           Enter Studio
                         </Button>
                       </Link>
@@ -178,7 +178,7 @@ export default async function DashboardPage({ searchParams }: Props) {
                     {room.status === RoomStatus.ENDED && (
                       <Link
                         href={`/session-summary/${room.code}`}
-                        className="text-xs text-violet-400 hover:text-violet-300 transition-colors"
+                        className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
                       >
                         Summary
                       </Link>

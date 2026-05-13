@@ -133,7 +133,7 @@ const ParticipantRow = React.memo(function ParticipantRow({
       {/* Name */}
       <span className="text-[10px] text-gray-400 truncate w-full text-center leading-tight">
         {displayName}
-        {isHost && <span className="text-violet-400 ml-0.5">★</span>}
+        {isHost && <span className="text-indigo-400 ml-0.5">★</span>}
       </span>
 
       {/* Moderation buttons (guests only) */}
@@ -145,7 +145,7 @@ const ParticipantRow = React.memo(function ParticipantRow({
             disabled={acting}
             aria-label={micOn ? `Mute ${displayName}'s mic` : `Unmute ${displayName}'s mic`}
             className={[
-              "p-1 rounded transition-colors disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-1 focus-visible:ring-offset-studio-bg-deep",
+              "p-1 rounded transition-colors disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-1 focus-visible:ring-offset-studio-bg-deep",
               micOn
                 ? "text-emerald-400 hover:bg-emerald-500/15"
                 : "text-gray-600 hover:bg-white/6",
@@ -160,7 +160,7 @@ const ParticipantRow = React.memo(function ParticipantRow({
             disabled={acting}
             aria-label={camOn ? `Turn off ${displayName}'s camera` : `Turn on ${displayName}'s camera`}
             className={[
-              "p-1 rounded transition-colors disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-1 focus-visible:ring-offset-studio-bg-deep",
+              "p-1 rounded transition-colors disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-1 focus-visible:ring-offset-studio-bg-deep",
               camOn
                 ? "text-emerald-400 hover:bg-emerald-500/15"
                 : "text-gray-600 hover:bg-white/6",
@@ -188,7 +188,7 @@ const ParticipantRow = React.memo(function ParticipantRow({
           type="button"
           onClick={handleStageToggle}
           aria-label={`Send ${displayName} to backstage`}
-          className="bg-white/6 text-gray-400 hover:bg-white/10 hover:text-white px-2.5 py-0.5 rounded text-[10px] min-w-[60px] text-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-1 focus-visible:ring-offset-studio-bg-deep"
+          className="bg-white/6 text-gray-400 hover:bg-white/10 hover:text-white px-2.5 py-0.5 rounded text-[10px] min-w-[60px] text-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-1 focus-visible:ring-offset-studio-bg-deep"
         >
           Backstage
         </button>
@@ -197,7 +197,7 @@ const ParticipantRow = React.memo(function ParticipantRow({
           type="button"
           onClick={handleStageToggle}
           aria-label={`Bring ${displayName} on stage`}
-          className="bg-violet-500/15 text-violet-400 hover:bg-violet-500/25 px-2.5 py-0.5 rounded text-[10px] min-w-[60px] text-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-1 focus-visible:ring-offset-studio-bg-deep"
+          className="bg-indigo-500/15 text-indigo-400 hover:bg-indigo-500/25 px-2.5 py-0.5 rounded text-[10px] min-w-[60px] text-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-1 focus-visible:ring-offset-studio-bg-deep"
         >
           Stage
         </button>

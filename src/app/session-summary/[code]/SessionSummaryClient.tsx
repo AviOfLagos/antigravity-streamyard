@@ -213,7 +213,7 @@ export default function SessionSummaryClient({ summary, limitedStats }: Props) {
           <span className="w-px h-4 bg-white/10" />
           <Link
             href="/dashboard"
-            className="text-sm text-violet-400 hover:text-violet-300 transition-colors font-medium"
+            className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors font-medium"
           >
             Start new session
           </Link>

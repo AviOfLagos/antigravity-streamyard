@@ -51,7 +51,7 @@ export default function PlatformFilter({ connectedPlatforms = [] }: PlatformFilt
                 aria-label={`${active ? "Hide" : "Show"} ${PLATFORM_LABELS[platform]} messages`}
                 title={active ? `Hide ${PLATFORM_LABELS[platform]}` : `Show ${PLATFORM_LABELS[platform]}`}
                 className={[
-                  "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400",
+                  "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400",
                   active ? "ring-2 ring-emerald-400/50" : "",
                 ].join(" ")}
                 style={

@@ -95,7 +95,7 @@ function ConnectionMonitor() {
     return (
       <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-50 pointer-events-none">
         <div className="text-center">
-          <div className="w-6 h-6 border-2 border-violet-400 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+          <div className="w-6 h-6 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
           <p className="text-white text-sm">Connecting to studio...</p>
         </div>
       </div>
@@ -116,14 +116,14 @@ function ConnectionMonitor() {
               <button
                 type="button"
                 onClick={() => window.location.reload()}
-                className="mt-3 px-4 py-1.5 rounded-xl text-sm font-medium bg-violet-500 hover:bg-violet-400 text-white transition-colors"
+                className="mt-3 px-4 py-1.5 rounded-xl text-sm font-medium bg-indigo-500 hover:bg-indigo-400 text-white transition-colors"
               >
                 Refresh to rejoin
               </button>
             </>
           ) : (
             <>
-              <div className="w-6 h-6 border-2 border-violet-400 border-t-transparent rounded-full animate-spin mx-auto" />
+              <div className="w-6 h-6 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin mx-auto" />
               <p className="text-white font-semibold">
                 Reconnecting... (attempt {attemptCount}/{MAX_RECONNECT_ATTEMPTS})
               </p>
@@ -146,7 +146,7 @@ function ConnectionMonitor() {
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="px-4 py-1.5 rounded-xl text-sm font-medium bg-violet-500 hover:bg-violet-400 text-white transition-colors"
+            className="px-4 py-1.5 rounded-xl text-sm font-medium bg-indigo-500 hover:bg-indigo-400 text-white transition-colors"
           >
             Refresh to rejoin
           </button>
@@ -466,7 +466,7 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
       <header className="flex-none h-12 flex items-center justify-between px-4 bg-studio-bg-deep border-b border-white/6 z-10 pt-[env(safe-area-inset-top)]">
         <div className="flex items-center gap-2.5">
           <div className="flex items-center gap-1.5 text-white font-bold text-sm">
-            <Zap className="w-4 h-4 text-violet-400" />
+            <Zap className="w-4 h-4 text-indigo-400" />
             Zerocast
           </div>
           <div className="h-4 w-px bg-white/10" />
@@ -496,7 +496,7 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
         {/* Mobile chat toggle (< lg) */}
         <button
           type="button"
-          className="lg:hidden relative p-2 rounded-lg text-gray-500 hover:text-white hover:bg-white/6 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-studio-bg-deep"
+          className="lg:hidden relative p-2 rounded-lg text-gray-500 hover:text-white hover:bg-white/6 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-studio-bg-deep"
           onClick={() => {
             setChatOpen((o) => {
               if (!o) setUnreadCount(0)
@@ -553,7 +553,7 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
         <AIChatController roomCode={roomCode} />
         {/* Fix: Browser autoplay policy blocks audio until user gesture on this page.
             StartAudio shows a button only when audio is blocked, auto-hides otherwise. */}
-        <StartAudio label="Click to enable audio" className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-violet-500 hover:bg-violet-600 text-white text-sm font-medium shadow-lg transition-all animate-pulse" />
+        <StartAudio label="Click to enable audio" className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium shadow-lg transition-all animate-pulse" />
         {/* Stage: video + controls — always fills available width, never obscured */}
         <div className="relative flex flex-col flex-1 min-w-0 overflow-hidden">
           {/* Top toolbar — panels, go live, layout, text, end session */}
@@ -621,7 +621,7 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
               setChatCollapsed(false)
               setUnreadCount(0)
             }}
-            className="hidden lg:flex absolute top-3 right-3 z-40 items-center justify-center w-10 h-10 bg-violet-500 hover:bg-violet-400 text-white rounded-full shadow-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 focus-visible:ring-offset-2 focus-visible:ring-offset-studio-bg"
+            className="hidden lg:flex absolute top-3 right-3 z-40 items-center justify-center w-10 h-10 bg-indigo-500 hover:bg-indigo-400 text-white rounded-full shadow-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 focus-visible:ring-offset-2 focus-visible:ring-offset-studio-bg"
             aria-label={`Open chat${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
             title="Open chat"
           >

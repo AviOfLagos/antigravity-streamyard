@@ -116,9 +116,9 @@ function ToolBtn({
       aria-pressed={pressed}
       aria-label={ariaLabel}
       className={[
-        "flex items-center justify-center w-8 h-8 rounded-lg transition-all text-sm select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-studio-bg-deep",
+        "flex items-center justify-center w-8 h-8 rounded-lg transition-all text-sm select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-studio-bg-deep",
         active
-          ? "bg-violet-500/20 text-violet-300 ring-1 ring-violet-500/40"
+          ? "bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-500/40"
           : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white",
         className,
       ].join(" ")}
@@ -230,7 +230,7 @@ export default function TopToolbar({
             <span className="relative">
               <Type className="w-4 h-4" />
               {visibleOverlayCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 min-w-[12px] h-[12px] flex items-center justify-center bg-violet-500 text-white text-[7px] font-bold rounded-full px-0.5 leading-none">
+                <span className="absolute -top-1.5 -right-1.5 min-w-[12px] h-[12px] flex items-center justify-center bg-indigo-500 text-white text-[7px] font-bold rounded-full px-0.5 leading-none">
                   {visibleOverlayCount}
                 </span>
               )}
@@ -264,9 +264,9 @@ export default function TopToolbar({
                 aria-checked={autoLayoutEnabled}
                 aria-label="Auto layout"
                 className={[
-                  "w-full flex items-center gap-2 px-2.5 py-2 rounded-lg transition-all text-xs font-medium select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-studio-panel",
+                  "w-full flex items-center gap-2 px-2.5 py-2 rounded-lg transition-all text-xs font-medium select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-studio-panel",
                   autoLayoutEnabled
-                    ? "bg-violet-500/20 text-violet-300 ring-1 ring-violet-500/30"
+                    ? "bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-500/30"
                     : "bg-white/4 text-gray-400 hover:bg-white/8 hover:text-white",
                 ].join(" ")}
                 title={autoLayoutEnabled ? "Auto Layout is ON — click to disable" : "Enable Auto Layout"}
@@ -276,7 +276,7 @@ export default function TopToolbar({
                 <span className={[
                   "text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full",
                   autoLayoutEnabled
-                    ? "bg-violet-500/30 text-violet-300"
+                    ? "bg-indigo-500/30 text-indigo-300"
                     : "bg-white/8 text-gray-600",
                 ].join(" ")}>
                   {autoLayoutEnabled ? "ON" : "OFF"}
@@ -461,7 +461,7 @@ export default function TopToolbar({
                       className={[
                         "px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all border",
                         chatOverlayPosition === p.value
-                          ? "bg-violet-500/20 text-violet-300 border-violet-500/40"
+                          ? "bg-indigo-500/20 text-indigo-300 border-indigo-500/40"
                           : "bg-white/4 text-gray-500 border-white/8 hover:text-white",
                       ].join(" ")}
                     >

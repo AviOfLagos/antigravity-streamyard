@@ -101,7 +101,7 @@ function ScreenShareButton() {
       className={[
         "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all text-[11px] font-medium min-w-[52px] select-none",
         enabled
-          ? "bg-violet-500/20 text-violet-300 hover:bg-violet-500/30"
+          ? "bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30"
           : "bg-white/6 text-gray-300 hover:bg-white/10 hover:text-white",
       ].join(" ")}
     >
@@ -168,7 +168,7 @@ function GuestConnectionMonitor({ wasKicked }: { wasKicked: boolean }) {
     return (
       <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-20 pointer-events-none">
         <div className="text-center">
-          <div className="w-6 h-6 border-2 border-violet-400 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+          <div className="w-6 h-6 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
           <p className="text-white text-sm">Connecting to studio...</p>
         </div>
       </div>
@@ -189,14 +189,14 @@ function GuestConnectionMonitor({ wasKicked }: { wasKicked: boolean }) {
               <button
                 type="button"
                 onClick={() => window.location.reload()}
-                className="mt-3 px-4 py-1.5 rounded-xl text-sm font-medium bg-violet-500 hover:bg-violet-400 text-white transition-colors"
+                className="mt-3 px-4 py-1.5 rounded-xl text-sm font-medium bg-indigo-500 hover:bg-indigo-400 text-white transition-colors"
               >
                 Refresh to rejoin
               </button>
             </>
           ) : (
             <>
-              <div className="w-6 h-6 border-2 border-violet-400 border-t-transparent rounded-full animate-spin mx-auto" />
+              <div className="w-6 h-6 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin mx-auto" />
               <p className="text-white font-semibold">
                 Reconnecting... (attempt {attemptCount}/{MAX_RECONNECT_ATTEMPTS})
               </p>
@@ -219,7 +219,7 @@ function GuestConnectionMonitor({ wasKicked }: { wasKicked: boolean }) {
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="px-4 py-1.5 rounded-xl text-sm font-medium bg-violet-500 hover:bg-violet-400 text-white transition-colors"
+            className="px-4 py-1.5 rounded-xl text-sm font-medium bg-indigo-500 hover:bg-indigo-400 text-white transition-colors"
           >
             Refresh to rejoin
           </button>
@@ -288,7 +288,7 @@ function ParticipantRow({ participant, localIdentity }: { participant: Participa
           {initial}
         </div>
         {isSpeaking && (
-          <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-violet-500 ring-1 ring-[#0d0d0d] animate-pulse" />
+          <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-indigo-500 ring-1 ring-[#0d0d0d] animate-pulse" />
         )}
       </div>
 
@@ -305,7 +305,7 @@ function ParticipantRow({ participant, localIdentity }: { participant: Participa
         className={[
           "text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0",
           role === "Host"
-            ? "bg-violet-500/20 text-violet-400"
+            ? "bg-indigo-500/20 text-indigo-400"
             : "bg-cyan-500/20 text-cyan-400",
         ].join(" ")}
       >
@@ -335,7 +335,7 @@ function BackstagePanel({ participants, localIdentity, onClose }: {
   return (
     <div className="flex flex-col h-full bg-[#0d0d0d]">
       <div className="flex-none flex items-center gap-2 px-3 py-2.5 border-b border-white/6">
-        <Users className="w-3.5 h-3.5 text-violet-400" />
+        <Users className="w-3.5 h-3.5 text-indigo-400" />
         <span className="text-xs font-semibold text-white tracking-wide">Participants</span>
         <span className="text-[10px] text-gray-600 tabular-nums">{participants.length}</span>
         {onClose && (
@@ -649,7 +649,7 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <header className="flex-none h-12 flex items-center px-3 sm:px-4 bg-[#080808] border-b border-white/6 gap-2">
         <div className="flex items-center gap-1.5 text-white font-bold text-sm shrink-0">
-          <Zap className="w-4 h-4 text-violet-400" />
+          <Zap className="w-4 h-4 text-indigo-400" />
           <span className="hidden xs:inline">Zerocast</span>
         </div>
         <div className="h-4 w-px bg-white/10 shrink-0" />
@@ -675,7 +675,7 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
             aria-label="Toggle participants"
           >
             <Users className="w-4 h-4" />
-            <span className="absolute top-0.5 right-0.5 min-w-[12px] h-[12px] flex items-center justify-center bg-violet-600 text-white text-[8px] font-bold rounded-full px-0.5 leading-none">
+            <span className="absolute top-0.5 right-0.5 min-w-[12px] h-[12px] flex items-center justify-center bg-indigo-600 text-white text-[8px] font-bold rounded-full px-0.5 leading-none">
               {participants.length}
             </span>
           </button>
@@ -764,7 +764,7 @@ export default function GuestStudio({ roomCode, displayName, onKicked }: GuestSt
               setChatCollapsed(false)
               setUnreadCount(0)
             }}
-            className="hidden lg:flex absolute top-3 right-3 z-40 items-center justify-center w-10 h-10 bg-violet-500 hover:bg-violet-400 text-white rounded-full shadow-lg transition-all duration-200"
+            className="hidden lg:flex absolute top-3 right-3 z-40 items-center justify-center w-10 h-10 bg-indigo-500 hover:bg-indigo-400 text-white rounded-full shadow-lg transition-all duration-200"
             aria-label="Open chat"
             title="Open chat"
           >

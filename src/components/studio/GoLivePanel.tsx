@@ -215,7 +215,7 @@ export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle,
   ) : (
     <button
       type="button"
-      className="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all text-[11px] font-semibold min-w-15 select-none bg-gradient-to-r from-red-600 to-violet-600 text-white hover:from-red-500 hover:to-violet-500 shadow-lg shadow-violet-500/20"
+      className="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all text-[11px] font-semibold min-w-15 select-none bg-gradient-to-r from-red-600 to-indigo-600 text-white hover:from-red-500 hover:to-indigo-500 shadow-lg shadow-indigo-500/20"
     >
       <Radio className="w-5 h-5" />
       <span>Go Live</span>
@@ -280,7 +280,7 @@ export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle,
                         <button
                           type="button"
                           onClick={() => handleAddDestination(ps.platform)}
-                          className="text-[10px] text-violet-400 hover:text-violet-300 transition-colors"
+                          className="text-[10px] text-indigo-400 hover:text-indigo-300 transition-colors"
                         >
                           + Add
                         </button>
@@ -358,7 +358,7 @@ export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle,
                     <p className="text-sm text-gray-400">No platforms connected.</p>
                     <a
                       href="/settings/platforms"
-                      className="inline-flex items-center gap-1.5 text-xs font-medium text-violet-400 hover:text-violet-300 transition-colors"
+                      className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
                     >
                       Connect a platform
                       <ExternalLink className="w-3 h-3" />
@@ -372,7 +372,7 @@ export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle,
                       "flex items-center justify-between px-3 py-2.5 rounded-lg border transition-all",
                       ps.hasStreamKey
                         ? selectedPlatforms.has(ps.platform)
-                          ? "bg-violet-500/10 border-violet-500/30 cursor-pointer"
+                          ? "bg-indigo-500/10 border-indigo-500/30 cursor-pointer"
                           : "bg-white/5 border-white/5 cursor-pointer hover:border-white/10"
                         : "bg-white/[0.02] border-white/5 opacity-60",
                     ].join(" ")}
@@ -383,7 +383,7 @@ export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle,
                           type="checkbox"
                           checked={selectedPlatforms.has(ps.platform)}
                           onChange={() => togglePlatform(ps.platform)}
-                          className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-violet-500 focus:ring-violet-500/30 focus:ring-offset-0"
+                          className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-indigo-500 focus:ring-indigo-500/30 focus:ring-offset-0"
                         />
                       ) : (
                         <AlertCircle className="w-4 h-4 text-gray-600" />
@@ -401,7 +401,7 @@ export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle,
                     ) : (
                       <a
                         href="/settings/platforms"
-                        className="inline-flex items-center gap-1 text-[10px] text-violet-400 hover:text-violet-300"
+                        className="inline-flex items-center gap-1 text-[10px] text-indigo-400 hover:text-indigo-300"
                         onClick={(e) => e.stopPropagation()}
                       >
                         Set up stream key <ExternalLink className="w-3 h-3" />
@@ -435,7 +435,7 @@ export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle,
                       className={[
                         "flex items-center justify-between px-3 py-2.5 rounded-lg border transition-all cursor-pointer",
                         selectedCustomRtmp.has(dest.id)
-                          ? "bg-violet-500/10 border-violet-500/30"
+                          ? "bg-indigo-500/10 border-indigo-500/30"
                           : "bg-white/5 border-white/5 hover:border-white/10",
                       ].join(" ")}
                     >
@@ -451,7 +451,7 @@ export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle,
                               return next
                             })
                           }}
-                          className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-violet-500 focus:ring-violet-500/30 focus:ring-offset-0"
+                          className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-indigo-500 focus:ring-indigo-500/30 focus:ring-offset-0"
                         />
                         <div className="w-[18px] h-[18px] rounded bg-gray-700 flex items-center justify-center text-[8px] font-bold text-white">
                           R
@@ -489,7 +489,7 @@ export default function GoLivePanel({ roomCode, connectedPlatforms, streamTitle,
                 <Button
                   onClick={handleGoLive}
                   disabled={starting || (selectedPlatforms.size + selectedCustomRtmp.size) === 0}
-                  className="flex-1 bg-gradient-to-r from-red-600 to-violet-600 hover:from-red-500 hover:to-violet-500 text-white font-semibold shadow-lg shadow-violet-500/20 disabled:opacity-40 disabled:shadow-none"
+                  className="flex-1 bg-gradient-to-r from-red-600 to-indigo-600 hover:from-red-500 hover:to-indigo-500 text-white font-semibold shadow-lg shadow-indigo-500/20 disabled:opacity-40 disabled:shadow-none"
                 >
                   {starting ? (
                     <span className="flex items-center gap-2">

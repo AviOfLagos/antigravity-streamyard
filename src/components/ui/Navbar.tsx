@@ -9,7 +9,7 @@ export default async function Navbar() {
   return (
     <nav className="border-b border-white/6 px-6 py-4 flex justify-between items-center bg-[#080808]">
       <Link href="/dashboard" className="flex items-center gap-2">
-        <div className="w-7 h-7 bg-violet-600 rounded-lg flex items-center justify-center">
+        <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center">
           <Zap className="w-3.5 h-3.5 text-white" />
         </div>
         <span className="font-bold text-white">Zerocast</span>
