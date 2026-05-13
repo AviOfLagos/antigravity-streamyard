@@ -33,6 +33,24 @@ export default function ChatPanel({ roomCode, isHost, displayName, onCollapse, c
     [storeMessages, filters]
   )
 
+  // Pre-compute author-grouping flags so consecutive messages from the same
+  // sender within ~60s collapse their header (cleaner read, fewer name dupes).
+  const GROUPING_WINDOW_MS = 60_000
+  const continuationFlags = useMemo(() => {
+    return messages.map((msg, i) => {
+      const prev = messages[i - 1]
+      if (!prev) return false
+      if (prev.platform !== msg.platform) return false
+      if (prev.author.name !== msg.author.name) return false
+      const eventType = msg.eventType ?? "text"
+      const prevEvent = prev.eventType ?? "text"
+      // Only group plain text messages; events keep their badge.
+      if (eventType !== "text" || prevEvent !== "text") return false
+      const dt = new Date(msg.timestamp).getTime() - new Date(prev.timestamp).getTime()
+      return dt < GROUPING_WINDOW_MS
+    })
+  }, [messages])
+
   // Track whether user is at bottom for auto-scroll
   const [isAtBottom, setIsAtBottom] = useState(true)
   const [hasNewMessages, setHasNewMessages] = useState(false)
@@ -151,7 +169,7 @@ export default function ChatPanel({ roomCode, isHost, displayName, onCollapse, c
                     transform: `translateY(${virtualRow.start}px)`,
                   }}
                 >
-                  <ChatMessage message={msg} />
+                  <ChatMessage message={msg} isContinuation={continuationFlags[virtualRow.index]} />
                 </div>
               )
             })}
@@ -204,15 +222,21 @@ function GuestChatInput({ displayName, onSend }: { displayName: string; onSend?:
 
   return (
     <div className="flex-none border-t border-white/6 px-2 py-2">
-      <div className="flex items-center gap-1.5">
-        <input
-          type="text"
+      <div className="flex items-end gap-1.5">
+        <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          placeholder="Send to chat..."
+          onKeyDown={(e) => {
+            // Enter sends; Shift+Enter inserts newline (standard convention).
+            if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+              e.preventDefault()
+              handleSend()
+            }
+          }}
+          rows={1}
+          placeholder="Send to chat… (Shift+Enter for newline)"
           maxLength={500}
-          className="flex-1 bg-white/4 text-white text-xs placeholder:text-gray-600 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-cyan-500/30 transition-colors"
+          className="flex-1 bg-white/4 text-white text-xs placeholder:text-gray-600 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-cyan-500/30 transition-colors resize-y min-h-[36px] max-h-32 leading-snug"
         />
         <button
           type="button"
@@ -224,7 +248,7 @@ function GuestChatInput({ displayName, onSend }: { displayName: string; onSend?:
           <Send className="w-3.5 h-3.5" />
         </button>
       </div>
-      <p className="text-[9px] text-gray-700 mt-1 px-1">
+      <p className="text-[9px] text-gray-500 mt-1 px-1">
         Visible to everyone in the room
       </p>
     </div>
@@ -269,15 +293,21 @@ function ChatInput({ roomCode }: { roomCode: string }) {
 
   return (
     <div className="flex-none border-t border-white/6 px-2 py-2">
-      <div className="flex items-center gap-1.5">
-        <input
-          type="text"
+      <div className="flex items-end gap-1.5">
+        <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          placeholder="Send to chat..."
+          onKeyDown={(e) => {
+            // Enter sends; Shift+Enter inserts newline.
+            if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+              e.preventDefault()
+              handleSend()
+            }
+          }}
+          rows={1}
+          placeholder="Send to chat… (Shift+Enter for newline)"
           maxLength={500}
-          className="flex-1 bg-white/4 text-white text-xs placeholder:text-gray-600 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-indigo-500/30 transition-colors"
+          className="flex-1 bg-white/4 text-white text-xs placeholder:text-gray-600 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-indigo-500/30 transition-colors resize-y min-h-[36px] max-h-32 leading-snug"
         />
         <button
           type="button"
@@ -289,7 +319,7 @@ function ChatInput({ roomCode }: { roomCode: string }) {
           <Send className="w-3.5 h-3.5" />
         </button>
       </div>
-      <p className="text-[9px] text-gray-700 mt-1 px-1">
+      <p className="text-[9px] text-gray-500 mt-1 px-1">
         Sends to connected platforms
       </p>
     </div>
