@@ -1,7 +1,16 @@
 import { Suspense } from "react"
 
 import { RoomStatus } from "@prisma/client"
-import { Clock, RefreshCw, Video } from "lucide-react"
+import {
+  ArrowRight,
+  Clock,
+  PlayCircle,
+  Plus,
+  RefreshCw,
+  Settings as SettingsIcon,
+  Users,
+  Video,
+} from "lucide-react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
@@ -123,11 +132,89 @@ export default async function DashboardPage({ searchParams }: Props) {
         {/* Rooms */}
         <h2 className="text-lg font-semibold text-white mb-4">Recent Studios</h2>
         {rooms.length === 0 && !dbError ? (
-          <Card className="bg-[#111111] border-white/6">
-            <CardContent className="py-16 text-center">
-              <Video className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400 mb-4">No studios yet. Create your first one!</p>
-              <CreateStudioButton />
+          <Card className="relative overflow-hidden bg-[#111111] border-white/6">
+            {/* Brand glow — top-right */}
+            <div
+              aria-hidden
+              className="absolute -top-32 -right-32 w-96 h-96 rounded-full pointer-events-none"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 60%)",
+              }}
+            />
+            <CardContent className="relative px-8 py-14">
+              <div className="max-w-xl">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-xs font-bold uppercase tracking-widest mb-5">
+                  <Video className="w-3 h-3" />
+                  First studio
+                </div>
+                <h3
+                  className="font-black text-white tracking-tight leading-[1.05] mb-3"
+                  style={{ fontSize: "clamp(28px, 3.5vw, 40px)" }}
+                >
+                  Take 90 seconds.
+                </h3>
+                <p className="text-gray-400 text-base leading-relaxed mb-8">
+                  Multistream to YouTube, Twitch, Kick, and TikTok — all from a
+                  single browser tab. No OBS, no downloads, no hardware.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+                {[
+                  {
+                    n: "01",
+                    icon: Plus,
+                    title: "Create a studio",
+                    sub: "Name it, get a code.",
+                  },
+                  {
+                    n: "02",
+                    icon: Users,
+                    title: "Invite guests by link",
+                    sub: "No accounts needed.",
+                  },
+                  {
+                    n: "03",
+                    icon: SettingsIcon,
+                    title: "Connect platforms",
+                    sub: "YT / Twitch / Kick / TikTok.",
+                  },
+                ].map((step) => {
+                  const Icon = step.icon
+                  return (
+                    <div
+                      key={step.n}
+                      className="rounded-lg border border-white/6 bg-white/[0.02] p-4"
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="font-mono text-xs font-bold text-indigo-400">
+                          {step.n}
+                        </span>
+                        <Icon className="w-3.5 h-3.5 text-gray-500" />
+                      </div>
+                      <p className="text-white font-semibold text-sm mb-1">
+                        {step.title}
+                      </p>
+                      <p className="text-gray-500 text-xs leading-relaxed">
+                        {step.sub}
+                      </p>
+                    </div>
+                  )
+                })}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-4">
+                <CreateStudioButton />
+                <Link
+                  href="/features"
+                  className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-white transition-colors"
+                >
+                  <PlayCircle className="w-4 h-4" />
+                  See what&apos;s in the studio
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
             </CardContent>
           </Card>
         ) : (
