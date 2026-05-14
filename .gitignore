@@ -37,12 +37,9 @@ yarn-error.log*
 !.env.example
 
 # project specific
-# mempalace.yaml — commit this (palace config). entities.json (mined data) stays ignored below.
+mempalace.yaml
 __pycache__/
 *.pyc
-
-# Per-machine agent skill installs (re-install via `npx skills add ...`)
-.agents/
 
 # vercel
 .vercel
@@ -53,7 +50,12 @@ next-env.d.ts
 
 
 # docs - keep project docs tracked (except design drafts)
-/doc
+/docs
+docs
 
-# MemPalace per-project files (issue #185)
-entities.json
+/doc
+doc
+
+
+/scripts
+scripts
