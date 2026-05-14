@@ -65,12 +65,12 @@ function VideoTileInner({ trackRef, isVisible, isLocal, isHost }: VideoTileProps
           </div>
         )}
 
-        {/* Name label */}
-        <div className="absolute bottom-2 left-2 right-12 flex items-center gap-1.5 min-w-0">
+        {/* Lower-third name bar */}
+        <div className="absolute bottom-0 left-0 right-0 flex items-center gap-2 min-w-0 pt-6 pb-2 px-3 bg-gradient-to-t from-black/70 via-black/40 to-transparent border-l-2 border-indigo-400 pointer-events-none">
           {isSpeaking && (
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse shrink-0" />
+            <span className="w-2 h-2 rounded-full bg-indigo-400 motion-safe:animate-pulse shrink-0" />
           )}
-          <span className="text-white text-[11px] font-medium bg-black/50 px-1.5 py-0.5 rounded backdrop-blur-sm truncate max-w-full">
+          <span className="text-white font-semibold tracking-tight leading-none truncate max-w-full text-[clamp(0.75rem,1.6cqi,1.5rem)]">
             {isLocal ? `${displayName} (You)` : displayName}
           </span>
         </div>
