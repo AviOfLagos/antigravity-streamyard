@@ -8,12 +8,15 @@ import { toast } from "sonner"
 
 import PlatformIcon, { PLATFORM_META } from "@/components/ui/PlatformIcon"
 import { PLATFORM_COLORS } from "@/components/chat/PlatformBadge"
+import { formatViewerCount } from "@/lib/viewer-counts"
 
 interface PlatformLinkPopoverProps {
   platform: string
   channelName: string
   /** Resolved viewer URL; null/undefined disables the popover actions. */
   url?: string | null
+  /** Live concurrent-viewer count. null = unknown; undefined = pre-live. */
+  viewerCount?: number | null
 }
 
 /**
@@ -25,7 +28,7 @@ interface PlatformLinkPopoverProps {
  * live), the trigger is still rendered for layout consistency but actions are
  * disabled with an explanatory tooltip.
  */
-export default function PlatformLinkPopover({ platform, channelName, url }: PlatformLinkPopoverProps) {
+export default function PlatformLinkPopover({ platform, channelName, url, viewerCount }: PlatformLinkPopoverProps) {
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
   const [qrOpen, setQrOpen] = useState(false)
@@ -82,15 +85,28 @@ export default function PlatformLinkPopover({ platform, channelName, url }: Plat
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={url
-          ? `${label} viewer link — open menu`
-          : `${label}: ${channelName} (viewer link not available)`}
+        aria-label={
+          viewerCount != null
+            ? `${label} viewer link — ${viewerCount.toLocaleString()} watching — open menu`
+            : url
+              ? `${label} viewer link — open menu`
+              : `${label}: ${channelName} (viewer link not available)`
+        }
         title={url ? `Click to copy ${label} watch link` : `${label}: ${channelName}`}
         className="inline-flex items-center gap-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full pl-1.5 pr-2 py-0.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-studio-bg-deep"
         style={{ borderColor: `${accentColor}33` }}
       >
         <PlatformIcon platform={platform} size={10} />
         <span className="text-[10px] font-medium text-gray-200">{label}</span>
+        {viewerCount != null && (
+          <span
+            className="text-[10px] font-semibold tabular-nums ml-0.5"
+            style={{ color: accentColor }}
+            aria-hidden="true"
+          >
+            {formatViewerCount(viewerCount)}
+          </span>
+        )}
       </button>
 
       {open && (

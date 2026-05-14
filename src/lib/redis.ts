@@ -79,6 +79,26 @@ export async function getRoomPublicUrls(code: string): Promise<Record<string, st
   }
 }
 
+// F-21: per-platform concurrent viewer counts. Hash payload like
+// { youtube: 1234, twitch: 87, kick: null }. Short TTL (5min) so a stale
+// value times out instead of misleading the host.
+const VIEWER_COUNTS_TTL = 60 * 5
+export async function setRoomViewerCounts(code: string, counts: Record<string, number | null>) {
+  const key = `room:${code}:viewer_counts`
+  await redis.set(key, JSON.stringify(counts), { ex: VIEWER_COUNTS_TTL })
+  await trackRoomKey(code, key)
+}
+
+export async function getRoomViewerCounts(code: string): Promise<Record<string, number | null>> {
+  const val = await redis.get(`room:${code}:viewer_counts`)
+  if (!val) return {}
+  try {
+    return typeof val === "string" ? JSON.parse(val) : (val as Record<string, number | null>)
+  } catch {
+    return {}
+  }
+}
+
 // Cleanup room
 export async function deleteRoomKeys(code: string) {
   const trackingKey = `room:${code}:_keys`

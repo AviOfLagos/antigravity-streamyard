@@ -23,6 +23,7 @@ import StudioKeyboard from "@/components/studio/StudioKeyboard"
 import TopToolbar from "@/components/studio/TopToolbar"
 import VideoGrid from "@/components/studio/VideoGrid"
 import useNotificationSound from "@/hooks/useNotificationSound"
+import useViewerCounts from "@/hooks/useViewerCounts"
 import useVisualViewport from "@/hooks/useVisualViewport"
 import { SSEEventDataSchema } from "@/lib/schemas/sse"
 import { PlatformListResponseSchema } from "@/lib/schemas/platform"
@@ -322,6 +323,8 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
   // F-23: lower-cased platform → public viewer URL. Populated after stream-live.
   const [platformUrls, setPlatformUrls] = useState<Record<string, string>>({})
   const isLiveForFetch = useStudioStore((s) => s.isLive)
+  // F-21: live concurrent-viewer counts (per lowercased platform). Only polls while live.
+  const viewerCounts = useViewerCounts(roomCode, { enabled: isLiveForFetch })
   const [criticalErrors, setCriticalErrors] = useState<CriticalError[]>([])
   const { play: playSound, requestNotificationPermission } = useNotificationSound()
   const viewport = useVisualViewport()
@@ -611,6 +614,7 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
                   platform={p.platform}
                   channelName={p.channelName}
                   url={platformUrls[p.platform.toLowerCase()]}
+                  viewerCount={viewerCounts[p.platform.toLowerCase()]}
                 />
               ))}
               {connectedPlatforms.length > 3 && (
