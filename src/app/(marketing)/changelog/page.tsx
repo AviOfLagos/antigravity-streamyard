@@ -30,6 +30,29 @@ const tagStyles: Record<Tag, string> = {
 
 const entries: ChangelogEntry[] = [
   {
+    date: "May 14, 2026",
+    version: "v2.6.0",
+    title: "Live Viewer Counts, Join Pulses, Lower-Thirds, Launch Kit & Marketing Funnel",
+    changes: [
+      // Studio — live observability
+      { tag: "feat", text: "F-21 — cross-platform live viewer count. YouTube concurrentViewers (OAuth liveBroadcasts), Twitch Helix /streams, Kick public channels API, TikTok placeholder. Header pill renders compact count (1.2K / 12K / 1.1M) in the platform accent color. Client polls /api/rooms/[code]/viewer-counts every 30s, server-cached in Redis (5min TTL). YouTube quota ≈ 2.9k units/day at this cadence, well under the 10k default." },
+      { tag: "feat", text: "F-22 — per-platform join activity pulses. Rolling 30s window aggregator (useJoinDeltas) renders compact \"+N PLATFORM\" pills next to the header pill cluster instead of toast-spamming the host on every viewer join. TikTok join events live today; Twitch / Kick light up the same UI as soon as those connectors forward join eventType. Host can disable via Settings → Join activity." },
+      { tag: "feat", text: "Lower-third name bars (T35) — VideoTile now renders a StreamYard-style full-width gradient bar with indigo left accent instead of a tiny corner pill. Name scales via clamp(0.75rem, 1.6cqi, 1.5rem) so it stays legible from 6-grid through solo layouts. Visible in browser preview and egress composite output (recording + RTMP)." },
+
+      // Dashboard
+      { tag: "feat", text: "First-studio onboarding empty state. Single-icon dashboard placeholder replaced with a status pill + display headline (Take 90 seconds.) + three-step grid (Create studio · Invite by link · Connect platforms), brand-indigo radial glow, primary CTA + secondary link to /features. Visible for every first-time beta user." },
+
+      // Marketing kit
+      { tag: "feat", text: "Product Hunt launch kit. New /og/marketing variants ph-thumb (240×240) and ph-gallery (1270×760) + scenes ph-launch (oversized upvote chevron + brand rings + Hunt today pill) and ph-maker (founder quote). Marketing-kit page groups PH scenes with a brand-tinted border + Product Hunt corner badge; scenes can declare a variant allow-list so only relevant sizes render." },
+
+      // Analytics
+      { tag: "feat", text: "PostHog Phase 2 — marketing funnel + identify wiring. BetaModal fires 7 funnel events (opened / closed / field_focused / submitted / success / duplicate / error) with PII-free properties. Click captures on MarketingNav, Footer, FaqSection, and a new BetaCta wrapper. SessionProvider added at the root so PostHogIdentify can alias → identify on signin and reset on signout." },
+
+      // Infra
+      { tag: "improvement", text: ".vercel/** added to eslint.config.mjs ignore list — eliminates ~9K false-positive lint warnings against compiled Vercel build artifacts when running lint after a local `vercel build`." },
+    ],
+  },
+  {
     date: "May 13, 2026",
     version: "v2.5.0",
     title: "Studio UX Overhaul — Phases Φ0 → Φ7 + Feature Backlog",
