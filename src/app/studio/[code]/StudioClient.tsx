@@ -15,6 +15,7 @@ import ControlBar from "@/components/studio/ControlBar"
 import ErrorBannerStack, { type CriticalError } from "@/components/studio/ErrorBanner"
 import GuestRequestToast from "@/components/studio/GuestRequestToast"
 import RoomEventRelay from "@/components/studio/RoomEventRelay"
+import PlatformJoinPulse from "@/components/studio/PlatformJoinPulse"
 import PlatformLinkPopover from "@/components/studio/PlatformLinkPopover"
 import StreamHealthBadge from "@/components/studio/StreamHealthBadge"
 import StudioCoachMarks from "@/components/studio/StudioCoachMarks"
@@ -622,6 +623,8 @@ export default function StudioClient({ roomCode, hostToken, livekitUrl, title, d
               )}
             </div>
           )}
+          {/* F-22: per-platform join activity pulses next to the pill cluster. */}
+          <PlatformJoinPulse />
         </div>
         {/* Mobile chat toggle (< lg) */}
         <button

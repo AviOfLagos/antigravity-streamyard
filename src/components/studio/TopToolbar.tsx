@@ -16,6 +16,7 @@ import {
   Settings,
   Sparkles,
   Type,
+  UserPlus,
   Volume2,
   VolumeX,
 } from "lucide-react"
@@ -34,6 +35,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import useNotificationSound from "@/hooks/useNotificationSound"
+import { isJoinActivityEnabled, setJoinActivityEnabled } from "@/hooks/useJoinDeltas"
 import { useStudioStore } from "@/store/studio"
 
 import DeviceSelector from "./DeviceSelector"
@@ -159,6 +161,12 @@ export default function TopToolbar({
   useEffect(() => {
     setSoundsOn(getSoundsEnabled())
   }, [getSoundsEnabled])
+
+  // F-22: join-activity pulses — host can toggle in Settings panel
+  const [joinsOn, setJoinsOn] = useState<boolean>(true)
+  useEffect(() => {
+    setJoinsOn(isJoinActivityEnabled())
+  }, [])
 
   // Bulk mute — call /api/rooms/[code]/mute for every guest with mic currently on
   const participants = useParticipants()
@@ -469,7 +477,7 @@ export default function TopToolbar({
             </div>
 
             {/* Notifications */}
-            <div>
+            <div className="space-y-1.5">
               <p className="text-[10px] text-gray-500 mb-2 uppercase tracking-wider">Notifications</p>
               <button
                 type="button"
@@ -494,6 +502,30 @@ export default function TopToolbar({
                   soundsOn ? "bg-indigo-500/30 text-indigo-300" : "bg-white/8 text-gray-500",
                 ].join(" ")}>
                   {soundsOn ? "ON" : "OFF"}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const next = !joinsOn
+                  setJoinActivityEnabled(next)
+                  setJoinsOn(next)
+                }}
+                role="switch"
+                aria-checked={joinsOn}
+                aria-label="Show platform join activity"
+                className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg bg-white/4 hover:bg-white/8 text-gray-300 hover:text-white text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+              >
+                <UserPlus className={[
+                  "w-3.5 h-3.5 shrink-0",
+                  joinsOn ? "text-indigo-400" : "text-gray-500",
+                ].join(" ")} aria-hidden="true" />
+                <span className="flex-1 text-left">Join activity</span>
+                <span className={[
+                  "text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full",
+                  joinsOn ? "bg-indigo-500/30 text-indigo-300" : "bg-white/8 text-gray-500",
+                ].join(" ")}>
+                  {joinsOn ? "ON" : "OFF"}
                 </span>
               </button>
             </div>
