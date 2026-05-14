@@ -233,7 +233,11 @@ export default function JoinClient({ roomCode, livekitUrl }: JoinClientProps) {
     if (status !== "waiting" || !guestId) return
 
     const since = Date.now() - 1000
-    const es = new EventSource(`/api/rooms/${roomCode}/stream?since=${since}`)
+    // guestId is REQUIRED by /api/rooms/[code]/stream for non-host auth;
+    // without it the SSE returns 401 and onerror fires → "Connection interrupted".
+    const es = new EventSource(
+      `/api/rooms/${roomCode}/stream?since=${since}&guestId=${encodeURIComponent(guestId)}`
+    )
     sseRef.current = es
 
     es.onmessage = (e) => {
