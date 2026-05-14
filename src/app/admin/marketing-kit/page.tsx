@@ -27,6 +27,10 @@ type Scene = {
   label: string;
   kicker: string;
   blurb: string;
+  group?: "general" | "product-hunt";
+  // If set, only these variant ids appear on the scene's download row.
+  // Undefined → standard variants (general scenes use the social-card set).
+  variants?: string[];
 };
 
 const SCENES: Scene[] = [
@@ -66,6 +70,25 @@ const SCENES: Scene[] = [
     kicker: "Long-form",
     blurb: "Pull-quote for blog + thought-leadership.",
   },
+  // ─── Product Hunt kit ─────────────────────────────────────────
+  {
+    id: "ph-launch",
+    label: "PH — Launch announce",
+    kicker: "Live on Product Hunt",
+    blurb:
+      "Launch-day push. Use ph-gallery as the PH gallery hero, og/square for cross-posting.",
+    group: "product-hunt",
+    variants: ["ph-gallery", "ph-thumb", "og", "square", "story"],
+  },
+  {
+    id: "ph-maker",
+    label: "PH — Maker comment",
+    kicker: "From the maker",
+    blurb:
+      "Companion image for the Maker comment on PH (founder pull-quote).",
+    group: "product-hunt",
+    variants: ["ph-gallery", "square", "og"],
+  },
 ];
 
 type Variant = {
@@ -81,7 +104,12 @@ const VARIANTS: Variant[] = [
   { id: "story", label: "Story", size: "1080×1920", platforms: "IG / TikTok / Snap" },
   { id: "banner", label: "Banner", size: "1500×500", platforms: "X / LinkedIn cover" },
   { id: "portrait", label: "4:5", size: "1080×1350", platforms: "IG portrait" },
+  { id: "ph-gallery", label: "PH Gallery", size: "1270×760", platforms: "Product Hunt gallery hero" },
+  { id: "ph-thumb", label: "PH Thumb", size: "240×240", platforms: "Product Hunt thumbnail" },
 ];
+
+const VARIANTS_BY_ID = Object.fromEntries(VARIANTS.map((v) => [v.id, v]));
+const DEFAULT_VARIANT_IDS = ["square", "og", "story", "banner", "portrait"];
 
 /* ─── campaign concept scaffolding ───────────────────────────────── */
 
@@ -101,7 +129,7 @@ const CAMPAIGNS: Campaign[] = [
     id: "social-cards",
     title: "Social card system",
     blurb:
-      "Six scenes × five sizes via /og/marketing. Live and renderable from this page.",
+      "Eight scenes × seven sizes (incl. Product Hunt gallery + thumb) via /og/marketing. Live and renderable from this page.",
     icon: ImageIcon,
     status: "shipped",
     surface: "social",
@@ -110,9 +138,9 @@ const CAMPAIGNS: Campaign[] = [
     id: "product-hunt-kit",
     title: "Product Hunt launch kit",
     blurb:
-      "Gallery hero (1270×760), thumbnail (240×240), Maker comment card, and a launch-day OG variant.",
+      "Gallery hero (1270×760), thumbnail (240×240), launch-announce scene + Maker comment scene. Renderable from the social-cards section above.",
     icon: Sparkles,
-    status: "planned",
+    status: "shipped",
     surface: "social",
   },
   {
@@ -308,44 +336,62 @@ export default function MarketingKitPage() {
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {SCENES.map((scene) => (
-            <article
-              key={scene.id}
-              className="flex flex-col gap-3 rounded-xl border border-white/8 bg-surface-1/40 p-4 hover:border-brand/30 transition-colors"
-            >
-              <div className="relative w-full aspect-[1200/630] rounded-lg overflow-hidden border border-white/8 bg-surface-1">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`/og/marketing?variant=og&scene=${scene.id}`}
-                  alt={`${scene.label} — OG card`}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="flex items-baseline justify-between gap-3">
-                <h3 className="font-bold text-sm text-white">{scene.label}</h3>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-brand-soft">
-                  {scene.kicker}
-                </span>
-              </div>
-              <p className="text-ink-faint text-xs leading-relaxed">
-                {scene.blurb}
-              </p>
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {VARIANTS.map((v) => (
-                  <a
-                    key={v.id}
-                    href={`/og/marketing?variant=${v.id}&scene=${scene.id}`}
-                    download={`zerocast-${scene.id}-${v.id}.png`}
-                    title={`${v.size} — ${v.platforms}`}
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-white/8 hover:border-brand/40 hover:bg-brand/5 transition-colors text-[10px] font-mono"
-                  >
-                    <span className="font-bold text-white">{v.label}</span>
-                    <span className="text-ink-faint">{v.size}</span>
-                  </a>
-                ))}
-              </div>
-            </article>
-          ))}
+          {SCENES.map((scene) => {
+            const sceneVariants = (scene.variants ?? DEFAULT_VARIANT_IDS)
+              .map((id) => VARIANTS_BY_ID[id])
+              .filter(Boolean);
+            const previewVariant =
+              scene.group === "product-hunt" ? "ph-gallery" : "og";
+            const previewAspect =
+              scene.group === "product-hunt" ? "aspect-[1270/760]" : "aspect-[1200/630]";
+            return (
+              <article
+                key={scene.id}
+                className={`flex flex-col gap-3 rounded-xl border bg-surface-1/40 p-4 hover:border-brand/30 transition-colors ${
+                  scene.group === "product-hunt"
+                    ? "border-brand/30"
+                    : "border-white/8"
+                }`}
+              >
+                <div className={`relative w-full ${previewAspect} rounded-lg overflow-hidden border border-white/8 bg-surface-1`}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`/og/marketing?variant=${previewVariant}&scene=${scene.id}`}
+                    alt={`${scene.label} — preview`}
+                    className="w-full h-full object-cover"
+                  />
+                  {scene.group === "product-hunt" ? (
+                    <span className="absolute top-2 left-2 inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest bg-brand text-white">
+                      Product Hunt
+                    </span>
+                  ) : null}
+                </div>
+                <div className="flex items-baseline justify-between gap-3">
+                  <h3 className="font-bold text-sm text-white">{scene.label}</h3>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-brand-soft">
+                    {scene.kicker}
+                  </span>
+                </div>
+                <p className="text-ink-faint text-xs leading-relaxed">
+                  {scene.blurb}
+                </p>
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {sceneVariants.map((v) => (
+                    <a
+                      key={v.id}
+                      href={`/og/marketing?variant=${v.id}&scene=${scene.id}`}
+                      download={`zerocast-${scene.id}-${v.id}.png`}
+                      title={`${v.size} — ${v.platforms}`}
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-white/8 hover:border-brand/40 hover:bg-brand/5 transition-colors text-[10px] font-mono"
+                    >
+                      <span className="font-bold text-white">{v.label}</span>
+                      <span className="text-ink-faint">{v.size}</span>
+                    </a>
+                  ))}
+                </div>
+              </article>
+            );
+          })}
         </div>
       </section>
 

@@ -39,13 +39,22 @@ const C = {
   danger: "#ef4444",
 } as const;
 
-type VariantId = "square" | "og" | "story" | "banner" | "portrait";
+type VariantId =
+  | "square"
+  | "og"
+  | "story"
+  | "banner"
+  | "portrait"
+  | "ph-thumb"
+  | "ph-gallery";
 const VARIANTS: Record<VariantId, { w: number; h: number }> = {
   square: { w: 1080, h: 1080 },
   og: { w: 1200, h: 630 },
   story: { w: 1080, h: 1920 },
   banner: { w: 1500, h: 500 },
   portrait: { w: 1080, h: 1350 },
+  "ph-thumb": { w: 240, h: 240 },
+  "ph-gallery": { w: 1270, h: 760 },
 };
 
 type SceneId =
@@ -54,7 +63,9 @@ type SceneId =
   | "ai-cohost"
   | "browser"
   | "beta"
-  | "quote";
+  | "quote"
+  | "ph-launch"
+  | "ph-maker";
 
 type SceneDef = {
   index: string; // "01" .. "06" badge
@@ -106,6 +117,20 @@ const SCENES: Record<SceneId, SceneDef> = {
     title: "“A three-person job",
     titleAccent: "you're doing alone.”",
     sub: "Zerocast — run a live show end-to-end, solo.",
+  },
+  "ph-launch": {
+    index: "PH",
+    kicker: "Live on Product Hunt",
+    title: "Today on PH.",
+    titleAccent: "Hunt with us.",
+    sub: "Browser-native multistream studio + AI Co-Host. Upvotes welcome.",
+  },
+  "ph-maker": {
+    index: "PH",
+    kicker: "From the maker",
+    title: "Built for solo",
+    titleAccent: "live shows.",
+    sub: "— Avi, founder. Three years streaming. One year building this.",
   },
 };
 
@@ -757,6 +782,74 @@ function QuoteGraphic({ size }: { size: number }) {
   );
 }
 
+/* ph-launch: oversized upvote chevron + tally pill (PH iconography w/o the orange) */
+function PhLaunchGraphic({ size }: { size: number }) {
+  const tri = size * 0.36;
+  return (
+    <div
+      style={{
+        position: "relative",
+        width: size,
+        height: size,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: size * 0.06,
+      }}
+    >
+      {/* outer brand ring */}
+      <div
+        style={{
+          position: "absolute",
+          width: size * 0.94,
+          height: size * 0.94,
+          borderRadius: "50%",
+          border: `1px solid ${C.brand}40`,
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          width: size * 0.7,
+          height: size * 0.7,
+          borderRadius: "50%",
+          border: `1px solid ${C.brandSoft}40`,
+        }}
+      />
+      {/* upvote chevron — triangle drawn via div borders */}
+      <div
+        style={{
+          width: 0,
+          height: 0,
+          borderLeft: `${tri * 0.55}px solid transparent`,
+          borderRight: `${tri * 0.55}px solid transparent`,
+          borderBottom: `${tri}px solid ${C.brandSoft}`,
+          filter: `drop-shadow(0 0 ${size * 0.06}px ${C.brand}aa)`,
+        }}
+      />
+      {/* upvote count pill */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: size * 0.04,
+          padding: `${size * 0.035}px ${size * 0.08}px`,
+          borderRadius: 999,
+          border: `1px solid ${C.brand}80`,
+          background: `${C.brand}1f`,
+          color: C.brandSofter,
+          fontSize: size * 0.075,
+          fontWeight: 800,
+          letterSpacing: -size * 0.002,
+        }}
+      >
+        Hunt today
+      </div>
+    </div>
+  );
+}
+
 function SceneGraphic({ scene, size }: { scene: SceneId; size: number }) {
   switch (scene) {
     case "hero":
@@ -770,6 +863,10 @@ function SceneGraphic({ scene, size }: { scene: SceneId; size: number }) {
     case "beta":
       return <BetaGraphic size={size} />;
     case "quote":
+      return <QuoteGraphic size={size} />;
+    case "ph-launch":
+      return <PhLaunchGraphic size={size} />;
+    case "ph-maker":
       return <QuoteGraphic size={size} />;
   }
 }
@@ -1142,6 +1239,43 @@ function BannerLayout({ scene, def, w, h }: LayoutProps) {
 
 /* portrait = square proportions, taller. Reuse SquareLayout. */
 
+/* ph-thumb (240×240): minimal — wordmark mark + brand glow only.
+   Text headlines don't fit in 240px and PH renders the title separately. */
+function PhThumbLayout({ w, h }: { w: number; h: number }) {
+  return (
+    <FrameBase w={w} h={h}>
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1,
+        }}
+      >
+        <div
+          style={{
+            width: w * 0.45,
+            height: w * 0.45,
+            borderRadius: w * 0.12,
+            background: C.brand,
+            boxShadow: `0 0 ${w * 0.25}px ${C.brand}aa`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: C.inkStrong,
+            fontSize: w * 0.32,
+            fontWeight: 900,
+            letterSpacing: -w * 0.012,
+          }}
+        >
+          Z
+        </div>
+      </div>
+    </FrameBase>
+  );
+}
+
 /* ── HANDLER ──────────────────────────────────────────────────────── */
 
 export async function GET(req: NextRequest) {
@@ -1171,6 +1305,9 @@ export async function GET(req: NextRequest) {
       element = <SquareLayout {...props} />;
       break;
     case "og":
+    case "ph-gallery":
+      // PH gallery is 1270×760 — almost identical aspect to OG (1200×630),
+      // OgLayout scales proportionally so it fits without a custom layout.
       element = <OgLayout {...props} />;
       break;
     case "story":
@@ -1178,6 +1315,9 @@ export async function GET(req: NextRequest) {
       break;
     case "banner":
       element = <BannerLayout {...props} />;
+      break;
+    case "ph-thumb":
+      element = <PhThumbLayout w={w} h={h} />;
       break;
   }
 

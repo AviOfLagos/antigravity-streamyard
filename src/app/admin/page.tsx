@@ -47,7 +47,7 @@ export default async function AdminHome() {
       title: "Marketing Kit",
       blurb:
         "Generate social cards, OG images, and brand assets from the design system.",
-      stat: "6 scenes · 5 sizes",
+      stat: "8 scenes · 7 sizes",
       sub: "Signal Static design system",
     },
   ];
