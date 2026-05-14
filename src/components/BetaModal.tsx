@@ -11,8 +11,17 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { ArrowRight, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { LAUNCH_OPEN } from "@/lib/launch";
 
 type Status = "idle" | "loading" | "success" | "duplicate" | "error";
+
+// Map a path to a stable, low-cardinality source label for analytics.
+// Keeps the property values within the doc taxonomy enum surface.
+function pathnameToSource(pathname: string): string {
+  if (pathname === "/" || pathname === "") return "homepage";
+  const slug = pathname.replace(/^\/+/, "").replace(/\/+$/, "").replace(/[^a-z0-9]+/gi, "_").toLowerCase();
+  return slug.slice(0, 60) || "homepage";
+}
 
 function BetaModalContent() {
   const searchParams = useSearchParams();
@@ -20,36 +29,63 @@ function BetaModalContent() {
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState("");
-  const statusRef = useRef<Status>("idle");
   const prevOpenRef = useRef(false);
-  const openedAtRef = useRef<number>(0);
   const focusedFieldsRef = useRef<Set<string>>(new Set());
-
-  // Keep statusRef in sync so close-time capture sees latest status without stale closure.
-  useEffect(() => {
-    statusRef.current = status;
-  }, [status]);
+  const hadInputRef = useRef(false);
+  const dismissMethodRef = useRef<string | null>(null);
 
   useEffect(() => {
     const shouldOpen = searchParams.get("beta") === "true";
+
+    // Launch-open mode: every ?beta=true link short-circuits to /login
+    // instead of capturing a wait-list row. Existing CTAs keep working
+    // without per-call-site changes. See src/lib/launch.ts.
+    if (shouldOpen && LAUNCH_OPEN) {
+      posthog.capture("launch_signup_redirect", {
+        source: pathnameToSource(window.location.pathname),
+      });
+      router.replace("/login");
+      return;
+    }
+
     if (shouldOpen && !prevOpenRef.current) {
       // open transition: false -> true
-      openedAtRef.current = Date.now();
       focusedFieldsRef.current = new Set();
+      hadInputRef.current = false;
+      dismissMethodRef.current = null;
       posthog.capture("beta_modal_opened", {
-        source: window.location.pathname,
+        source: pathnameToSource(window.location.pathname),
       });
     }
     prevOpenRef.current = shouldOpen;
     setOpen(shouldOpen);
-  }, [searchParams]);
+  }, [searchParams, router]);
+
+  // Capture Escape-key dismissal so dismiss_method can distinguish it from
+  // overlay-click / X-button (Radix doesn't surface those discretely).
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") dismissMethodRef.current = "escape_key";
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [open]);
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
-      const timeOpenMs = openedAtRef.current ? Date.now() - openedAtRef.current : 0;
+      // dismiss_method precedence:
+      //   "completed"   — auto-close after successful submit
+      //   "escape_key"  — set by keydown listener above
+      //   "overlay_or_x"— Radix-driven close path we can't distinguish without
+      //                   patching the DialogContent primitive; documented as deviation.
+      let dismissMethod = dismissMethodRef.current;
+      if (!dismissMethod) {
+        dismissMethod = status === "success" || status === "duplicate" ? "completed" : "overlay_or_x";
+      }
       posthog.capture("beta_modal_closed", {
-        status: statusRef.current,
-        time_open_ms: timeOpenMs,
+        dismiss_method: dismissMethod,
+        had_input: hadInputRef.current,
       });
     }
     setOpen(newOpen);
@@ -66,7 +102,11 @@ function BetaModalContent() {
     const field = e.currentTarget.name;
     if (!field || focusedFieldsRef.current.has(field)) return;
     focusedFieldsRef.current.add(field);
-    posthog.capture("beta_modal_field_focused", { field });
+    posthog.capture("beta_modal_field_focused", { field_name: field });
+  };
+
+  const handleFieldInput = () => {
+    hadInputRef.current = true;
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -74,16 +114,17 @@ function BetaModalContent() {
     setStatus("loading");
 
     const formData = new FormData(e.currentTarget);
-    const data = {
-      name: formData.get("name"),
-      email: formData.get("email"),
-      platform: formData.get("platform"),
-      painPoint: formData.get("painPoint"),
-    };
+    const name = (formData.get("name") as string | null) ?? "";
+    const email = (formData.get("email") as string | null) ?? "";
+    const platform = (formData.get("platform") as string | null) ?? "";
+    const painPoint = (formData.get("painPoint") as string | null) ?? "";
+
+    const data = { name, email, platform, painPoint };
 
     posthog.capture("beta_modal_submitted", {
-      platform: data.platform,
-      has_pain_point: !!data.painPoint,
+      has_email: email.length > 0,
+      has_name: name.length > 0,
+      use_case_length: painPoint.length,
     });
 
     try {
@@ -94,25 +135,28 @@ function BetaModalContent() {
       });
 
       if (res.status === 409) {
-        posthog.capture("beta_modal_duplicate", { platform: data.platform });
+        posthog.capture("beta_modal_duplicate");
         setStatus("duplicate");
       } else if (res.ok) {
-        posthog.capture("beta_modal_success", { platform: data.platform });
+        const json: { id?: string } = await res.json().catch(() => ({}));
+        posthog.capture("beta_modal_success", {
+          lead_id: json.id,
+        });
         setStatus("success");
       } else {
-        const json = await res.json();
+        const json: { error?: string } = await res.json().catch(() => ({}));
         setErrorMsg(json.error || "Something went wrong.");
         posthog.capture("beta_modal_error", {
-          platform: data.platform,
-          error_type: res.status >= 500 ? "server" : "validation",
+          status_code: res.status,
+          error_code: res.status >= 500 ? "server" : "validation",
         });
         setStatus("error");
       }
     } catch {
       setErrorMsg("Network error. Please try again.");
       posthog.capture("beta_modal_error", {
-        platform: data.platform,
-        error_type: "network",
+        status_code: 0,
+        error_code: "network",
       });
       setStatus("error");
     }
@@ -164,6 +208,7 @@ function BetaModalContent() {
                       type="text"
                       placeholder="Jane Doe"
                       onFocus={handleFieldFocus}
+                      onChange={handleFieldInput}
                       className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-ink-faint focus:outline-none focus:border-brand/60 focus:bg-white/8 transition-all"
                     />
                   </div>
@@ -175,6 +220,7 @@ function BetaModalContent() {
                       type="email"
                       placeholder="jane@example.com"
                       onFocus={handleFieldFocus}
+                      onChange={handleFieldInput}
                       className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-ink-faint focus:outline-none focus:border-brand/60 focus:bg-white/8 transition-all"
                     />
                   </div>
@@ -185,6 +231,7 @@ function BetaModalContent() {
                   <select
                     name="platform"
                     onFocus={handleFieldFocus}
+                    onChange={handleFieldInput}
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand/60 transition-all appearance-none"
                   >
                     <option value="YouTube Live">YouTube Live</option>
@@ -204,6 +251,7 @@ function BetaModalContent() {
                     rows={2}
                     placeholder="e.g. Managing chat while interviewing guests is impossible..."
                     onFocus={handleFieldFocus}
+                    onChange={handleFieldInput}
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-ink-faint focus:outline-none focus:border-brand/60 focus:bg-white/8 transition-all resize-none"
                   />
                 </div>

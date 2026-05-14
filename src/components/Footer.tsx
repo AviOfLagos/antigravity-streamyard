@@ -6,9 +6,9 @@ import { BetaCta } from "./BetaCta";
 
 const captureFooterClick = (label: string, href: string, section: string) => () => {
   posthog.capture("footer_link_clicked", {
-    link_label: label,
-    link_href: href,
-    section,
+    link_text: label,
+    destination: href,
+    footer_section: section,
   });
 };
 

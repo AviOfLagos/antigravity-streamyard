@@ -92,7 +92,10 @@ export function FaqSection() {
             className="group border-b border-white/5 last:border-0 pb-6"
             onToggle={(e) => {
               if (e.currentTarget.open) {
-                posthog.capture("faq_opened", { question: q });
+                posthog.capture("faq_question_opened", {
+                  question_id: q.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 80),
+                  question_index: i,
+                });
               }
             }}
           >

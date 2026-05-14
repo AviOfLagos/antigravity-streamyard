@@ -2,15 +2,35 @@
 
 import Link from "next/link";
 import posthog from "posthog-js";
-import type { ReactNode } from "react";
+import { Children, isValidElement, type ReactNode } from "react";
 
 interface BetaCtaProps {
   location: string;
   children: ReactNode;
   className?: string;
+  ctaId?: string;
 }
 
-export function BetaCta({ location, children, className }: BetaCtaProps) {
+// Best-effort extraction of human-readable button text from JSX children for the
+// cta_text property. Handles plain strings, fragments, and a single level of
+// nested ReactElement children. Returns undefined if no plain string surface.
+function extractCtaText(children: ReactNode): string | undefined {
+  const parts: string[] = [];
+  Children.forEach(children, (child) => {
+    if (typeof child === "string" || typeof child === "number") {
+      parts.push(String(child));
+    } else if (isValidElement(child)) {
+      const elementChildren = (child.props as { children?: ReactNode } | null)?.children;
+      if (typeof elementChildren === "string" || typeof elementChildren === "number") {
+        parts.push(String(elementChildren));
+      }
+    }
+  });
+  const joined = parts.join(" ").trim();
+  return joined.length > 0 ? joined.slice(0, 80) : undefined;
+}
+
+export function BetaCta({ location, children, className, ctaId = "request_beta" }: BetaCtaProps) {
   return (
     <Link
       href="?beta=true"
@@ -18,9 +38,10 @@ export function BetaCta({ location, children, className }: BetaCtaProps) {
       className={className}
       onClick={() => {
         posthog.capture("cta_clicked", {
-          cta_id: "request_beta",
+          cta_id: ctaId,
           cta_location: location,
-          page: typeof window !== "undefined" ? window.location.pathname : null,
+          cta_text: extractCtaText(children),
+          destination: "?beta=true",
         });
       }}
     >
