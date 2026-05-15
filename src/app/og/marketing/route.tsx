@@ -784,7 +784,6 @@ function QuoteGraphic({ size }: { size: number }) {
 
 /* ph-launch: oversized upvote chevron + tally pill (PH iconography w/o the orange) */
 function PhLaunchGraphic({ size }: { size: number }) {
-  const tri = size * 0.36;
   return (
     <div
       style={{
@@ -795,10 +794,10 @@ function PhLaunchGraphic({ size }: { size: number }) {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        gap: size * 0.06,
+        gap: size * 0.04,
       }}
     >
-      {/* outer brand ring */}
+      {/* outer brand rings */}
       <div
         style={{
           position: "absolute",
@@ -817,17 +816,20 @@ function PhLaunchGraphic({ size }: { size: number }) {
           border: `1px solid ${C.brandSoft}40`,
         }}
       />
-      {/* upvote chevron — triangle drawn via div borders */}
+      {/* upvote chevron — Unicode ↑ glyph (▲ is missing in satori default font set) */}
       <div
         style={{
-          width: 0,
-          height: 0,
-          borderLeft: `${tri * 0.55}px solid transparent`,
-          borderRight: `${tri * 0.55}px solid transparent`,
-          borderBottom: `${tri}px solid ${C.brandSoft}`,
-          filter: `drop-shadow(0 0 ${size * 0.06}px ${C.brand}aa)`,
+          display: "flex",
+          color: C.brandSoft,
+          fontSize: size * 0.4,
+          lineHeight: 1,
+          fontWeight: 900,
+          letterSpacing: -size * 0.01,
+          textShadow: `0 0 ${size * 0.06}px ${C.brand}cc`,
         }}
-      />
+      >
+        ↑
+      </div>
       {/* upvote count pill */}
       <div
         style={{
