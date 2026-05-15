@@ -116,4 +116,4 @@ Neon Postgres (Prisma)
 - `docs/styleguide.md` — marketing design system: token catalog, usage patterns, forbidden patterns, add-a-token instructions.
 - `docs/design/philosophy.md` — Signal Static visual philosophy + scene / variant matrix for the `/og/marketing` social-card generator.
 - `docs/zerocast-api.postman_collection.json` — API collection.
-- Changelog: `src/app/(marketing)/changelog/page.tsx` (current: **v2.6.0**, live viewer counts + join pulses + lower-third name bars + PH launch kit + marketing funnel analytics).
+- Changelog: `src/app/(marketing)/changelog/page.tsx` (current: **v2.7.0**, F-24 per-platform stream-drop detection + one-click Reconnect via LiveKit egress webhook).

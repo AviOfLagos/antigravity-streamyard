@@ -31,6 +31,19 @@ const tagStyles: Record<Tag, string> = {
 const entries: ChangelogEntry[] = [
   {
     date: "May 14, 2026",
+    version: "v2.7.0",
+    title: "Per-Platform Stream Drop Detection + Reconnect",
+    changes: [
+      { tag: "feat", text: "F-24 — when one streaming platform fails mid-broadcast (host closed the YouTube Studio broadcast, ad-policy hit, stream key revoked) but the rest stay live, the host now sees a pinned banner with a one-click Reconnect action instead of one platform silently dying." },
+      { tag: "feat", text: "New /api/webhooks/livekit endpoint. Reads raw body, verifies the signed payload via WebhookReceiver(LIVEKIT_API_KEY, LIVEKIT_API_SECRET), and on egress_updated / egress_ended scans per-destination streamResults for FAILED entries. Skips full-egress failures (those still flow through STREAM_ERROR) and Redis-dedups per (egressId, platform) for 60s so re-broadcast events don't trigger a banner storm." },
+      { tag: "feat", text: "New POST /api/rooms/[code]/stream-live/reconnect (host-only, rate-limited at rooms:reconnect = 10/min/IP). Re-reads the host's PlatformConnection for a fresh stream key (handles platform-side key rotation), calls LiveKit updateStream to re-add the destination, updates StreamSession.platforms, and publishes STREAM_DESTINATION_CHANGED so the studio UI reflects recovery." },
+      { tag: "feat", text: "New SSE event PLATFORM_STREAM_DROPPED carrying { platform, reason }. Studio handler plays the stream-error tone, fires a desktop Notification when the tab is hidden, and surfaces a CriticalError in the existing ErrorBannerStack with a Reconnect retry action — banners auto-dismiss on successful reconnect." },
+      { tag: "improvement", text: "Reverse-lookup helper inferPlatformFromUrl(url) in src/lib/egress.ts maps an RTMP destination URL (rtmp://a.rtmp.youtube.com/live2, live.twitch.tv/app, live.kick.com/app, ...) to its lower-cased platform key. Returns null for custom RTMP." },
+      { tag: "improvement", text: "RoomEvent type union extended with PLATFORM_STREAM_DROPPED; SSE schema discriminated union picked up the new event." },
+    ],
+  },
+  {
+    date: "May 14, 2026",
     version: "v2.6.0",
     title: "Live Viewer Counts, Join Pulses, Lower-Thirds, Launch Kit & Marketing Funnel",
     changes: [
