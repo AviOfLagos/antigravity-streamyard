@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Mail, Palette, ArrowRight, AlertTriangle } from "lucide-react";
+import { Mail, Palette, ArrowRight, AlertTriangle, BarChart2, Activity } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
 import { getRecentErrors } from "@/lib/errors";
@@ -49,6 +49,24 @@ export default async function AdminHome() {
         "Generate social cards, OG images, and brand assets from the design system.",
       stat: "8 scenes · 7 sizes",
       sub: "Signal Static design system",
+    },
+    {
+      href: "/admin/posthog",
+      icon: BarChart2,
+      title: "PostHog Dashboards",
+      blurb:
+        "Embedded PostHog dashboards for funnels, retention, and product health.",
+      stat: "6 dashboards",
+      sub: "External + embed",
+    },
+    {
+      href: "/admin/analytics",
+      icon: Activity,
+      title: "Analytics",
+      blurb:
+        "Visitor counts, signup conversion, traffic sources, daily trends.",
+      stat: "Realtime",
+      sub: "PostHog + DB",
     },
   ];
 

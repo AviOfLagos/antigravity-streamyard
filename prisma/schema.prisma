@@ -180,5 +180,28 @@ model BetaRequest {
   email     String   @unique
   platform  String
   painPoint String?
+
+  // Attribution
+  referrer    String?
+  landingPage String?
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  utmTerm     String?
+  utmContent  String?
+
+  // Request context (from Vercel edge headers at API time)
+  userAgent String?
+  country   String?
+  region    String?
+  city      String?
+
+  // PostHog stitching
+  posthogDistinctId String?
+
   createdAt DateTime @default(now())
+
+  @@index([utmSource])
+  @@index([utmCampaign])
+  @@index([country])
 }

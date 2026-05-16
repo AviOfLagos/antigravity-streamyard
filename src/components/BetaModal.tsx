@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { ArrowRight, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { LAUNCH_OPEN } from "@/lib/launch";
+import { captureAttribution, getAttribution, clearAttribution } from "@/lib/attribution";
 
 type Status = "idle" | "loading" | "success" | "duplicate" | "error";
 
@@ -53,6 +54,9 @@ function BetaModalContent() {
       focusedFieldsRef.current = new Set();
       hadInputRef.current = false;
       dismissMethodRef.current = null;
+      // Refresh attribution from the current URL right before we read it at
+      // submit time. Idempotent + SSR-safe per @/lib/attribution contract.
+      captureAttribution();
       posthog.capture("beta_modal_opened", {
         source: pathnameToSource(window.location.pathname),
       });
@@ -119,7 +123,17 @@ function BetaModalContent() {
     const platform = (formData.get("platform") as string | null) ?? "";
     const painPoint = (formData.get("painPoint") as string | null) ?? "";
 
-    const data = { name, email, platform, painPoint };
+    const attribution = getAttribution();
+    const posthogDistinctId = posthog.get_distinct_id();
+
+    const data = {
+      name,
+      email,
+      platform,
+      painPoint,
+      ...attribution,
+      posthogDistinctId,
+    };
 
     posthog.capture("beta_modal_submitted", {
       has_email: email.length > 0,
@@ -142,6 +156,10 @@ function BetaModalContent() {
         posthog.capture("beta_modal_success", {
           lead_id: json.id,
         });
+        // Wipe attribution so future submissions from the same browser (e.g.
+        // a second email) don't echo stale UTMs. Only on true success — NOT
+        // on 409 duplicate (already captured) or any error (preserve for retry).
+        clearAttribution();
         setStatus("success");
       } else {
         const json: { error?: string } = await res.json().catch(() => ({}));

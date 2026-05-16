@@ -19,11 +19,19 @@ import posthog from "posthog-js";
  *
  * Idempotent across renders via a ref guard on userId.
  *
- * NOTE: provider name (google / email / etc.) is not surfaced by useSession()
- * unless the NextAuth session/jwt callback is extended to persist it. Until that
- * lands, this fires with provider="next-auth" as a placeholder. Tracked in the
- * taxonomy reconciliation pass.
+ * `provider` + `is_new_user` are surfaced from the NextAuth session (see
+ * src/auth.ts jwt+session callbacks). Provider id mapping:
+ *   - "google" → "google"
+ *   - "resend" → "email" (we use Resend as our email magic-link provider; the
+ *     taxonomy doc canonicalises this as "email" since it's the user-facing
+ *     auth method)
  */
+function normalizeProvider(raw: string | undefined): string {
+  if (!raw) return "unknown";
+  if (raw === "resend") return "email";
+  return raw;
+}
+
 export function PostHogIdentify() {
   const { data: session, status } = useSession();
   const lastIdentifiedRef = useRef<string | null>(null);
@@ -40,7 +48,8 @@ export function PostHogIdentify() {
       });
 
       posthog.capture("login_succeeded", {
-        provider: "next-auth",
+        provider: normalizeProvider(session?.user?.provider),
+        is_new_user: session?.user?.isNewUser ?? false,
       });
 
       lastIdentifiedRef.current = userId;

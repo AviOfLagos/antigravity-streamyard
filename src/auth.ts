@@ -40,15 +40,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     ...authConfig.callbacks,
 
-    // Persist the user's database id into the JWT on first sign-in.
-    jwt({ token, user }) {
+    // Persist the user's database id, auth provider, and new-user flag into the JWT.
+    // `account` is only present on initial sign-in; `isNewUser` is only true on the
+    // very first JWT mint for a newly-created user (sticky for that session only).
+    jwt({ token, user, account, isNewUser }) {
       if (user?.id) token.id = user.id
+      if (account?.provider && !token.provider) token.provider = account.provider
+      if (isNewUser) token.isNewUser = true
       return token
     },
 
-    // Expose the id from the JWT to the session object.
+    // Expose id, provider, and isNewUser from the JWT to the session object.
     session({ session, token }) {
       if (token.id) session.user.id = token.id as string
+      if (token.provider) session.user.provider = token.provider as string
+      if (token.isNewUser) session.user.isNewUser = true
       return session
     },
   },
