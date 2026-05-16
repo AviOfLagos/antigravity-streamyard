@@ -31,6 +31,23 @@ const tagStyles: Record<Tag, string> = {
 const entries: ChangelogEntry[] = [
   {
     date: "May 16, 2026",
+    version: "v2.9.0",
+    title: "Twitch JOIN + YT/Kick Join Proxy + X (Twitter) Live Destination",
+    changes: [
+      // Chat — F-22 platform coverage closed
+      { tag: "feat", text: "Twitch IRC JOIN forward — src/lib/chat/twitch.ts now binds tmi.js client.on(\"join\") and emits a ChatMessage with eventType: \"join\" so PlatformJoinPulse fires \"+N on Twitch\" pills exactly like TikTok. self-joins skipped so the bot's own connector boot doesn't pulse." },
+      { tag: "feat", text: "YouTube + Kick first-chat-as-join proxy — both platforms' chat APIs don't expose viewer-enter events, so the closest engagement signal is \"first chat message from a previously-unseen author this session\". YouTube tracks unique authorChannelIds + a primed flag (first-poll-cycle warm-up); Kick uses sender.slug + a 5-second prime window after Pusher subscribe so the initial replay of existing chatters doesn't pulse all of them. Silent lurkers stay invisible — no chat, no signal." },
+      { tag: "improvement", text: "/features Join Pulses bullet now reads \"Twitch + TikTok use native join events; YouTube + Kick infer a join from a viewer's first chat message.\" Honest about the proxy, no longer overpromises." },
+
+      // X (Twitter) as a first-class platform
+      { tag: "feat", text: "X (Twitter) Live as a first-class streaming destination. TWITTER added to PlatformType Prisma enum. buildRtmpUrl treats TWITTER like TikTok (requires user-supplied ingestUrl because Media Studio Producer mints a unique source URL per broadcast). inferPlatformFromUrl recognises pscp.tv / x.com / twitter.com hostnames so F-24 drop detection covers X destinations too." },
+      { tag: "feat", text: "/settings/platforms gains an X card with helpText pointing at x.com/i/media_studio/producer + the Premium-required caveat. PlatformConnectForm renders the same RTMP URL + stream key inputs we already use for TikTok. PlatformIcon renders the official X mark glyph; PLATFORM_META + chat PLATFORM_COLORS + PlatformSchema extended." },
+      { tag: "improvement", text: "Honest limits documented in helpText, /features, and public/llms-full.txt: X Premium subscription required on the streamer's account, two-step go-live (Zerocast pushes RTMP, host clicks Go Live in Media Studio Producer — no public API to automate that), no live viewer count, no chat ingestion, no auto-create broadcast." },
+      { tag: "improvement", text: "resolvePublicUrls falls back to https://x.com/<slug> profile page (X auto-renders the live tab while broadcasting). resolveViewerCounts returns null for twitter — documented." },
+    ],
+  },
+  {
+    date: "May 16, 2026",
     version: "v2.8.0",
     title: "Funnel Phase 3 & 4, X (Twitter) Live, Demo Hardening, Features Overhaul & Cross-Platform Join Pulses",
     changes: [

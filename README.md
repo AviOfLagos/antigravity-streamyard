@@ -252,9 +252,9 @@ npm run test:coverage # Coverage report
 
 See [/changelog](https://zerocast.vercel.app/changelog) or `src/app/(marketing)/changelog/page.tsx`.
 
-Highlights: v2.7 (F-24 per-platform stream-drop detection + reconnect via LiveKit egress webhook), v2.6 (live viewer counts + join pulses + lower-third name bars + PH launch kit + marketing funnel analytics), v2.5 (studio UX overhaul Φ0→Φ7 + End/Pause + platform watch links + public recap), v2.4 (marketing design system, admin console, observability), v2.3 (slot-based 1920×1080 canvas + R2 recording + composite egress template), v2.2 (SEO foundation, AI bot allowlist, llms.txt), v2.1 (marketing site overhaul + beta infra), v2.0 (Phase 4 hardening), v1.9 (SSE→LiveKit data channels, AI chat), v1.8 (guest overhaul, reconnection).
+Highlights: v2.9 (Twitch JOIN + YT/Kick join proxy + X (Twitter) Live destination), v2.8 (funnel Phase 3+4, demo hardening, features overhaul, cross-platform join pulses), v2.7 (F-24 per-platform stream-drop detection + reconnect via LiveKit egress webhook), v2.6 (live viewer counts + join pulses + lower-third name bars + PH launch kit + marketing funnel analytics), v2.5 (studio UX overhaul Φ0→Φ7 + End/Pause + platform watch links + public recap), v2.4 (marketing design system, admin console, observability), v2.3 (slot-based 1920×1080 canvas + R2 recording + composite egress template), v2.2 (SEO foundation, AI bot allowlist, llms.txt), v2.1 (marketing site overhaul + beta infra), v2.0 (Phase 4 hardening), v1.9 (SSE→LiveKit data channels, AI chat), v1.8 (guest overhaul, reconnection).
 
-Current version: **v2.7.0** (May 14, 2026)
+Current version: **v2.9.0** (May 16, 2026)
 
 ## License
 
