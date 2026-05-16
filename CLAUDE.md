@@ -2,6 +2,22 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Resume here (read first if you're a fresh session)
+
+The work in this repo is staged across multi-phase, multi-agent rollouts. Before doing anything, get oriented:
+
+1. **`SPEC.md`** — caveman-encoded. §V invariants (V1–V20) explain load-bearing constraints. §B is the bug log. **§T (T1–T57) is the live task ledger** — `x` done, `~` wip, `.` todo. This is the single source of truth for "what's pending".
+2. **`/doc/agent-coordination.md`** (gitignored — present on this machine only) — phase-by-phase log of every spawned agent, files touched, line deltas, follow-ups. Read it for the most recent in-flight state.
+3. **`/doc/agent-swarm-plan.md`** (gitignored) — the 8-phase rollout plan with file-ownership maps.
+4. **`~/.claude/projects/-Users-Apple-26-Github-Personal-zerocast/memory/MEMORY.md`** (auto-loaded) — pinned preferences: no Co-Authored-By trailer, parallel-Claude-instance rule, MemPalace tool reference.
+5. **MemPalace** — semantic search across ~3,500 indexed drawers. CLI at `$HOME/Library/Python/3.9/bin/mempalace` (prepend to PATH); MCP server registered in `~/.claude.json` so future sessions get `mempalace_*` tools natively. Query with `mempalace search "..."` before grepping for fuzzy intent.
+
+**Parallel-Claude-instance rule** (carried in memory): multiple sessions may be active in this working tree. Never `git add .`, never push without explicit user instruction, stage only files you touched this session.
+
+**Don't drift on commit style**: no `Co-Authored-By: Claude ...` trailers. Match the repo's existing one-line subject + tight body convention.
+
+If a fresh session lacks `/doc/*` (different machine): SPEC.md + the latest git log are sufficient to recover. Re-run `mempalace mine .` to rebuild the search index on a new machine.
+
 ## Commands
 
 ```bash
@@ -116,4 +132,4 @@ Neon Postgres (Prisma)
 - `docs/styleguide.md` — marketing design system: token catalog, usage patterns, forbidden patterns, add-a-token instructions.
 - `docs/design/philosophy.md` — Signal Static visual philosophy + scene / variant matrix for the `/og/marketing` social-card generator.
 - `docs/zerocast-api.postman_collection.json` — API collection.
-- Changelog: `src/app/(marketing)/changelog/page.tsx` (current: **v2.7.0**, F-24 per-platform stream-drop detection + one-click Reconnect via LiveKit egress webhook).
+- Changelog: `src/app/(marketing)/changelog/page.tsx` (current: **v2.9.0**, Twitch JOIN forward + YT/Kick first-chat join proxy + X (Twitter) Live as a first-class RTMP destination).
