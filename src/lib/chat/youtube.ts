@@ -11,6 +11,14 @@ interface YouTubeConnectorState {
   pollingIntervalMs: number
   onTokenRefresh?: () => Promise<string | null>
   consecutiveErrors: number
+  /** F-22 proxy: track unique chat authors seen this session so we can
+   *  emit a synthetic `join` event the first time a viewer speaks.
+   *  YouTube's chat API has no real viewer-join event — first chat is
+   *  the closest engagement signal we get without paid analytics. */
+  seenAuthors: Set<string>
+  /** Skip proxy firing during the first poll cycle — we'd otherwise pulse
+   *  every existing chatter on connector boot. */
+  primed: boolean
 }
 
 const activeConnectors = new Map<string, YouTubeConnectorState>()
@@ -142,11 +150,37 @@ async function pollMessages(roomCode: string, state: YouTubeConnectorState) {
       if (authorDetails.isChatModerator) badges.push("moderator")
       if (authorDetails.isChatSponsor) badges.push("member")
 
+      const authorName = String(authorDetails.displayName ?? "Unknown")
+      const authorChannelId = String(authorDetails.channelId ?? authorName)
+
+      // F-22 proxy: emit a synthetic join event the first time a viewer
+      // sends a chat message in this session (text only — donations / subs
+      // already have their own surface). Skipped on the connector's first
+      // poll cycle to avoid pulsing every existing chatter on boot.
+      if (
+        state.primed
+        && eventType === "text"
+        && !state.seenAuthors.has(authorChannelId)
+      ) {
+        state.seenAuthors.add(authorChannelId)
+        const joinMsg: ChatMessage = {
+          id: randomUUID(),
+          platform: "youtube",
+          author: { name: authorName },
+          message: `${authorName} joined`,
+          timestamp: String(snippet.publishedAt ?? new Date().toISOString()),
+          eventType: "join",
+        }
+        await publishChat(roomCode, joinMsg).catch(console.error)
+      } else if (eventType === "text") {
+        state.seenAuthors.add(authorChannelId)
+      }
+
       const msg: ChatMessage = {
         id: item.id ?? randomUUID(),
         platform: "youtube",
         author: {
-          name: String(authorDetails.displayName ?? "Unknown"),
+          name: authorName,
           avatar: authorDetails.profileImageUrl as string | undefined,
           badges: badges.length > 0 ? badges : undefined,
         },
@@ -158,6 +192,10 @@ async function pollMessages(roomCode: string, state: YouTubeConnectorState) {
       }
       await publishChat(roomCode, msg).catch(console.error)
     }
+
+    // After the first successful poll cycle the seen-authors set is hot —
+    // subsequent unknown authors are genuine new arrivals.
+    state.primed = true
   } catch (err) {
     state.consecutiveErrors++
     console.error(`[YouTube] Poll error for room ${roomCode}:`, err)
@@ -190,6 +228,8 @@ export async function startYouTubeConnector(
     pollingIntervalMs: 5_000, // Start conservative, API will adjust
     onTokenRefresh,
     consecutiveErrors: 0,
+    seenAuthors: new Set<string>(),
+    primed: false,
   }
 
   publishConnectorStatus(roomCode, "connecting")

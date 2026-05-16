@@ -4,7 +4,20 @@ import type { ChatMessage } from "./types"
 import type { RoomEvent } from "@/lib/redis"
 import { randomUUID } from "crypto"
 
-const activeConnectors = new Map<string, { pusher: Pusher; channelName: string }>()
+// F-22 proxy: per-room seen-authors set + primed flag. Kick's public
+// chatroom Pusher channel emits no viewer-join events; first chat
+// message from a new author is the closest engagement signal we have.
+interface KickConnectorState {
+  pusher: Pusher
+  channelName: string
+  seenAuthors: Set<string>
+  primed: boolean
+  /** Set true once a short grace window elapses after subscribe, so the
+   *  flood of existing chatters' replays doesn't pulse all of them. */
+  primeTimer?: ReturnType<typeof setTimeout>
+}
+
+const activeConnectors = new Map<string, KickConnectorState>()
 
 function publishConnectorStatus(roomCode: string, status: string, error?: string) {
   publishEvent(roomCode, {
@@ -63,11 +76,35 @@ export async function startKickConnector(roomCode: string, channelName: string) 
       }
     }
 
+    const authorName = data.sender?.username ?? data.sender?.slug ?? "Unknown"
+    const authorKey = data.sender?.slug ?? authorName
+    const state = activeConnectors.get(roomCode)
+
+    // F-22 proxy: first chat from a new author after the prime window
+    // becomes a synthetic join. Pre-prime messages just seed the set so
+    // the existing chatter pool doesn't all pulse at once on boot.
+    if (state) {
+      if (state.primed && !state.seenAuthors.has(authorKey)) {
+        state.seenAuthors.add(authorKey)
+        const joinMsg: ChatMessage = {
+          id: randomUUID(),
+          platform: "kick",
+          author: { name: authorName },
+          message: `${authorName} joined`,
+          timestamp: data.created_at ?? new Date().toISOString(),
+          eventType: "join",
+        }
+        await publishChat(roomCode, joinMsg).catch(console.error)
+      } else {
+        state.seenAuthors.add(authorKey)
+      }
+    }
+
     const msg: ChatMessage = {
       id: data.id?.toString() ?? randomUUID(),
       platform: "kick",
       author: {
-        name: data.sender?.username ?? data.sender?.slug ?? "Unknown",
+        name: authorName,
         badges: badges.length > 0 ? badges : undefined,
       },
       message: data.content ?? "",
@@ -138,12 +175,25 @@ export async function startKickConnector(roomCode: string, channelName: string) 
     await publishChat(roomCode, msg).catch(console.error)
   })
 
-  activeConnectors.set(roomCode, { pusher, channelName })
+  // Prime the seen-authors set with a 5-second silence window: any
+  // chatter who speaks during this grace period is treated as already
+  // present, not a new join. After the window, unknown authors pulse.
+  const newState: KickConnectorState = {
+    pusher,
+    channelName,
+    seenAuthors: new Set<string>(),
+    primed: false,
+  }
+  newState.primeTimer = setTimeout(() => {
+    newState.primed = true
+  }, 5_000)
+  activeConnectors.set(roomCode, newState)
 }
 
 export function stopKickConnector(roomCode: string) {
   const state = activeConnectors.get(roomCode)
   if (!state) return
+  if (state.primeTimer) clearTimeout(state.primeTimer)
   try { state.pusher.disconnect() } catch {}
   activeConnectors.delete(roomCode)
 }
