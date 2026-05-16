@@ -30,6 +30,45 @@ const tagStyles: Record<Tag, string> = {
 
 const entries: ChangelogEntry[] = [
   {
+    date: "May 16, 2026",
+    version: "v2.8.0",
+    title: "Funnel Phase 3 & 4, X (Twitter) Live, Demo Hardening, Features Overhaul & Cross-Platform Join Pulses",
+    changes: [
+      // Platforms — X Live
+      { tag: "feat", text: "X (Twitter) Live as a first-class streaming destination. TWITTER added to the PlatformType enum + PlatformSchema. buildRtmpUrl treats X like TikTok — requires user-supplied ingestUrl because X mints a unique source URL per Media Studio broadcast (no stable base). inferPlatformFromUrl recognizes pscp.tv / x.com / twitter.com hostnames so F-24 drop detection works for X. Public URL fallback resolves to x.com/<slug>; viewer counts return null (no public API). New X icon (currentColor SVG), PLATFORM_META + PLATFORM_COLORS + PLATFORM_LABELS extended, dashboard PlatformConnectForm renders the TikTok-style ingest URL + stream key inputs for twitter, settings page gets a Twitter card. Limits documented in copy: X Premium subscription required, two-step go-live (Zerocast pushes RTMP → host clicks Go Live in Media Studio Producer), no chat ingestion, no viewer count." },
+
+      // Observability — Phase 4
+      { tag: "feat", text: "PostHog Phase 4 — Sentry server + edge instrumentation. sentry.server.config.ts + sentry.edge.config.ts gated on SENTRY_DSN (no DSN → no init, no noise). tracesSampleRate 0.1 in prod. beforeSend filters retryable Prisma errors (P1001 + network) that the retry wrapper already handles. instrumentation.ts register() dynamic-imports the right config per NEXT_RUNTIME; onRequestError chains existing homegrown reporter + Sentry.captureRequestError — both sinks fire, neither can break the other. next.config.ts wrapped with withSentryConfig: hideSourceMaps via v10's sourcemaps.deleteSourcemapsAfterUpload; sourcemaps.disable when SENTRY_AUTH_TOKEN absent so local builds work clean. No client config — PostHog already covers client exceptions to dedup." },
+      { tag: "feat", text: "Rate-limit hit persistence + admin Abuse Monitor. New RateLimitHit model (identifier, limiterType, route, method, userAgent, country, createdAt; indexed on all three query columns). checkRateLimit + rateLimitGuard accept optional RateLimitContext arg ({ route, method, userAgent, country }) — when a request is throttled, fire-and-forget persists a row (void + .catch) so the 429 path is never blocked. New rateLimitContextFromRequest(req) helper. /admin/abuse: time-range selector (1h/24h/7d/30d), 4 stat cards (total hits, unique offenders, endpoints hit, last hit), top offenders + hottest limiter types panels, recent-hits table, inline-SVG spike chart with hour/day buckets via date_trunc." },
+      { tag: "improvement", text: "Vercel Speed Insights mounted in root layout. Free Hobby tier 10K events/mo, no env config, no-op outside Vercel." },
+
+      // Analytics — Phase 3
+      { tag: "feat", text: "PostHog Phase 3 — full attribution capture. BetaRequest gains 13 fields (referrer, landingPage, utm{Source,Medium,Campaign,Term,Content}, userAgent, country, region, city, posthogDistinctId) + indexes on utmSource / utmCampaign / country. /api/beta reads Vercel edge headers (x-vercel-ip-country / -region / -city / user-agent) and persists alongside body UTM data; every string sanitized via stripHtml() + 500-char cap. Fires server-side beta_signup_persisted PostHog event to stitch with client capture via posthogDistinctId." },
+      { tag: "feat", text: "First-touch + last-touch attribution model in src/lib/attribution.ts (localStorage, 30-day TTL on last-touch, first-touch sticky until clearAttribution(), SSR-safe). BetaModal spreads getAttribution() into the POST body and clears only on 200 success." },
+      { tag: "feat", text: "Four new admin pages reading from PostHog Query API + Prisma side-by-side. /admin/analytics — 4 stat cards (visitors, signups, conversion, streams started) with w/w delta + inline-SVG sparkline + top-sources panel. /admin/funnel — Marketing→Beta and Activation funnels with 7d/28d/90d selector. /admin/sources — UTM source/campaign/referrer + geo distribution + recent signups table. /admin/posthog — iframe quick-win for the 6 public-share dashboards (env-driven slot wiring)." },
+      { tag: "feat", text: "src/lib/posthog-query.ts — server-side HogQL/Insight wrapper (queryHogQL, queryFunnel, queryTrend, queryRetention). Requires POSTHOG_PROJECT_ID + POSTHOG_PERSONAL_API_KEY (documented in .env.example). Fail-soft: returns [] with one-time warn when env unset. 60s Next cache; every Prisma + PostHog call wrapped in try/catch so one metric failing doesn't break the page." },
+      { tag: "improvement", text: "src/auth.ts jwt + session callbacks now surface provider (google / resend → 'email') and isNewUser onto session.user. PostHogIdentify login_succeeded event fires with real provider and is_new_user — closes the deviation flagged in the Phase 2 reconciliation." },
+
+      // Demo flow hardening — PH launch
+      { tag: "feat", text: "DemoOverlay — Product Hunt visitors landing on /demo/[code] now see a top-right DEMO pill with live expiry countdown (\"Expires in 3h 42m\", updates every 60s; warn-text under 5min) and a bottom-right \"Like this? Get your own room →\" CTA pointing to /signup (falls back to /login). Overlays floating elements without touching StudioClient or studio chrome. Token exp read from the validated JWT payload." },
+      { tag: "feat", text: "Host-auth helper (src/lib/host-auth.ts) — new authenticateHost(req, code) accepts a Bearer host token OR a NextAuth session. Verifies the LiveKit-minted host token signature, confirms video.room === code, falls back to auth() when no Bearer. Applied to end / pause / stream-live (POST + DELETE + PATCH) so demo visitors can exercise every studio control without a NextAuth session. Production studio flow unchanged." },
+
+      // Features page
+      { tag: "feat", text: "/features page overhaul — replaces the original static feature grid with a sales-focused layout. New hero (One browser tab. Every platform.) with live vs roadmap counts pulled from feature data. Four alternating marquee blocks (Studio mini-grid, AI Co-Host chat mockup, MultistreamFan with mock viewer counts, RecapWidget with stat cards). Full catalogue reflects v2.5–v2.7 capabilities with anchor ids per category for deep-linking. Coming-soon roadmap teaser pulled directly from feature data so it stays in sync." },
+
+      // Chat — close F-22 marketing gap
+      { tag: "feat", text: "Twitch JOIN forward — client.on(\"join\") pushes a ChatMessage with eventType: \"join\" into the chat stream. Skips when self === true so the bot's own JOIN doesn't fire a \"+1 zerocast\" pulse on connector boot. PlatformJoinPulse + useJoinDeltas now render \"+N on Twitch\" pills exactly like TikTok, no UI changes needed." },
+      { tag: "feat", text: "YouTube + Kick synthetic join proxy — both platforms' chat APIs don't expose viewer-join events. Closest engagement signal is \"first chat message from a previously-unseen author this session\" — wired as a synthetic join. YouTube: keys on authorChannelId (falls back to displayName), only fires after the first successful poll cycle so pre-existing chatters don't pulse on connector start. Kick: 5-second prime window after Pusher subscribe so the initial chat history replay doesn't fire a pulse per existing chatter; authorKey prefers sender.slug, falls back to username. /features bullet qualifies coverage: \"Twitch + TikTok use native join events; YouTube + Kick infer a join from a viewer's first chat message.\" Silent lurkers stay invisible on YT + Kick — no chat, no signal." },
+
+      // Security
+      { tag: "security", text: "scripts/create-demo-room.mjs no longer hardcodes LiveKit API key + secret, Neon DATABASE_URL, or Upstash Redis URL + token. Loads .env.local at startup, validates each required var, exits with explicit error listing missing vars. ⚠️ Rotate the prior secrets — they remain in git history pre-fix." },
+      { tag: "security", text: "/og/marketing — cap user-overrideable query params at point-of-read (kicker 40 / title 100 / accent 100 / sub 280 chars) to prevent multi-MB strings from OOM-ing satori or hanging the worker. Silent truncation, no 4xx." },
+
+      // Launch
+      { tag: "improvement", text: "docs/launch/ — 900-word founder blog post (Don't just stream. Co-host with AI., dated 2026-05-24) + 8-section social/email copy deck (X founder thread, X company post, LinkedIn, Instagram/Threads, wait-list email, PH Maker comment, Slack/Discord announce, PH-day timeline). Force-added because docs/ is gitignored." },
+    ],
+  },
+  {
     date: "May 14, 2026",
     version: "v2.7.0",
     title: "Per-Platform Stream Drop Detection + Reconnect",

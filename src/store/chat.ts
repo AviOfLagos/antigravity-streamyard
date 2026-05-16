@@ -24,6 +24,7 @@ export const useChatStore = create<ChatStore>((set) => ({
     twitch: true,
     kick: true,
     tiktok: true,
+    twitter: true,
     // Host messages are always shown and not user-togglable
     host: true,
     // Guest messages are always shown
