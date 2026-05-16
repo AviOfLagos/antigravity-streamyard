@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Mail, Palette, ArrowRight, AlertTriangle, BarChart2, Activity } from "lucide-react";
+import { Mail, Palette, ArrowRight, AlertTriangle, BarChart2, Activity, ShieldAlert } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
 import { getRecentErrors } from "@/lib/errors";
@@ -67,6 +67,14 @@ export default async function AdminHome() {
         "Visitor counts, signup conversion, traffic sources, daily trends.",
       stat: "Realtime",
       sub: "PostHog + DB",
+    },
+    {
+      href: "/admin/abuse",
+      icon: ShieldAlert,
+      title: "Abuse Monitor",
+      blurb: "Rate-limit hits, top offenders, hot endpoints, traffic spikes.",
+      stat: "Realtime",
+      sub: "DB-sourced",
     },
   ];
 

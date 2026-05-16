@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import BetaModal from "@/components/BetaModal"
 import { ErrorBeacon } from "@/components/ErrorBeacon"
 import { Providers } from "@/components/Providers"
@@ -113,6 +114,7 @@ export default function RootLayout({
           <BetaModal />
           <ErrorBeacon />
         </Providers>
+        <SpeedInsights />
       </body>
     </html>
   )

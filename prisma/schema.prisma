@@ -206,3 +206,18 @@ model BetaRequest {
   @@index([utmCampaign])
   @@index([country])
 }
+
+model RateLimitHit {
+  id          String   @id @default(cuid())
+  identifier  String   // IP, user id, or composite key (already passed to checkRateLimit)
+  limiterType String   // limiter key, e.g. "rooms:create", "guest:chat-send"
+  route       String?  // request path (req.url) for context
+  method      String?  // GET / POST / etc.
+  userAgent   String?  // truncated to 500 chars
+  country     String?  // x-vercel-ip-country at hit time
+  createdAt   DateTime @default(now())
+
+  @@index([identifier])
+  @@index([limiterType])
+  @@index([createdAt])
+}

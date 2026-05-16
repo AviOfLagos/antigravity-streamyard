@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   transpilePackages: ["livekit-server-sdk"],
@@ -49,4 +50,20 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  disableLogger: true,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  sourcemaps: {
+    // Skip source-map upload entirely when SENTRY_AUTH_TOKEN is absent
+    // (local dev / preview). Replaces the deprecated top-level `dryRun`.
+    disable: !process.env.SENTRY_AUTH_TOKEN,
+    // Delete maps from the build output after upload so they are never shipped
+    // publicly. Replaces the deprecated `hideSourceMaps`. (Default is true in
+    // @sentry/nextjs v10, but stated explicitly for safety.)
+    deleteSourcemapsAfterUpload: true,
+  },
+});

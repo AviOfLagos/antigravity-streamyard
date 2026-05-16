@@ -1,6 +1,8 @@
 import { Ratelimit } from "@upstash/ratelimit"
 import { Redis } from "@upstash/redis"
 
+import { prisma } from "@/lib/prisma"
+
 // ── Redis instance for rate limiting (reuses same Upstash credentials) ──────
 
 function getRateLimitRedis(): Redis {
@@ -66,12 +68,58 @@ export interface RateLimitResult {
 }
 
 /**
+ * Optional per-request context recorded on RateLimitHit rows.
+ * All fields are optional — when omitted, the persisted row has nulls in
+ * those columns (identifier + limiterType + createdAt are always set).
+ */
+export interface RateLimitContext {
+  route?: string
+  method?: string
+  userAgent?: string | null
+  country?: string | null
+}
+
+/**
+ * Persist a RateLimitHit row — fire-and-forget. Never awaited, never blocks
+ * the 429 response. DB write failures are swallowed (logged via console.warn)
+ * to preserve fail-open guarantees.
+ */
+function recordHit(
+  identifier: string,
+  limiterType: string,
+  context?: RateLimitContext,
+): void {
+  try {
+    void prisma.rateLimitHit
+      .create({
+        data: {
+          identifier,
+          limiterType,
+          route: context?.route ?? null,
+          method: context?.method ?? null,
+          userAgent: context?.userAgent ?? null,
+          country: context?.country ?? null,
+        },
+      })
+      .catch((err: unknown) => console.warn("[rate-limit] persist failed:", err))
+  } catch (err) {
+    // Defensive: if prisma client itself blows up at call time
+    // (e.g. missing env, broken init), do NOT propagate.
+    console.warn("[rate-limit] persist threw synchronously:", err)
+  }
+}
+
+/**
  * Check rate limit for a given identifier and limiter type.
  * Fail-open: if Redis is unreachable, the request is allowed.
+ *
+ * When throttled (success=false), a RateLimitHit row is persisted via
+ * fire-and-forget — DB write failures never block the 429 response.
  */
 export async function checkRateLimit(
   identifier: string,
   limiterType: string,
+  context?: RateLimitContext,
 ): Promise<RateLimitResult> {
   try {
     const config = LIMITER_CONFIGS[limiterType]
@@ -82,6 +130,11 @@ export async function checkRateLimit(
 
     const limiter = getLimiter(limiterType, config.tokens, config.window)
     const result = await limiter.limit(identifier)
+
+    if (!result.success) {
+      // fire-and-forget log; never block the 429 response.
+      recordHit(identifier, limiterType, context)
+    }
 
     return {
       success: result.success,
@@ -109,14 +162,29 @@ export function getClientIp(req: Request): string {
 }
 
 /**
+ * Build a RateLimitContext from a Request — convenience for route handlers
+ * that want to opt-in to per-hit observability. User-Agent is truncated to
+ * 500 chars to match the schema column.
+ */
+export function rateLimitContextFromRequest(req: Request): RateLimitContext {
+  return {
+    route: new URL(req.url).pathname,
+    method: req.method,
+    userAgent: req.headers.get("user-agent")?.slice(0, 500) ?? null,
+    country: req.headers.get("x-vercel-ip-country") ?? null,
+  }
+}
+
+/**
  * Rate-limit guard — returns a 429 NextResponse if over limit, or null if allowed.
  * Attaches standard rate-limit headers on the 429 response.
  */
 export async function rateLimitGuard(
   identifier: string,
   limiterType: string,
+  context?: RateLimitContext,
 ): Promise<Response | null> {
-  const rl = await checkRateLimit(identifier, limiterType)
+  const rl = await checkRateLimit(identifier, limiterType, context)
   if (!rl.success) {
     const { NextResponse } = await import("next/server")
     const retryAfter = Math.ceil((rl.reset - Date.now()) / 1000)
