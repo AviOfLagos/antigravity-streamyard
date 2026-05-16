@@ -44,12 +44,18 @@ export function inferPlatformFromUrl(url: string): string | null {
   if (u.includes("twitch.tv")) return "twitch"
   if (u.includes("kick.com")) return "kick"
   if (u.includes("tiktok") || u.includes("tiktokcdn")) return "tiktok"
+  // X (Twitter) Live ingest hostnames vary per source — `va.pscp.tv` (legacy
+  // Periscope CDN still used), `live-video-cdn-*.x.com`, etc. Match broadly.
+  if (u.includes("pscp.tv") || u.includes("x.com") || u.includes("twitter.com")) return "twitter"
   return null
 }
 
 /**
  * Build the full RTMP URL for a given platform and stream key.
- * TikTok requires a user-provided ingest URL.
+ * TikTok + Twitter both require a user-provided ingest URL because X
+ * Media Studio Producer mints a unique RTMP source URL per broadcast and
+ * TikTok mints one per RTMP session — neither has a stable, well-known
+ * base URL like YouTube / Twitch / Kick.
  */
 export function buildRtmpUrl(
   platform: PlatformType,
@@ -61,6 +67,14 @@ export function buildRtmpUrl(
       throw new Error("TikTok requires a custom ingest URL")
     }
     return `${ingestUrl}/${streamKey}`
+  }
+
+  if (platform === PlatformType.TWITTER) {
+    if (!ingestUrl) {
+      throw new Error("Twitter (X) requires a custom ingest URL from Media Studio Producer")
+    }
+    // Strip trailing slash to keep behaviour identical to other platforms.
+    return `${ingestUrl.replace(/\/$/, "")}/${streamKey}`
   }
 
   const baseUrl = RTMP_INGEST_URLS[platform]

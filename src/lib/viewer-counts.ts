@@ -10,6 +10,8 @@
  *   - Twitch  : Helix /streams?user_login (OAuth user token + Client-ID)
  *   - Kick    : /api/v2/channels/{slug}.livestream.viewer_count (public)
  *   - TikTok  : Partner-only LIVE API — always returns null today.
+ *   - Twitter : No public viewer-count API on X Live broadcasts (Media
+ *               Studio Producer doesn't expose one publicly) — null today.
  */
 
 import { prisma } from "@/lib/prisma"
@@ -140,7 +142,8 @@ export async function resolveViewerCounts(
         } else if (key === "kick") {
           out[key] = await getKickViewerCount(conn.channelName)
         } else {
-          // TikTok + unknown — surfaced as null placeholder.
+          // TikTok + Twitter + unknown — no public viewer-count API, null
+          // surfaces as the "—" placeholder in the header pill.
           out[key] = null
         }
       } catch {

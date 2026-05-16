@@ -4,7 +4,7 @@ import { stripHtml } from "@/lib/sanitize"
 
 // ── Platform enum (lowercase — canonical form used by client & chat system) ──
 
-export const PlatformSchema = z.enum(["youtube", "twitch", "kick", "tiktok", "host", "guest", "ai"])
+export const PlatformSchema = z.enum(["youtube", "twitch", "kick", "tiktok", "twitter", "host", "guest", "ai"])
 export type Platform = z.infer<typeof PlatformSchema>
 
 // Accepts both lowercase and uppercase (DB returns uppercase PlatformType enum)
@@ -15,7 +15,7 @@ export const PlatformFlexSchema = z
   .pipe(PlatformSchema)
 
 // Schema for external platform connections (excludes "host" which is internal-only)
-export const ExternalPlatformSchema = z.enum(["youtube", "twitch", "kick", "tiktok"])
+export const ExternalPlatformSchema = z.enum(["youtube", "twitch", "kick", "tiktok", "twitter"])
 
 // ── Platform connection (as returned by GET /api/platforms) ──────────────────
 

@@ -31,6 +31,11 @@ function fallbackUrl(platform: string, channelName: string | null | undefined): 
       return `https://kick.com/${slug}`
     case "tiktok":
       return `https://tiktok.com/@${slug}/live`
+    case "twitter":
+      // X has no public live broadcast URL we can derive from the channel
+      // slug alone. Best effort: profile page. Users see "live" tab there
+      // automatically while the broadcast is active.
+      return `https://x.com/${slug}`
     default:
       return null
   }

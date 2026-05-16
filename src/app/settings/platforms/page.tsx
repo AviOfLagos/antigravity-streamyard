@@ -72,6 +72,14 @@ export default async function PlatformsPage() {
             helpText="Your TikTok username. Get RTMP URL + stream key from TikTok Live Center (requires 1000+ followers)."
             connection={connectedMap.tiktok ?? null}
           />
+          <PlatformConnectForm
+            platform="twitter"
+            label="X (Twitter)"
+            color="bg-black"
+            placeholder="@your-handle"
+            helpText="Your X handle. Requires X Premium or Premium+. Get RTMP URL + stream key from x.com/i/media_studio/producer → Sources → Create Source. Two-step go-live: we push RTMP, then you click Go Live in Media Studio."
+            connection={connectedMap.twitter ?? null}
+          />
         </div>
 
         {/* Custom RTMP */}

@@ -15,6 +15,7 @@ const STREAM_KEY_HINTS: Record<string, string> = {
   twitch: "Find your stream key in Twitch Creator Dashboard \u2192 Settings \u2192 Stream",
   kick: "Find your stream key in Kick Dashboard \u2192 Settings \u2192 Stream",
   tiktok: "Get your RTMP URL and stream key from TikTok Live Center",
+  twitter: "Get RTMP URL + stream key from x.com/i/media_studio/producer \u2192 Sources \u2192 Create Source",
 }
 
 interface PlatformConnectFormProps {
@@ -37,7 +38,7 @@ interface PlatformConnectFormProps {
 function TokenHealthBadge({ health, platform }: { health: TokenHealth; platform: string }) {
   if (health === "no_token") {
     // Kick and TikTok don't need token management
-    if (platform === "kick" || platform === "tiktok") {
+    if (platform === "kick" || platform === "tiktok" || platform === "twitter") {
       return (
         <span className="inline-flex items-center gap-1 text-xs text-gray-400 bg-gray-800 px-2 py-0.5 rounded-full">
           No token needed
@@ -99,13 +100,13 @@ function StreamKeySection({ platform, hasStreamKey: initialHasStreamKey, hasInge
         body: JSON.stringify({
           platform,
           streamKey: streamKey.trim(),
-          ...(platform === "tiktok" && ingestUrl.trim() ? { ingestUrl: ingestUrl.trim() } : {}),
+          ...((platform === "tiktok" || platform === "twitter") && ingestUrl.trim() ? { ingestUrl: ingestUrl.trim() } : {}),
           ...(platform === "youtube" && backupIngestUrl.trim() ? { backupIngestUrl: backupIngestUrl.trim() } : {}),
         }),
       })
       if (res.ok) {
         setHasStreamKey(true)
-        if (platform === "tiktok" && ingestUrl.trim()) setHasIngestUrl(true)
+        if ((platform === "tiktok" || platform === "twitter") && ingestUrl.trim()) setHasIngestUrl(true)
         if (platform === "youtube" && backupIngestUrl.trim()) setHasBackupIngestUrl(true)
         setStreamKey("")
         setIngestUrl("")
@@ -140,7 +141,7 @@ function StreamKeySection({ platform, hasStreamKey: initialHasStreamKey, hasInge
 
       <p className="text-[11px] text-gray-600 mb-2">{STREAM_KEY_HINTS[platform]}</p>
 
-      {platform === "tiktok" && (
+      {(platform === "tiktok" || platform === "twitter") && (
         <div className="mb-2">
           <Label className="text-gray-500 text-[11px]">RTMP URL</Label>
           <div className="relative mt-1">
@@ -281,7 +282,7 @@ export default function PlatformConnectForm({
     }
   }
 
-  const showRefreshButton = connected && platform !== "kick" && platform !== "tiktok" && tokenHealth !== "no_token"
+  const showRefreshButton = connected && platform !== "kick" && platform !== "tiktok" && platform !== "twitter" && tokenHealth !== "no_token"
 
   return (
     <Card className="bg-[#111111] border-white/6">

@@ -118,7 +118,7 @@ Next.js 15 App Router with React 19, Tailwind CSS v4, shadcn/ui primitives over 
 - AI Co-Host replies are visually emphasized with an indigo tint and a bot icon so the host can see at a glance which questions the assistant has handled.
 
 ## Streaming
-- One-click multistream to YouTube Live, Twitch, Kick, and TikTok Live simultaneously.
+- One-click multistream to YouTube Live, Twitch, Kick, TikTok Live, and X (Twitter) Live simultaneously. X requires the streamer to hold an X Premium subscription and to create an RTMP source in Media Studio Producer; we provide the RTMP push, the streamer clicks Go Live in Media Studio (X has no public API to automate that final click).
 - Unlimited custom RTMP destinations (Facebook Live, LinkedIn Live, Trovo, Rumble, etc.).
 - Broadcast title and description per session.
 - Cloud-based RTMP fan-out via LiveKit Egress — host upload bandwidth does not scale with destination count.

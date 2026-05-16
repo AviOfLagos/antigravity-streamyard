@@ -35,6 +35,14 @@ export default function PlatformIcon({ platform, size = 20, className = "" }: Pl
           <path fill="#ffffff" d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.88 2.89 2.89 0 0 1-2.88-2.88 2.89 2.89 0 0 1 2.88-2.88c.3 0 .59.04.86.11v-3.5a6.37 6.37 0 0 0-.86-.06A6.34 6.34 0 0 0 3.15 15.6 6.34 6.34 0 0 0 9.49 22a6.34 6.34 0 0 0 6.34-6.34V9.4a8.16 8.16 0 0 0 4.78 1.53V7.48a4.85 4.85 0 0 1-1.02-.79z"/>
         </svg>
       )
+    case "twitter":
+    case "x":
+      // X (formerly Twitter) — official X mark glyph.
+      return (
+        <svg width={s} height={s} viewBox="0 0 24 24" className={className}>
+          <path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+        </svg>
+      )
     default:
       return (
         <div
@@ -52,4 +60,5 @@ export const PLATFORM_META: Record<string, { label: string; color: string; bgCol
   twitch: { label: "Twitch", color: "#9146FF", bgColor: "bg-purple-600" },
   kick: { label: "Kick", color: "#53FC18", bgColor: "bg-green-600" },
   tiktok: { label: "TikTok", color: "#ffffff", bgColor: "bg-black" },
+  twitter: { label: "X", color: "#ffffff", bgColor: "bg-black" },
 }

@@ -130,7 +130,7 @@ const categories: FeatureCategory[] = [
     title: "Streaming",
     description: "Go live to multiple platforms simultaneously — and stay live when things go sideways.",
     features: [
-      { icon: <Radio className="w-4 h-4" />, name: "Multi-Platform RTMP", detail: "Stream to YouTube, Twitch, Kick, and TikTok at the same time via LiveKit Egress. Cloud fan-out; host upload bandwidth doesn't scale with destinations.", status: "live" },
+      { icon: <Radio className="w-4 h-4" />, name: "Multi-Platform RTMP", detail: "Stream to YouTube, Twitch, Kick, TikTok, and X (Twitter) at the same time via LiveKit Egress. Cloud fan-out; host upload bandwidth doesn't scale with destinations. X requires Premium and a Media Studio Producer source.", status: "live" },
       { icon: <Radio className="w-4 h-4" />, name: "Custom RTMP", detail: "Add unlimited custom RTMP destinations — Facebook Live, LinkedIn, Restream, or your own server.", status: "live" },
       { icon: <CheckCircle2 className="w-4 h-4" />, name: "Pre-Flight Checklist", detail: "Before Go Live we flag mic-off / cam-off / poor network / YouTube-without-title. Non-blocking reminders, not a gate.", status: "live" },
       { icon: <BarChart2 className="w-4 h-4" />, name: "Live Viewer Counts", detail: "Concurrent viewer counts from YouTube, Twitch, and Kick rendered in the header pill (compact 1.2K / 12K / 1.1M) every 30 seconds.", status: "live" },
@@ -468,7 +468,7 @@ export default function FeaturesPage() {
 
           <MarqueeBlock
             eyebrow="Multistream"
-            title="Stream live to YouTube, Twitch, Kick, and TikTok at once"
+            title="Stream live to YouTube, Twitch, Kick, TikTok, and X at once"
             bullets={[
               "Cloud RTMP fan-out via LiveKit Egress — your upload bandwidth doesn't scale with platforms.",
               "Live viewer counts pulled from each platform every 30s and rendered in the studio header.",
