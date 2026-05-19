@@ -56,6 +56,7 @@ const LIMITER_CONFIGS: Record<string, { tokens: number; window: string }> = {
   "platforms:custom-rtmp":{ tokens: 10, window: "1m" },
   "feedback:submit":    { tokens: 5,  window: "1m" },
   "errors:ingest":      { tokens: 30, window: "1m" },
+  "onboarding:complete":{ tokens: 5,  window: "1m" },
 }
 
 // ── Public API ──────────────────────────────────────────────────────────────

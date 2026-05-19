@@ -46,6 +46,7 @@ model User {
   platformConnections PlatformConnection[]
   customRtmp          CustomRtmpDestination[]
   rooms               Room[]
+  onboardedAt         DateTime?
   createdAt           DateTime                @default(now())
   updatedAt           DateTime                @updatedAt
 }
