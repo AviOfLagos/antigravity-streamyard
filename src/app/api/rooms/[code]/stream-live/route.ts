@@ -9,6 +9,7 @@ import { checkRateLimit } from "@/lib/rate-limit"
 import { getPostHogClient } from "@/lib/posthog-server"
 import { publishEvent, setRoomPublicUrls } from "@/lib/redis"
 import { resolvePublicUrls } from "@/lib/public-urls"
+import { postStreamStarted } from "@/lib/slack"
 import { updateBroadcastMetadata, uploadThumbnail, hasValidAccessToken } from "@/lib/youtube-api"
 
 // ── POST — Start streaming (Go Live) ──────────────────────────────────────
@@ -189,6 +190,28 @@ export async function POST(
         egress_id: egressId,
       },
     })
+
+    // Fire-and-forget Slack notification — never blocks the response. Host
+    // email is resolved best-effort from the User row; falls back to "unknown"
+    // (authenticateHost returns userId but no session/email directly).
+    void (async () => {
+      let hostEmail: string = "unknown"
+      try {
+        const hostUser = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { email: true },
+        })
+        hostEmail = hostUser?.email ?? "unknown"
+      } catch {
+        // best-effort lookup — fall through with "unknown"
+      }
+      await postStreamStarted({
+        hostEmail,
+        roomCode: code,
+        platforms: requestedPlatforms,
+        egressId,
+      })
+    })().catch((err) => console.warn("[slack] stream-started failed:", err))
 
     return NextResponse.json({
       egressId,

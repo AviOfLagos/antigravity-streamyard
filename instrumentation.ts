@@ -9,6 +9,8 @@
 
 import * as Sentry from "@sentry/nextjs"
 
+import { postAlert } from "@/lib/slack"
+
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
     await import("./sentry.server.config")
@@ -57,5 +59,28 @@ export async function onRequestError(
     })
   } catch {
     // fail open
+  }
+
+  // Third sink: Slack alert (ERROR level only — warn would spam). Fire-and-forget
+  // so it never delays the request path. Fingerprint dedupes a flood from one
+  // broken route within the helper's 60s window.
+  try {
+    const errMessage = error instanceof Error ? error.message : String(error)
+    void postAlert({
+      severity: "error",
+      title: `Server error: ${errMessage.slice(0, 120)}`,
+      body:
+        error instanceof Error && error.stack
+          ? `\`\`\`\n${error.stack.slice(0, 500)}\n\`\`\``
+          : undefined,
+      context: {
+        path: request?.path ?? "unknown",
+        method: request?.method ?? "unknown",
+        routerKind: context?.routerKind ?? "unknown",
+      },
+      fingerprint: `${request?.path ?? "unknown"}:${errMessage.slice(0, 50)}`,
+    }).catch((slackErr) => console.warn("[slack] alert failed:", slackErr))
+  } catch {
+    // fail open — observability must never break the request path
   }
 }

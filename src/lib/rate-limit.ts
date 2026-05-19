@@ -2,6 +2,13 @@ import { Ratelimit } from "@upstash/ratelimit"
 import { Redis } from "@upstash/redis"
 
 import { prisma } from "@/lib/prisma"
+import { postAlert } from "@/lib/slack"
+
+// Spike detection thresholds — when an identifier exceeds SPIKE_THRESHOLD hits
+// within SPIKE_WINDOW_MS, fire a warn-level Slack alert. The alert helper
+// dedupes by fingerprint within 60s so we don't re-alert on every hit.
+const SPIKE_THRESHOLD = 20
+const SPIKE_WINDOW_MS = 5 * 60_000
 
 // ── Redis instance for rate limiting (reuses same Upstash credentials) ──────
 
@@ -103,6 +110,31 @@ function recordHit(
         },
       })
       .catch((err: unknown) => console.warn("[rate-limit] persist failed:", err))
+
+    // Spike check — fire-and-forget. If this identifier has crossed the spike
+    // threshold within the rolling window, emit a warn-level Slack alert.
+    // Wrapped in its own IIFE so the count query never blocks the 429 response.
+    void (async () => {
+      try {
+        const count = await prisma.rateLimitHit.count({
+          where: {
+            identifier,
+            createdAt: { gte: new Date(Date.now() - SPIKE_WINDOW_MS) },
+          },
+        })
+        if (count >= SPIKE_THRESHOLD) {
+          await postAlert({
+            severity: "warn",
+            title: `Rate-limit spike: ${identifier}`,
+            body: `${count} hits in last 5 min`,
+            context: { identifier, limiterType, count },
+            fingerprint: `spike:${identifier}`,
+          })
+        }
+      } catch (err) {
+        console.warn("[rate-limit] spike check failed:", err)
+      }
+    })()
   } catch (err) {
     // Defensive: if prisma client itself blows up at call time
     // (e.g. missing env, broken init), do NOT propagate.

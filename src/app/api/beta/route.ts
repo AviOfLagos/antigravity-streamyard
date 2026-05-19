@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { stripHtml } from "@/lib/sanitize";
 import { getPostHogClient } from "@/lib/posthog-server";
+import { postBetaSignup } from "@/lib/slack";
 
 // Shape of the incoming JSON body. All attribution fields are optional and
 // may arrive as undefined/null/empty when the client cannot resolve them.
@@ -123,6 +124,16 @@ export async function POST(req: Request) {
       // Swallow — telemetry must never block the user response.
       console.error("[Beta Request PostHog Error]", phError);
     }
+
+    // Fire-and-forget Slack notification. Non-PII fields only (defense-in-depth;
+    // the Slack helper also redacts). Never awaited so the 201 response is not
+    // delayed by Slack latency or outages.
+    void postBetaSignup({
+      platform: betaRequest.platform,
+      country: betaRequest.country,
+      utmSource: betaRequest.utmSource,
+      referrer: betaRequest.referrer,
+    }).catch((err) => console.warn("[slack] beta signup failed:", err));
 
     return NextResponse.json({ success: true, id: betaRequest.id });
   } catch (error: unknown) {

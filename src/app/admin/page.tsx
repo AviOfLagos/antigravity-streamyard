@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Mail, Palette, ArrowRight, AlertTriangle, BarChart2, Activity, ShieldAlert } from "lucide-react";
+import { Mail, Palette, ArrowRight, AlertTriangle, BarChart2, Activity, ShieldAlert, MessageSquare } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
 import { getRecentErrors } from "@/lib/errors";
@@ -75,6 +75,14 @@ export default async function AdminHome() {
       blurb: "Rate-limit hits, top offenders, hot endpoints, traffic spikes.",
       stat: "Realtime",
       sub: "DB-sourced",
+    },
+    {
+      href: "/admin/slack",
+      icon: MessageSquare,
+      title: "Slack Integration",
+      blurb: "Realtime ops alerts to Slack. Status + test buttons for each channel.",
+      stat: "4 channels",
+      sub: "Webhook-driven",
     },
   ];
 
